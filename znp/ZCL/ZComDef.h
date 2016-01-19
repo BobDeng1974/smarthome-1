@@ -49,16 +49,16 @@ extern "C"
 /*********************************************************************
  * INCLUDES
  */
-//#include "comdef.h"
-//#include "saddr.h"
+#include "comdef.h"
+#include "saddr.h"
 
 
 /*********************************************************************
  * CONSTANTS
  */
-//#define osal_cpyExtAddr(a, b)   sAddrExtCpy((a), (const unsigned char *)(b))
-//#define osal_ExtAddrEqual(a, b) sAddrExtCmp((const unsigned char *)(a), (const unsigned char *)(b))
-//#define osal_copyAddress(a, b)  sAddrCpy( (sAddr_t *)(a), (const sAddr_t *)(b) )
+#define osal_cpyExtAddr(a, b)   sAddrExtCpy((a), (const uint8 *)(b))
+#define osal_ExtAddrEqual(a, b) sAddrExtCmp((const uint8 *)(a), (const uint8 *)(b))
+#define osal_copyAddress(a, b)  sAddrCpy( (sAddr_t *)(a), (const sAddr_t *)(b) )
 
 /*********************************************************************
  * CONSTANTS
@@ -280,6 +280,10 @@ extern "C"
  */
 
 /*** Data Types ***/
+typedef uint8   byte;
+typedef uint16  UINT16;
+typedef int16   INT16;
+
 enum
 {
   AddrNotPresent = 0,
@@ -291,16 +295,16 @@ enum
 
 #define Z_EXTADDR_LEN   8
 
-typedef unsigned char ZLongAddr_t[Z_EXTADDR_LEN];
+typedef byte ZLongAddr_t[Z_EXTADDR_LEN];
 
 typedef struct
 {
   union
   {
-    unsigned short      shortAddr;
+    uint16      shortAddr;
     ZLongAddr_t extAddr;
   } addr;
-  unsigned char addrMode;
+  byte addrMode;
 } zAddrType_t;
 
 // Redefined Generic Status Return Values for code backwards compatibility
@@ -390,16 +394,18 @@ typedef struct
 #define ZMacUnsupported             0xf5
 #define ZMacSrcMatchInvalidIndex    0xff
 
+typedef Status_t ZStatus_t;
+
 typedef struct
 {
-  unsigned char  txCounter;    // Counter of transmission success/failures
-  unsigned char  txCost;       // Average of sending rssi values if link staus is enabled
+  uint8  txCounter;    // Counter of transmission success/failures
+  uint8  txCost;       // Average of sending rssi values if link staus is enabled
                        // i.e. NWK_LINK_STATUS_PERIOD is defined as non zero
-  unsigned char  rxLqi;        // average of received rssi values
+  uint8  rxLqi;        // average of received rssi values
                        // needs to be converted to link cost (1-7) before used
-  unsigned char  inKeySeqNum;  // security key sequence number
-  unsigned int inFrmCntr;    // security frame counter..
-  unsigned short txFailure;    // higher values indicate more failures
+  uint8  inKeySeqNum;  // security key sequence number
+  uint32 inFrmCntr;    // security frame counter..
+  uint16 txFailure;    // higher values indicate more failures
 } linkInfo_t;
 
 /*********************************************************************

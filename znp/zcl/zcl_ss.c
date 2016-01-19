@@ -321,7 +321,7 @@ int zclss_processinzonestatuscmdsclient(struct zclincomingmsg * msg){
 	
 	switch(msg->zclframehdr.commandid){
 		case COMMAND_SS_IAS_ZONE_STATUS_CHANGE_NOTIFICATION:
-			zclss_processincmd_zonestatus_changenotification(msg){
+			zclss_processincmd_zonestatus_changenotification(msg);
 			break;
 		case COMMAND_SS_IAS_ZONE_STATUS_ENROLL_REQUEST:
 			zclss_processincmd_zonestatus_enrollrequest(msg);

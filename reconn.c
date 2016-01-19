@@ -5,7 +5,6 @@
 #include "eventhub.h"
 #include "connection.h"
 #include "socket.h"
-#include "termcontrol.h"
 
 struct reconn{ 
 	int rfd;
@@ -20,12 +19,6 @@ void event_reconnect(struct eventhub * hub){
 		struct connection * serverconn = connectserver();
 		if(serverconn){
 			eventhub_register(hub,connection_getfd(serverconn));
-		}
-	}
-	if(!connlist_check(CONNSERIALPORT)){
-		struct connection * serialconn = connserialport();
-		if(serialconn){
-			eventhub_register(hub,connection_getfd(serialconn));
 		}
 	}
 }

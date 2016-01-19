@@ -11,7 +11,6 @@
 #include "termcontrol.h" 
 #include "gateway.h"
 #include "list.h"
-#include "bussinessdata.h"
 
 void event_accept(int fd){
 	struct connection * c = freeconnlist_getconn();
@@ -90,9 +89,6 @@ void event_recvmsg(struct eventhub * hub, int fd, unsigned char * buf, int bufle
 		int messagelen = znpframe_check(c, &messageid);
 		char buffer[1024] = {0};
 		connection_get(c, buffer, messagelen);
-
-		Bussinessdata payload;
-		memset(&payload, 0, sizeof(Bussinessdata));	
 		switch(messageid){
 			case  AFINCOMINGDATA:
 				break;
@@ -111,21 +107,6 @@ void event_recvmsg(struct eventhub * hub, int fd, unsigned char * buf, int bufle
 
 			case BUSSINESSDATA:
 				{
-					dataparse(&payload, buffer, messagelen);	
-					char databuf[255]={0};
-					int datalen;
-					datalen = encode_alarm(getgateway(), databuf,&payload);
-					struct list_head *pos, *n;
-					list_for_each_safe(pos, n, connlist_get()){
-						struct connection *c = list_entry(pos, struct connection, list);
-						if(c && (connection_gettype(c) == CONNSOCKETCLIENT || connection_gettype(c) == CONNSOCKETSERVER))
-						{
-
-							int n = sendnonblocking(connection_getfd(c),databuf,datalen);
-						}
-
-
-					}
 				}
 				break;
 			case HALFPACK:

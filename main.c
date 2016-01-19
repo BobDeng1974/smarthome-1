@@ -8,7 +8,6 @@
 #include "socket.h"
 #include "ceconf.h"
 #include "connection.h"
-#include "termcontrol.h"
 #include "reconn.h"
 #include "gateway.h"
 
@@ -29,7 +28,6 @@ int main(){
 	// create timer
 	struct cetimer * timer = cetimer_create(10, 1, wfd, reconnwfd);
 	cetimer_start(timer);
-	
 
 	// create eventhub 
 	struct eventhubconf hubconf;
@@ -49,12 +47,6 @@ int main(){
 	// add cmd pipe
 	if(readconn){
 		eventhub_register(hub, connection_getfd(readconn));
-	}
-
-	// conn to serial port
-	struct connection * connserial = connserialport();
-	if(connserial){ 
-		eventhub_register(hub, connection_getfd(connserial));
 	}
 
 	eventhub_start(hub);

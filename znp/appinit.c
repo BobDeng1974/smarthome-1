@@ -1656,6 +1656,7 @@ uint32_t appInit(void)
 	afRegisterCallbacks(mtAfCb);
 	sapiRegisterCallbacks(mtSapiCb);
 
+
 	return 0;
 }
 
