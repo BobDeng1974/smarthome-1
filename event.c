@@ -98,6 +98,15 @@ void event_recvznp(struct eventhub * hub, int fd){
 				device_addcluster(device, req.ieeeaddr, 1, req.clusterid, "");
 			}
 			break;
+		case ZCLZONECHANGENOTIFICATION:
+			{
+				struct zclzonechangenotification req;
+				readnonblocking(fd, &req, sizeof(struct zclzonechangenotification));
+				fprintf(stdout, "-----------------------%u\n", req.zonestatus);
+				fprintf(stdout, "-----------------------%d\n", req.extendedstatus);
+				fprintf(stdout, "-----------------------%d\n", req.zoneid);
+				fprintf(stdout, "-----------------------%d\n", req.delay);
+			}
 	}
 }
 

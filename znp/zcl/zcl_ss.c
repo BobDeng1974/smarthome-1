@@ -313,6 +313,16 @@ int zclss_processincmd_zonestatus_enrollrequest(struct zclincomingmsg * pInMsg){
 }
 
 int zclss_processincmd_zonestatus_changenotification(struct zclincomingmsg * msg){
+	struct zclzonechangenotification req;
+	req.zonestatus = BUILD_UINT16(msg->data[0],msg->data[1]);
+	req.extendedstatus = msg->data[2];
+	req.zoneid = msg->data[3];
+	req.delay = BUILD_UINT16(msg->data[4], msg->data[5]);
+
+	int tmp = ZCLZONECHANGENOTIFICATION;
+	sendnonblocking(g_znpwfd, &tmp, sizeof(int));
+	sendnonblocking(g_znpwfd, &req, sizeof(struct zclzonechangenotification));
+	
 	return 0;
 }
 
