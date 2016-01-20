@@ -38,10 +38,11 @@ struct endpoint * device_getep(struct device * d, unsigned short ep){
 	return NULL;
 }
 
-void device_addcluster(struct device *d, unsigned char ep, unsigned short clusterid, char * name){ 
+void device_addcluster(struct device *d,  unsigned long long ieeeaddr, unsigned char ep, unsigned short clusterid, char * name){ 
 	if(strlen(d->devicename) == 0){
 		memcpy(d->devicename, name,min(strlen(name), MAXNAMELEN-1));
 	}
+	d->ieeeaddr = ieeeaddr;
 	struct endpoint * endpoint = NULL;
 	if((endpoint = device_getep(d, ep))){
 		endpoint->clusterid[endpoint->clusteridcount] = clusterid;

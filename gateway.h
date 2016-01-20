@@ -15,6 +15,7 @@ struct endpoint{
 };
 
 struct device{
+	unsigned long long ieeeaddr;
 	struct list_head list;
 	unsigned short deviceid;
 	char devicename[MAXNAMELEN];
@@ -33,7 +34,7 @@ struct gateway{
 	struct list_head head;
 };
 struct device * device_create(unsigned short deviceid);
-void device_addcluster(struct device *d, unsigned char ep, unsigned short clusterid, char * name); 
+void device_addcluster(struct device *d, unsigned long long ieeeaddr, unsigned char ep, unsigned short clusterid, char * name); 
 struct gateway * getgateway();
 void gateway_init(struct gateway * gw,unsigned long long gatewayid, char * gatewayname, unsigned char boxversion, unsigned char protocolversion);
 void gateway_adddevice(struct gateway * gw, struct device * d);

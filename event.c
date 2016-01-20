@@ -94,19 +94,11 @@ void event_recvznp(struct eventhub * hub, int fd){
 			{ 
 				struct zclzoneenrollreq req;
 				readnonblocking(fd, &req, sizeof(struct zclzoneenrollreq));
-				fprintf(stdout, "hahahah----------------------------------------hahahahahah\n");
+				struct device * device = device_create(req.shortaddr);
+				device_addcluster(device, req.ieeeaddr, 1, req.clusterid, "");
 			}
 			break;
 	}
-	
-
-struct zclzoneenrollreq{
-	unsigned long long ieeeaddr;
-	unsigned short shortaddr;
-	unsigned short zonetype;
-	unsigned char zoneid; 
-};
-
 }
 
 void event_close(int fd){

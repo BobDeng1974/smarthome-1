@@ -7,6 +7,7 @@ struct zclzoneenrollreq{
 	unsigned long long ieeeaddr;
 	unsigned short shortaddr;
 	unsigned short zonetype;
+	unsigned short clusterid;
 	unsigned char zoneid; 
 };
 

@@ -1470,6 +1470,7 @@ static int32_t startNetwork(void)
 
 
 		//Select random PAN ID for Coord and join any PAN for RTR/ED
+		//status = setNVPanID(0x0202);
 		status = setNVPanID(0xFFFF);
 		if (status != MT_RPC_SUCCESS)
 		{

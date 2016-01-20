@@ -294,6 +294,7 @@ int zclss_processincmd_zonestatus_enrollrequest(struct zclincomingmsg * pInMsg){
 	req.ieeeaddr = d->ieeeaddr; 
 	req.zonetype = zoneType;
 	req.zoneid = zoneID;
+	req.clusterid = pInMsg->message->ClusterId;
 	int tmp = ZCLZONEENROLLREQ;
 	sendnonblocking(g_znpwfd, &tmp, sizeof(int));
 	sendnonblocking(g_znpwfd, &req, sizeof(struct zclzoneenrollreq));
