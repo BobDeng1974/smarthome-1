@@ -119,7 +119,10 @@ void eventhub_start(struct eventhub * hub){
 				   and won't get a notification again for the same
 				   data. */
 				int done = 0;
-
+				struct connection * c = connrbtree_getconn(events[i].data.fd);
+				if(connection_gettype(c) == CONNZNP){ 
+					event_recvznp(hub, events[i].data.fd);
+				}
 				for(;;) {
 					ssize_t count;
 					char buf[1024];

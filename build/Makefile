@@ -13,8 +13,8 @@ PROJ_DIR=
 
 all: gateway.bin
 
-gateway.bin: main.o rpc.o mtParser.o mtZdo.o mtSys.o mtAf.o mtSapi.o dbgPrint.o rpcTransport.o queue.o appinit.o commands.o zcl.o zcl_ss.o ceconf.o cetimer.o connection.o event.o eventhub.o gateway.o kfifo.o protocol.o rbtree.o reconn.o socket.o toolkit.o parseserver.o 
-	$(CC) main.o appinit.o rpc.o mtParser.o mtZdo.o mtSys.o mtAf.o mtSapi.o dbgPrint.o rpcTransport.o queue.o commands.o zcl.o zcl_ss.o ceconf.o cetimer.o connection.o event.o eventhub.o gateway.o kfifo.o protocol.o rbtree.o reconn.o socket.o toolkit.o parseserver.o $(LIBS) -o gateway.bin
+gateway.bin: main.o rpc.o mtParser.o mtZdo.o mtSys.o mtAf.o mtSapi.o dbgPrint.o rpcTransport.o queue.o appinit.o commands.o zcl.o zcl_ss.o ceconf.o cetimer.o connection.o event.o eventhub.o gateway.o kfifo.o protocol.o rbtree.o reconn.o socket.o toolkit.o parseserver.o znp.o znp_device.o
+	$(CC) main.o appinit.o rpc.o mtParser.o mtZdo.o mtSys.o mtAf.o mtSapi.o dbgPrint.o rpcTransport.o queue.o commands.o zcl.o zcl_ss.o ceconf.o cetimer.o connection.o event.o eventhub.o gateway.o kfifo.o protocol.o rbtree.o reconn.o socket.o toolkit.o parseserver.o znp.o znp_device.o $(LIBS) -o gateway.bin
 
 # rule for file "main.o".
 main.o: ../main.c
@@ -123,6 +123,15 @@ toolkit.o: $(PROJ_DIR)../toolkit.h $(PROJ_DIR)../toolkit.c
 # rule for file "parseserver.o".
 parseserver.o: $(PROJ_DIR)../parseserver.h $(PROJ_DIR)../parseserver.c
 	$(CC) $(CFLAGS) $(INCLUDE) $(DEFS) $(PROJ_DIR)../parseserver.c
+
+# rule for file "znp.o".
+znp.o: $(PROJ_DIR)../znp.h $(PROJ_DIR)../znp.c
+	$(CC) $(CFLAGS) $(INCLUDE) $(DEFS) $(PROJ_DIR)../znp.c
+
+# rule for file "znp_device.o".
+znp_device.o: $(PROJ_DIR)../znp/znp_device.h $(PROJ_DIR)../znp/znp_device.c
+	$(CC) $(CFLAGS) $(INCLUDE) $(DEFS) $(PROJ_DIR)../znp/znp_device.c
+
 # rule for cleaning files generated during compilations.
 clean:
 	/bin/rm -f gateway.bin *.o

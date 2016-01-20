@@ -11,6 +11,7 @@
 #include "termcontrol.h" 
 #include "gateway.h"
 #include "list.h"
+#include "zcl_datatype.h"
 
 void event_accept(int fd){
 	struct connection * c = freeconnlist_getconn();
@@ -31,8 +32,7 @@ int _check_command(unsigned char * buffer, int buflen, unsigned char command){
 }
 
 void event_recvmsg(struct eventhub * hub, int fd, unsigned char * buf, int buflen){
-	fprintf(stdout, "IN ");
-	toolkit_printbytes(buf, buflen);
+	//toolkit_printbytes(buf, buflen);
 	struct connection * c = connrbtree_getconn(fd);
 	if(c && connection_gettype(c) == CONNSOCKETCMD){ 
 		if( _check_command(buf, buflen, CECHECK[0])){
@@ -83,40 +83,30 @@ void event_recvmsg(struct eventhub * hub, int fd, unsigned char * buf, int bufle
 				break;
 		}
 	//}else if(c && (connection_gettype(c) == CONNSOCKETCLIENT || connection_gettype(c) == CONNSOCKETSERVER)){
-	}else if(c && connection_gettype(c) == CONNSERIALPORT){
-		connection_put(c, buf, buflen);
-		unsigned short messageid = 0;	
-		int messagelen = znpframe_check(c, &messageid);
-		char buffer[1024] = {0};
-		connection_get(c, buffer, messagelen);
-		switch(messageid){
-			case  AFINCOMINGDATA:
-				break;
-			case ZDOSTATECHANGE:
-				break;
-			case SYSRESETIND:
-				break;
-			case ZBWRITERSP:
-				break;
-			case AFREGISTERRSP:
-				break;
-			case ZDOSTARTUPRSP:
-				break;
-			case AFDATAREQRSP:
-				break;
-
-			case BUSSINESSDATA:
-				{
-				}
-				break;
-			case HALFPACK:
-				break;
-			case ILLEGAL:
-				break;
-			default:
-				printf("unrecognized serial messageid\r\n");
-		}		
 	}
+}
+
+void event_recvznp(struct eventhub * hub, int fd){ 
+	int znpdatatype = 0;
+	readnonblocking(fd, &znpdatatype, sizeof(int));
+	switch(znpdatatype){
+		case ZCLZONEENROLLREQ: 
+			{ 
+				struct zclzoneenrollreq req;
+				readnonblocking(fd, &req, sizeof(struct zclzoneenrollreq));
+				fprintf(stdout, "hahahah----------------------------------------hahahahahah\n");
+			}
+			break;
+	}
+	
+
+struct zclzoneenrollreq{
+	unsigned long long ieeeaddr;
+	unsigned short shortaddr;
+	unsigned short zonetype;
+	unsigned char zoneid; 
+};
+
 }
 
 void event_close(int fd){

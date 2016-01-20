@@ -115,7 +115,8 @@ struct connection * connrbtree_getconn(int fd){
 	struct rb_root *root = &connrbtreeroot;
 	struct rb_node *node = root->rb_node;
 
-	struct connection * c; while(node){
+	struct connection * c; 
+	while(node){
 		c  = rb_entry(node, struct connection, node);
 		if(fd > c->fd){
 			node = node->rb_right;

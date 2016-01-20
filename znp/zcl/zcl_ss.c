@@ -2,35 +2,40 @@
 #include "zcl_ss.h" 
 #include "zcl.h"
 #include "mtParser.h"
+#include "zcl_datatype.h"
+#include "znp_device.h"
+#include "socket.h"
+
 #define FALSE 0
 #define TRUE 1
 
+extern int g_znpwfd;
 /*******************************************************************************
  * MACROS
  */
 #define zclSS_ZoneTypeSupported( a ) ( (a) == SS_IAS_ZONE_TYPE_STANDARD_CIE              || \
-                                       (a) == SS_IAS_ZONE_TYPE_MOTION_SENSOR             || \
-                                       (a) == SS_IAS_ZONE_TYPE_CONTACT_SWITCH            || \
-                                       (a) == SS_IAS_ZONE_TYPE_FIRE_SENSOR               || \
-                                       (a) == SS_IAS_ZONE_TYPE_WATER_SENSOR              || \
-                                       (a) == SS_IAS_ZONE_TYPE_GAS_SENSOR                || \
-                                       (a) == SS_IAS_ZONE_TYPE_PERSONAL_EMERGENCY_DEVICE || \
-                                       (a) == SS_IAS_ZONE_TYPE_VIBRATION_MOVEMENT_SENSOR || \
-                                       (a) == SS_IAS_ZONE_TYPE_REMOTE_CONTROL            || \
-                                       (a) == SS_IAS_ZONE_TYPE_KEY_FOB                   || \
-                                       (a) == SS_IAS_ZONE_TYPE_KEYPAD                    || \
-                                       (a) == SS_IAS_ZONE_TYPE_STANDARD_WARNING_DEVICE   || \
-                                       (a) == SS_IAS_ZONE_TYPE_GLASS_BREAK_SENSOR        || \
-                                       (a) == SS_IAS_ZONE_TYPE_SECURITY_REPEATER         )
+		(a) == SS_IAS_ZONE_TYPE_MOTION_SENSOR             || \
+		(a) == SS_IAS_ZONE_TYPE_CONTACT_SWITCH            || \
+		(a) == SS_IAS_ZONE_TYPE_FIRE_SENSOR               || \
+		(a) == SS_IAS_ZONE_TYPE_WATER_SENSOR              || \
+		(a) == SS_IAS_ZONE_TYPE_GAS_SENSOR                || \
+		(a) == SS_IAS_ZONE_TYPE_PERSONAL_EMERGENCY_DEVICE || \
+		(a) == SS_IAS_ZONE_TYPE_VIBRATION_MOVEMENT_SENSOR || \
+		(a) == SS_IAS_ZONE_TYPE_REMOTE_CONTROL            || \
+		(a) == SS_IAS_ZONE_TYPE_KEY_FOB                   || \
+		(a) == SS_IAS_ZONE_TYPE_KEYPAD                    || \
+		(a) == SS_IAS_ZONE_TYPE_STANDARD_WARNING_DEVICE   || \
+		(a) == SS_IAS_ZONE_TYPE_GLASS_BREAK_SENSOR        || \
+		(a) == SS_IAS_ZONE_TYPE_SECURITY_REPEATER         )
 
 /*******************************************************************************
  * TYPEDEFS
  */
 typedef struct zclSS_ZoneItem
 {
-  struct zclSS_ZoneItem   *next;
-  uint8                   endpoint; // Used to link it into the endpoint descriptor
-  IAS_ACE_ZoneTable_t     zone;     // Zone info
+	struct zclSS_ZoneItem   *next;
+	uint8                   endpoint; // Used to link it into the endpoint descriptor
+	IAS_ACE_ZoneTable_t     zone;     // Zone info
 } zclSS_ZoneItem_t;
 
 /*******************************************************************************
@@ -59,41 +64,41 @@ static zclSS_ZoneItem_t *zclSS_ZoneTable = (zclSS_ZoneItem_t *)NULL;
  */
 static ZStatus_t zclSS_AddZone( uint8 endpoint, IAS_ACE_ZoneTable_t *zone )
 {
-  zclSS_ZoneItem_t *pNewItem;
-  zclSS_ZoneItem_t *pLoop;
+	zclSS_ZoneItem_t *pNewItem;
+	zclSS_ZoneItem_t *pLoop;
 
-  // Fill in the new profile list
-  pNewItem = (zclSS_ZoneItem_t *)malloc( sizeof( zclSS_ZoneItem_t ) );
-  memset(pNewItem, 0, sizeof(zclSS_ZoneItem_t));
-  if ( pNewItem == NULL )
-  {
-    return ( ZMemError );
-  }
+	// Fill in the new profile list
+	pNewItem = (zclSS_ZoneItem_t *)malloc( sizeof( zclSS_ZoneItem_t ) );
+	memset(pNewItem, 0, sizeof(zclSS_ZoneItem_t));
+	if ( pNewItem == NULL )
+	{
+		return ( ZMemError );
+	}
 
-  // Fill in the plugin record.
-  pNewItem->next = (zclSS_ZoneItem_t *)NULL;
-  pNewItem->endpoint = endpoint;
-  memcpy( (uint8*)&(pNewItem->zone), (uint8*)zone, sizeof ( IAS_ACE_ZoneTable_t ));
+	// Fill in the plugin record.
+	pNewItem->next = (zclSS_ZoneItem_t *)NULL;
+	pNewItem->endpoint = endpoint;
+	memcpy( (uint8*)&(pNewItem->zone), (uint8*)zone, sizeof ( IAS_ACE_ZoneTable_t ));
 
-  // Find spot in list
-  if (  zclSS_ZoneTable == NULL )
-  {
-    zclSS_ZoneTable = pNewItem;
-  }
-  else
-  {
-    // Look for end of list
-    pLoop = zclSS_ZoneTable;
-    while ( pLoop->next != NULL )
-    {
-      pLoop = pLoop->next;
-    }
+	// Find spot in list
+	if (  zclSS_ZoneTable == NULL )
+	{
+		zclSS_ZoneTable = pNewItem;
+	}
+	else
+	{
+		// Look for end of list
+		pLoop = zclSS_ZoneTable;
+		while ( pLoop->next != NULL )
+		{
+			pLoop = pLoop->next;
+		}
 
-    // Put new item at end of list
-    pLoop->next = pNewItem;
-  }
+		// Put new item at end of list
+		pLoop->next = pNewItem;
+	}
 
-  return ( 0 );
+	return ( 0 );
 }
 
 /*********************************************************************
@@ -107,17 +112,17 @@ static ZStatus_t zclSS_AddZone( uint8 endpoint, IAS_ACE_ZoneTable_t *zone )
  */
 uint8 zclSS_CountAllZones( void )
 {
-  zclSS_ZoneItem_t *pLoop;
-  uint8 cnt = 0;
+	zclSS_ZoneItem_t *pLoop;
+	uint8 cnt = 0;
 
-  // Look for end of list
-  pLoop = zclSS_ZoneTable;
-  while ( pLoop )
-  {
-    cnt++;
-    pLoop = pLoop->next;
-  }
-  return ( cnt );
+	// Look for end of list
+	pLoop = zclSS_ZoneTable;
+	while ( pLoop )
+	{
+		cnt++;
+		pLoop = pLoop->next;
+	}
+	return ( cnt );
 }
 
 /*********************************************************************
@@ -131,25 +136,25 @@ uint8 zclSS_CountAllZones( void )
  */
 static uint8 zclSS_ZoneIDAvailable( uint8 zoneID )
 {
-  zclSS_ZoneItem_t *pLoop;
+	zclSS_ZoneItem_t *pLoop;
 
-  if ( zoneID < ZCL_SS_MAX_ZONE_ID )
-  {
-    pLoop = zclSS_ZoneTable;
-    while ( pLoop )
-    {
-      if ( pLoop->zone.zoneID == zoneID  )
-      {
-        return ( FALSE );
-      }
-      pLoop = pLoop->next;
-    }
+	if ( zoneID < ZCL_SS_MAX_ZONE_ID )
+	{
+		pLoop = zclSS_ZoneTable;
+		while ( pLoop )
+		{
+			if ( pLoop->zone.zoneID == zoneID  )
+			{
+				return ( FALSE );
+			}
+			pLoop = pLoop->next;
+		}
 
-    // Zone ID not in use
-    return ( TRUE );
-  }
+		// Zone ID not in use
+		return ( TRUE );
+	}
 
-  return ( FALSE );
+	return ( FALSE );
 }
 /*********************************************************************
  * @fn      zclSS_GetNextFreeZoneID
@@ -163,33 +168,33 @@ static uint8 zclSS_ZoneIDAvailable( uint8 zoneID )
  */
 static uint8 zclSS_GetNextFreeZoneID( void )
 {
-  static uint8 nextAvailZoneID = 0;
+	static uint8 nextAvailZoneID = 0;
 
-  if ( zclSS_ZoneIDAvailable( nextAvailZoneID ) == FALSE )
-  {
-    uint8 zoneID = nextAvailZoneID;
+	if ( zclSS_ZoneIDAvailable( nextAvailZoneID ) == FALSE )
+	{
+		uint8 zoneID = nextAvailZoneID;
 
-    // Look for next available zone ID
-    do
-    {
-      if ( ++zoneID > ZCL_SS_MAX_ZONE_ID )
-      {
-        zoneID = 0; // roll over
-      }
-    } while ( (zoneID != nextAvailZoneID) && (zclSS_ZoneIDAvailable( zoneID ) == FALSE) );
+		// Look for next available zone ID
+		do
+		{
+			if ( ++zoneID > ZCL_SS_MAX_ZONE_ID )
+			{
+				zoneID = 0; // roll over
+			}
+		} while ( (zoneID != nextAvailZoneID) && (zclSS_ZoneIDAvailable( zoneID ) == FALSE) );
 
-    // Did we found a free zone ID?
-    if ( zoneID != nextAvailZoneID )
-    {
-      nextAvailZoneID = zoneID;
-    }
-    else
-    {
-      return ( ZCL_SS_MAX_ZONE_ID + 1 );
-    }
-  }
+		// Did we found a free zone ID?
+		if ( zoneID != nextAvailZoneID )
+		{
+			nextAvailZoneID = zoneID;
+		}
+		else
+		{
+			return ( ZCL_SS_MAX_ZONE_ID + 1 );
+		}
+	}
 
-  return ( nextAvailZoneID );
+	return ( nextAvailZoneID );
 }
 
 
@@ -209,90 +214,101 @@ static uint8 zclSS_GetNextFreeZoneID( void )
  * @return  ZStatus_t
  */
 ZStatus_t zclSS_IAS_Send_ZoneStatusEnrollResponseCmd( uint8 srcEP, uint8 dstEp, uint16 dstaddr,
-                                                      uint8 responseCode, uint8 zoneID,
-                                                      uint8 disableDefaultRsp, uint8 seqNum )
+		uint8 responseCode, uint8 zoneID,
+		uint8 disableDefaultRsp, uint8 seqNum )
 {
-  uint8 buf[PAYLOAD_LEN_ZONE_STATUS_ENROLL_RSP];
+	uint8 buf[PAYLOAD_LEN_ZONE_STATUS_ENROLL_RSP];
 
-  buf[0] = responseCode;
-  buf[1] = zoneID;
+	buf[0] = responseCode;
+	buf[1] = zoneID;
 
-  return zcl_SendCommand( srcEP, dstEp, dstaddr, ZCL_CLUSTER_ID_SS_IAS_ZONE,
-                          COMMAND_SS_IAS_ZONE_STATUS_ENROLL_RESPONSE, TRUE,
-                          ZCL_FRAME_CLIENT_SERVER_DIR, disableDefaultRsp, 0,
-                          seqNum, PAYLOAD_LEN_ZONE_STATUS_ENROLL_RSP, buf );
+	return zcl_SendCommand( srcEP, dstEp, dstaddr, ZCL_CLUSTER_ID_SS_IAS_ZONE,
+			COMMAND_SS_IAS_ZONE_STATUS_ENROLL_RESPONSE, TRUE,
+			ZCL_FRAME_CLIENT_SERVER_DIR, disableDefaultRsp, 0,
+			seqNum, PAYLOAD_LEN_ZONE_STATUS_ENROLL_RSP, buf );
 }
 
 int zclss_processincmd_zonestatus_enrollrequest(struct zclincomingmsg * pInMsg){
-  IAS_ACE_ZoneTable_t zone;
-  ZStatus_t stat = -1;
-  uint16 zoneType;
-  uint16 manuCode;
-  uint8 responseCode;
-  uint8 zoneID;
+	IAS_ACE_ZoneTable_t zone;
+	ZStatus_t stat = -1;
+	uint16 zoneType;
+	uint16 manuCode;
+	uint8 responseCode;
+	uint8 zoneID;
 
-  zoneType = BUILD_UINT16( pInMsg->data[0], pInMsg->data[1] );
-  manuCode = BUILD_UINT16( pInMsg->data[2], pInMsg->data[3] );
+	zoneType = BUILD_UINT16( pInMsg->data[0], pInMsg->data[1] );
+	manuCode = BUILD_UINT16( pInMsg->data[2], pInMsg->data[3] );
 
-  if ( zclSS_ZoneTypeSupported( zoneType ) )
-  {
-    // Add zone to the table if space is available
-    if ( ( zclSS_CountAllZones() < ZCL_SS_MAX_ZONES-1 ) &&
-       ( ( zoneID = zclSS_GetNextFreeZoneID() ) <= ZCL_SS_MAX_ZONE_ID ) )
-    {
-      zone.zoneID = zoneID;
-      zone.zoneType = zoneType;
+	if ( zclSS_ZoneTypeSupported( zoneType ) )
+	{
+		// Add zone to the table if space is available
+		if ( ( zclSS_CountAllZones() < ZCL_SS_MAX_ZONES-1 ) &&
+				( ( zoneID = zclSS_GetNextFreeZoneID() ) <= ZCL_SS_MAX_ZONE_ID ) )
+		{
+			zone.zoneID = zoneID;
+			zone.zoneType = zoneType;
 
-      // The application will fill in the right IEEE Address later
- //     zcl_cpyExtAddr( zone.zoneAddress, (void *)zclSS_UknownIeeeAddress );
-      memcpy(zone.zoneAddress, &zclSS_UknownIeeeAddress, sizeof(zclSS_UknownIeeeAddress));
+			// The application will fill in the right IEEE Address later
+			//     zcl_cpyExtAddr( zone.zoneAddress, (void *)zclSS_UknownIeeeAddress );
+			memcpy(zone.zoneAddress, &zclSS_UknownIeeeAddress, sizeof(zclSS_UknownIeeeAddress));
 
-      if ( zclSS_AddZone( pInMsg->message->DstEndpoint, &zone ) == ZSuccess )
-      {
-        responseCode = ZSuccess;
-      }
-      else
-      {
-        // CIE does not permit new zones to enroll at this time
-        responseCode = SS_IAS_ZONE_STATUS_ENROLL_RESPONSE_CODE_NO_ENROLL_PERMIT;
-      }
-    }
-    else
-    {
-      // CIE reached its limit of number of enrolled zones
-      responseCode = SS_IAS_ZONE_STATUS_ENROLL_RESPONSE_CODE_TOO_MANY_ZONES;
-    }
-  }
-  else
-  {
-    // Zone type is not known to CIE and is not supported
-    responseCode = SS_IAS_ZONE_STATUS_ENROLL_RESPONSE_CODE_NOT_SUPPORTED;
-  }
+			if ( zclSS_AddZone( pInMsg->message->DstEndpoint, &zone ) == ZSuccess )
+			{
+				responseCode = ZSuccess;
+			}
+			else
+			{
+				// CIE does not permit new zones to enroll at this time
+				responseCode = SS_IAS_ZONE_STATUS_ENROLL_RESPONSE_CODE_NO_ENROLL_PERMIT;
+			}
+		}
+		else
+		{
+			// CIE reached its limit of number of enrolled zones
+			responseCode = SS_IAS_ZONE_STATUS_ENROLL_RESPONSE_CODE_TOO_MANY_ZONES;
+		}
+	}
+	else
+	{
+		// Zone type is not known to CIE and is not supported
+		responseCode = SS_IAS_ZONE_STATUS_ENROLL_RESPONSE_CODE_NOT_SUPPORTED;
+	}
 
-  // Callback the application so it can fill in the Device IEEE Address
-//  if ( pCBs->pfnEnrollRequest )
-//  {
-//    zclZoneEnrollReq_t req;
-//
-//    req.srcAddr = &(pInMsg->msg->srcAddr);
-//    req.zoneID = zoneID;
-//    req.zoneType = zoneType;
-//    req.manufacturerCode = manuCode;
-//
-//    stat = pCBs->pfnEnrollRequest( &req, pInMsg->msg->endPoint );
-//  }
+	// Callback the application so it can fill in the Device IEEE Address
+	//  if ( pCBs->pfnEnrollRequest )
+	//  {
+	//    zclZoneEnrollReq_t req;
+	//
+	//    req.srcAddr = &(pInMsg->msg->srcAddr);
+	//    req.zoneID = zoneID;
+	//    req.zoneType = zoneType;
+	//    req.manufacturerCode = manuCode;
+	//
+	//    stat = pCBs->pfnEnrollRequest( &req, pInMsg->msg->endPoint );
+	//  }
+	//
+	
+	struct zclzoneenrollreq req;
+	req.shortaddr = pInMsg->message->SrcAddr;
+	struct znp_device * d = znp_device_get(req.shortaddr);
+	req.ieeeaddr = d->ieeeaddr; 
+	req.zonetype = zoneType;
+	req.zoneid = zoneID;
+	int tmp = ZCLZONEENROLLREQ;
+	sendnonblocking(g_znpwfd, &tmp, sizeof(int));
+	sendnonblocking(g_znpwfd, &req, sizeof(struct zclzoneenrollreq));
 
- // if ( stat == ZSuccess )
-  {
-    // Send a response back
-    stat = zclSS_IAS_Send_ZoneStatusEnrollResponseCmd( pInMsg->message->DstEndpoint, pInMsg->message->SrcEndpoint, pInMsg->message->SrcAddr, responseCode, zoneID, TRUE, pInMsg->zclframehdr.transseqnum );
+	// if ( stat == ZSuccess )
+	{
+		// Send a response back
+		stat = zclSS_IAS_Send_ZoneStatusEnrollResponseCmd( pInMsg->message->DstEndpoint, pInMsg->message->SrcEndpoint, pInMsg->message->SrcAddr, responseCode, zoneID, TRUE, pInMsg->zclframehdr.transseqnum );
 
-    return ( ZCL_STATUS_CMD_HAS_RSP );
-  }
- // else
-  {
-    return ( stat );
-  }
+		return ( ZCL_STATUS_CMD_HAS_RSP );
+	}
+	// else
+	{
+		return ( stat );
+	}
 }
 
 int zclss_processincmd_zonestatus_changenotification(struct zclincomingmsg * msg){
@@ -318,7 +334,7 @@ int zclss_processinzonestatuscmdsserver(struct zclincomingmsg * msg){
 
 int zclss_processinzonestatuscmdsclient(struct zclincomingmsg * msg){
 	int result = -1;
-	
+
 	switch(msg->zclframehdr.commandid){
 		case COMMAND_SS_IAS_ZONE_STATUS_CHANGE_NOTIFICATION:
 			zclss_processincmd_zonestatus_changenotification(msg);
@@ -355,7 +371,7 @@ int zclss_handleincoming( struct zclincomingmsg * zclincomingmsg){
 		if(zclincomingmsg->zclframehdr.control.manuspecific == 0){ 
 			zclss_handlespecificcommands(zclincomingmsg);
 		}else{
-		       	// We don't support any manufacturer specific command -- ignore it.  
+			// We don't support any manufacturer specific command -- ignore it.  
 			result = -1;
 		}
 	}else{

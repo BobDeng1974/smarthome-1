@@ -25,8 +25,6 @@ struct cetimer{
 static struct cetimer * s_timer = NULL;
 
 void checkstatus(int i){ 
-	fprintf(stdout, "timer threadit %X\n", pthread_self());
-
 	sendnonblocking(s_timer->wfd, CECHECK, 1);
 	sendnonblocking(s_timer->reconnwfd, CERECONN, 1);
 	time_t t = time(NULL);

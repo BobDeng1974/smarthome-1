@@ -57,6 +57,8 @@
 
 #include "zcl.h"
 
+#include "znp_device.h"
+
 #define consolePrint printf
 #define consoleClearLn(); printf("%c[2K", 27);
 #define consoleFlush(); fflush(stdout);
@@ -932,6 +934,12 @@ static uint8_t mtZdoEndDeviceAnnceIndCb(EndDeviceAnnceIndFormat_t *msg)
 	consolePrint("IEEEAddr: 0x%016llX\n",
 	        (long long unsigned int) msg->IEEEAddr);
 	consolePrint("Capabilities: 0x%02X\n", msg->Capabilities);
+	struct znp_device * device = (struct znp_device *)malloc(sizeof(struct znp_device));
+	memset(device, 0, sizeof(struct znp_device));
+	device->shortaddr = msg->SrcAddr;
+	device->ieeeaddr = msg->IEEEAddr;
+	znp_device_insert(device);
+
 	return 0;
 }
 static uint8_t mtZdoMatchDescRspSentCb(MatchDescRspSentFormat_t *msg)
@@ -1046,6 +1054,7 @@ static uint8_t mtZdoLeaveIndCb(LeaveIndFormat_t *msg)
 	consolePrint("Request: 0x%02X\n", msg->Request);
 	consolePrint("Remove: 0x%02X\n", msg->Remove);
 	consolePrint("Rejoin: 0x%02X\n", msg->Rejoin);
+	znp_device_del(msg->SrcAddr);
 	return 0;
 }
 static uint8_t mtZdoMsgCbIncomingCb(MsgCbIncomingFormat_t *msg)
@@ -1595,6 +1604,7 @@ void* appMsgProcess(void *argument)
 
 	return 0;
 }
+
 void appProcess(void * args)
 {
 	int32_t status;

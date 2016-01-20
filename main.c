@@ -10,12 +10,21 @@
 #include "connection.h"
 #include "reconn.h"
 #include "gateway.h"
+#include "znp.h"
 
 int main(){ 
 	unsigned long long mac = toolkit_getmac();
 	gateway_init(getgateway(), mac, "gateway", 1, 1);
-	fprintf(stdout, "%llu\n", mac);
-	fprintf(stdout, "main threadid %X\n", pthread_self());
+	// create pipe for znp to main
+	int mainrfd, znpwfd;
+	mainrfd = createpipe2(&znpwfd);
+	struct connection * znpconnection = freeconnlist_getconn();
+	connection_init(znpconnection, mainrfd, CONNZNP);
+
+	// open serial port
+	if(znp_start(znpwfd, ceconf_getserialport()) == -1){
+		return 1;
+	}
 
 	// create pipe for timer to main
 	int wfd;
@@ -47,6 +56,11 @@ int main(){
 	// add cmd pipe
 	if(readconn){
 		eventhub_register(hub, connection_getfd(readconn));
+	}
+
+	if(znpconnection){
+		eventhub_register(hub, connection_getfd(znpconnection));
+		connrbtree_insert(znpconnection);
 	}
 
 	eventhub_start(hub);

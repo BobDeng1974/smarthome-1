@@ -8,7 +8,7 @@ int openclient(char *addr, char *port);
 struct connection * connectserver();
 struct connection * createpipe(int * wfd);
 int createpipe2(int *wfd);
-int readnonblocking(int fd, char * buf, int buflen);
-int sendnonblocking(int fd, char * buf, int buflen);
+int readnonblocking(int fd, void * buf, int buflen);
+int sendnonblocking(int fd, void * buf, int buflen);
 
 #endif

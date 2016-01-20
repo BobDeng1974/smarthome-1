@@ -147,7 +147,7 @@ int createpipe2(int *wfd){
 	return fdsig[0];
 }
 
-int sendnonblocking(int fd, char * buf, int buflen){ 
+int sendnonblocking(int fd, void * buf, int buflen){ 
 	int n;
 	for(;;){
 		n = write(fd, buf, buflen);
@@ -167,7 +167,7 @@ int sendnonblocking(int fd, char * buf, int buflen){
 	return n;
 }
 
-int readnonblocking(int fd, char * buf, int buflen){
+int readnonblocking(int fd, void * buf, int buflen){
 	int n;
 	for(;;){
 		n = read(fd, buf, buflen);
