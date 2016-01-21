@@ -187,3 +187,14 @@ int readnonblocking(int fd, void * buf, int buflen){
 	return n;
 }
 
+int broadcast(unsigned char * buf, unsigned int buflen){
+	struct list_head *pos, *n;
+	list_for_each_safe(pos, n, connlist_get()){
+		struct connection *c = list_entry(pos, struct connection, list);
+		if(c && (connection_gettype(c) == CONNSOCKETCLIENT || connection_gettype(c) == CONNSOCKETSERVER)) {
+			sendnonblocking(connection_getfd(c), buf, buflen);
+		}
+	}
+
+	return 0;
+}

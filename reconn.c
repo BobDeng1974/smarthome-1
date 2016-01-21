@@ -1,7 +1,6 @@
 #include <stdlib.h>
 #include <string.h>
 #include <pthread.h>
-#include <stdio.h>
 #include "eventhub.h"
 #include "connection.h"
 #include "socket.h"
@@ -32,7 +31,6 @@ void * ceconnect(void * args){
 		char buf[1024];
 
 		count = read (rfd, buf, sizeof buf);
-		fprintf(stdout, "start to reconnect ...\n");
 		event_reconnect(hub);
 	}
 }

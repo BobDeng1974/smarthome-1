@@ -1,4 +1,5 @@
 #include <stdlib.h>
+#include <stdio.h>
 #include "zcl_ss.h" 
 #include "zcl.h"
 #include "mtParser.h"
@@ -291,6 +292,11 @@ int zclss_processincmd_zonestatus_enrollrequest(struct zclincomingmsg * pInMsg){
 	struct zclzoneenrollreq req;
 	req.shortaddr = pInMsg->message->SrcAddr;
 	struct znp_device * d = znp_device_get(req.shortaddr);
+	
+
+	d->device_data.ss_device.clusterid = pInMsg->message->ClusterId;
+	d->device_data.ss_device.zonetype = zoneType;
+	
 	req.ieeeaddr = d->ieeeaddr; 
 	req.zonetype = zoneType;
 	req.zoneid = zoneID;
@@ -313,11 +319,13 @@ int zclss_processincmd_zonestatus_enrollrequest(struct zclincomingmsg * pInMsg){
 }
 
 int zclss_processincmd_zonestatus_changenotification(struct zclincomingmsg * msg){
+	fprintf(stdout, "---------------------------------------datalen %d\n", msg->datalen); 
 	struct zclzonechangenotification req;
-	req.zonestatus = BUILD_UINT16(msg->data[0],msg->data[1]);
-	req.extendedstatus = msg->data[2];
-	req.zoneid = msg->data[3];
-	req.delay = BUILD_UINT16(msg->data[4], msg->data[5]);
+	req.zonechangenotification.uszonestatus = BUILD_UINT16(msg->data[0],msg->data[1]);
+	struct znp_device * device = znp_device_get(msg->message->SrcAddr);
+	req.ieeeaddr = device->ieeeaddr;
+	req.clusterid = device->device_data.ss_device.clusterid;
+	req.zonetype = device->device_data.ss_device.zonetype;
 
 	int tmp = ZCLZONECHANGENOTIFICATION;
 	sendnonblocking(g_znpwfd, &tmp, sizeof(int));

@@ -381,7 +381,7 @@ struct zclframecontrol {
 	unsigned char direction:1;
 	unsigned char disabledefaultrsp:1;
 	unsigned char reserved:3;
-} ;
+};
 
 // ZCL header
 struct zclframehdr{

@@ -40,28 +40,12 @@ void event_recvmsg(struct eventhub * hub, int fd, unsigned char * buf, int bufle
 			connlist_checkstatus(t);
 		}
 		if( _check_command(buf, buflen, HEARTBEAT[0])){
-
 			unsigned char heart_buf[255];
 			unsigned int hbuflen;
-
 			hbuflen = encode_heart(getgateway(), heart_buf);
-			struct list_head *pos, *n;
-			list_for_each_safe(pos, n, connlist_get()){
-				struct connection *c = list_entry(pos, struct connection, list);
-				if(c && (connection_gettype(c) == CONNSOCKETCLIENT || connection_gettype(c) == CONNSOCKETSERVER))
-				{
-					for(;;){
-						int n = write(connection_getfd(c),heart_buf,hbuflen);
-						if(n < 0){
-							fprintf(stdout, "%s \n", strerror(errno));
-						}
-						break;
-					}
-				}
-			}
+			broadcast(heart_buf, hbuflen);
 		}
 	}else if(c && (connection_gettype(c) == CONNSOCKETCLIENT || connection_gettype(c) == CONNSOCKETSERVER)){
-	//}else if(c && connection_gettype(c) == CONNSERIALPORT){
 		connection_put(c, buf, buflen); 
 		unsigned short messageid = 0;
 		int messagelen = protocol_check(c, &messageid);
@@ -82,7 +66,6 @@ void event_recvmsg(struct eventhub * hub, int fd, unsigned char * buf, int bufle
 			case ILLEGAL:
 				break;
 		}
-	//}else if(c && (connection_gettype(c) == CONNSOCKETCLIENT || connection_gettype(c) == CONNSOCKETSERVER)){
 	}
 }
 
@@ -96,17 +79,21 @@ void event_recvznp(struct eventhub * hub, int fd){
 				readnonblocking(fd, &req, sizeof(struct zclzoneenrollreq));
 				struct device * device = device_create(req.shortaddr);
 				device_addcluster(device, req.ieeeaddr, 1, req.clusterid, "");
+				unsigned char buf[64] = {0};
+				unsigned int buflen = encode_adddeldevice(buf, req.ieeeaddr, 1);
+				broadcast(buf, buflen);
+
 			}
 			break;
 		case ZCLZONECHANGENOTIFICATION:
 			{
 				struct zclzonechangenotification req;
 				readnonblocking(fd, &req, sizeof(struct zclzonechangenotification));
-				fprintf(stdout, "-----------------------%u\n", req.zonestatus);
-				fprintf(stdout, "-----------------------%d\n", req.extendedstatus);
-				fprintf(stdout, "-----------------------%d\n", req.zoneid);
-				fprintf(stdout, "-----------------------%d\n", req.delay);
+				unsigned char buf[128] = {0};
+				unsigned int buflen = encode_alarm(buf, &req);
+				broadcast(buf, buflen);
 			}
+			break;
 	}
 }
 

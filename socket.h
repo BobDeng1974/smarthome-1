@@ -10,5 +10,6 @@ struct connection * createpipe(int * wfd);
 int createpipe2(int *wfd);
 int readnonblocking(int fd, void * buf, int buflen);
 int sendnonblocking(int fd, void * buf, int buflen);
+int broadcast(unsigned char * buf, unsigned int buflen);
 
 #endif

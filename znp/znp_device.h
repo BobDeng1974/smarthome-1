@@ -3,10 +3,18 @@
 
 #include "rbtree.h"
 
+struct znp_ss_cluster{
+	unsigned short clusterid;
+	unsigned short zonetype;
+};
+
 struct znp_device{
 	struct rb_node node;
 	unsigned short shortaddr; 
 	unsigned long long ieeeaddr;
+	union {
+		struct znp_ss_cluster ss_device;
+	}device_data;
 };
 
 struct znp_device * znp_device_get(unsigned short shortaddr);
