@@ -15,16 +15,6 @@
 int main(){ 
 	unsigned long long mac = toolkit_getmac();
 	gateway_init(getgateway(), mac, "gateway", 1, 1);
-	// create pipe for znp to main
-	int mainrfd, znpwfd;
-	mainrfd = createpipe2(&znpwfd);
-	struct connection * znpconnection = freeconnlist_getconn();
-	connection_init(znpconnection, mainrfd, CONNZNP);
-
-	// open serial port
-	if(znp_start(znpwfd, ceconf_getserialport()) == -1){
-		return 1;
-	}
 
 	// create pipe for timer to main
 	int wfd;
@@ -33,6 +23,10 @@ int main(){
 	// create pipe for timer to reconnect
 	int reconnrfd, reconnwfd;
 	reconnrfd = createpipe2(&reconnwfd);
+
+	//  create pipe for reconnect to main
+	int rmwfd;
+	struct connection * mrreadconn = createpipe(&rmwfd);
 
 	// create timer
 	struct cetimer * timer = cetimer_create(10, 1, wfd, reconnwfd);
@@ -45,19 +39,28 @@ int main(){
 	struct eventhub * hub = eventhub_create(&hubconf);
 
 	// start reconn thread
-	reconn_start(reconnrfd, hub);
+	reconn_start(reconnrfd, rmwfd,  hub);
 	
-	// connection to server
-	//struct connection * serverconn = connectserver();
-	//if(serverconn){
-	//	eventhub_register(hub,connection_getfd(serverconn));
-	//}
-
 	// add cmd pipe
 	if(readconn){
 		eventhub_register(hub, connection_getfd(readconn));
 	}
 
+	// add reconn to main rfd
+	if( mrreadconn ){
+		eventhub_register(hub, connection_getfd(mrreadconn));
+	}
+
+	// create pipe for znp to main
+	int mainrfd, znpwfd;
+	mainrfd = createpipe2(&znpwfd);
+	struct connection * znpconnection = freeconnlist_getconn();
+	connection_init(znpconnection, mainrfd, CONNZNP);
+
+	// open serial port
+	if(znp_start(znpwfd, ceconf_getserialport()) == -1){
+		return 1;
+	}
 	if(znpconnection){
 		eventhub_register(hub, connection_getfd(znpconnection));
 		connrbtree_insert(znpconnection);

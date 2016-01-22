@@ -8,9 +8,8 @@
                                              
 unsigned char encode_checksum(unsigned char * buf, unsigned int buflen);
 
-#define  LOGIN     0x0003
-unsigned int encode_login(struct gateway *gw, unsigned char *buf)
-{
+#define  LOGIN     0x0001
+unsigned int encode_login(struct gateway *gw, unsigned char *buf) {
 	unsigned char *p = buf;
 	bytebuffer_writebyte(&p,0xCE);
 	bytebuffer_writeword(&p,0x0000);
@@ -19,31 +18,38 @@ unsigned int encode_login(struct gateway *gw, unsigned char *buf)
 	bytebuffer_writeword(&p,gw->devicecount);
 
 	struct list_head *pos, *n;
-	struct device *temp;
+	struct device *d;
 	list_for_each_safe(pos, n,&gw->head)
 	{
-		temp=list_entry(pos, struct device, list);
-		//		unsigned char deviceidlen = strlen(temp->deviceid);
-		bytebuffer_writebyte(&p, 0X06);
-		bytebuffer_writemac(&p, temp->deviceid);
-		bytebuffer_writeword(&p,temp->company);
-		bytebuffer_writebyte(&p,temp->devicestatus);
-		unsigned char devicenamelen = strlen(temp->devicename);
+		d=list_entry(pos, struct device, list);
+		bytebuffer_writebyte(&p, d->ieeeaddr);
+		unsigned char devicenamelen = strlen(d->devicename);
 		bytebuffer_writebyte(&p, devicenamelen);
-		bytebuffer_writebytes(&p, temp->devicename,devicenamelen);
+		bytebuffer_writebytes(&p, d->devicename,devicenamelen);
+
+		unsigned char clusteridcount = device_getclusteridcount(d);
+		bytebuffer_writebyte(&p, clusteridcount);
+
+		struct endpoint * endpoint;
+		unsigned short i;
+		struct list_head * epos, *en;
+		list_for_each_safe(epos, en, &d->eplisthead){
+			endpoint = list_entry(epos, struct endpoint, list);
+			for(i = 0; i < endpoint->clusteridcount; i++){
+				bytebuffer_writeword(&p, endpoint->clusterid[i]);
+			}
+
+		}
 	}	
 	unsigned int templen = p-buf;
-
 	unsigned char *p1=buf+1;
-
 	bytebuffer_writeword(&p1,templen+2);
+
 	unsigned checksum = encode_checksum(buf,templen);
 	bytebuffer_writebyte(&p,checksum);
 	bytebuffer_writebyte(&p,0XCE);
 
-	unsigned int buflen = p-buf;
-
-	return buflen;
+	return p-buf;
 }
 
 #define  HEART     0x0002

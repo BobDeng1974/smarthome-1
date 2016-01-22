@@ -12,6 +12,7 @@
 #include "gateway.h"
 #include "list.h"
 #include "zcl_datatype.h"
+#include "innercmd.h"
 
 void event_accept(int fd){
 	struct connection * c = freeconnlist_getconn();
@@ -44,6 +45,12 @@ void event_recvmsg(struct eventhub * hub, int fd, unsigned char * buf, int bufle
 			unsigned int hbuflen;
 			hbuflen = encode_heart(getgateway(), heart_buf);
 			broadcast(heart_buf, hbuflen);
+		}
+		if( _check_command(buf, buflen, CESEND[0])){
+			unsigned char buf[2048] = {0}; 
+			unsigned int buflen = encode_login(getgateway(), buf); 
+			sendnonblocking(connlist_getserverfd(), buf, buflen);
+			fprintf(stdout, "should send to server  %d %d \n", connlist_getserverfd(), buflen);
 		}
 	}else if(c && (connection_gettype(c) == CONNSOCKETCLIENT || connection_gettype(c) == CONNSOCKETSERVER)){
 		connection_put(c, buf, buflen); 
@@ -82,7 +89,6 @@ void event_recvznp(struct eventhub * hub, int fd){
 				unsigned char buf[64] = {0};
 				unsigned int buflen = encode_adddeldevice(buf, req.ieeeaddr, 1);
 				broadcast(buf, buflen);
-
 			}
 			break;
 		case ZCLZONECHANGENOTIFICATION:

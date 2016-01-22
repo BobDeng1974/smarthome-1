@@ -85,3 +85,15 @@ void gateway_deldevice(struct gateway * gw, struct device *d){
 	free(d);
 }
 
+unsigned char device_getclusteridcount(struct device * d){
+	int result = 0;
+
+	struct endpoint * endpoint;
+	struct list_head * pos, *n;
+	list_for_each_safe(pos, n, &d->eplisthead){ 
+		endpoint = list_entry(pos, struct endpoint, list); 
+		result += endpoint->clusteridcount;
+	}
+
+	return result;
+}

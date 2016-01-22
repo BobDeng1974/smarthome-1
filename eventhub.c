@@ -122,7 +122,7 @@ void eventhub_start(struct eventhub * hub){
 				struct connection * c = connrbtree_getconn(events[i].data.fd);
 				if(connection_gettype(c) == CONNZNP){ 
 					event_recvznp(hub, events[i].data.fd);
-				}
+				}else{
 				for(;;) {
 					ssize_t count;
 					char buf[1024];
@@ -148,6 +148,7 @@ void eventhub_start(struct eventhub * hub){
 						event_recvmsg(hub, events[i].data.fd, buf, count);
 					}
 
+				}
 				}
 
 				if (done) {

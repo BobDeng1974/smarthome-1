@@ -9,6 +9,7 @@
 #include <string.h>
 #include <assert.h>
 #include <time.h>
+#include <errno.h>
 #include "connection.h"
 #include "ceconf.h"
 
@@ -155,6 +156,7 @@ int sendnonblocking(int fd, void * buf, int buflen){
 			if(errno == EINTR) continue;
 			else if(errno == EAGAIN) break;
 			else {
+				fprintf(stdout, "errno %d error msg %s\n", strerror(errno));
 				assert(0);
 				break;
 			}

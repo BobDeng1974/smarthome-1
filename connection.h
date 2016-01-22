@@ -37,6 +37,7 @@ void freeconnlist_add(struct connection * c);
 struct list_head * connlist_get();
 int connlist_check(unsigned char conntype); 
 void connlist_checkstatus(long timestamp);
+int connlist_getserverfd();
 
 struct connection * connrbtree_getconn(int fd);
 void connrbtree_insert(struct connection *c);
