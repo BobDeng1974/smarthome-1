@@ -4,7 +4,7 @@ SBU_REV= "0.1"
 INCLUDE = -I$(PROJ_DIR)../ -I$(PROJ_DIR)../framework/platform/gnu -I$(PROJ_DIR)../framework/rpc/ -I$(PROJ_DIR)../framework/mt/ -I$(PROJ_DIR)../framework/mt/Af -I$(PROJ_DIR)../framework/mt/Zdo -I$(PROJ_DIR)../framework/mt/Sys -I$(PROJ_DIR)../framework/mt/Sapi -I$(PROJ_DIR)../znp/zcl -I$(PROJ_DIR)../znp
 
 CC= gcc
-#CC=/usr/local/angstrom/arm/bin/arm-angstrom-linux-gnueabi-gcc
+#CC=arm-arago-linux-gnueabi-gcc
 
 CFLAGS= -c -Wall -g -std=gnu99
 LIBS = -lpthread -lrt

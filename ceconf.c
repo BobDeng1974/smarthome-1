@@ -11,7 +11,7 @@ static struct ceconf{
 	"8989",
 	"192.168.8.178",
 	"8989",
-	"/dev/ttyUSB0",
+	"/dev/ttyO1",
 	60,
 };
 
