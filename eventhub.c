@@ -109,8 +109,8 @@ void eventhub_start(struct eventhub * hub){
 					ret = make_socket_non_blocking (infd);
 					if (ret == -1)
 						abort ();
-					event_accept(infd);
 					eventhub_register(hub, infd);
+					event_accept(infd);
 				}
 				continue;
 			} else {

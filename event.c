@@ -16,12 +16,17 @@
 #include "innercmd.h"
 #include "parseserver.h"
 
+
 extern struct connection * g_serverconn;
 
 void event_accept(int fd){
 	struct connection * c = freeconnlist_getconn();
 	connection_init(c, fd, CONNSOCKETCLIENT);
 	connrbtree_insert(c);
+
+	unsigned char buf[2048] = {0}; 
+	unsigned int buflen = encode_login(getgateway(), buf); 
+	sendnonblocking(fd, buf, buflen);
 }
 
 
