@@ -16,11 +16,15 @@ void *rpctask(void *argument)
 	}
 
 	dbg_print(PRINT_LEVEL_WARNING, "rpcTask exited!\n");
+
+	return NULL;
 }
 
 void *apptask(void *argument)
 {
 	appProcess(NULL);
+
+	return NULL;
 }
 
 void *appinmessagetask(void *argument)
@@ -28,6 +32,8 @@ void *appinmessagetask(void *argument)
 	while (1) {
 		appMsgProcess(NULL);
 	}
+
+	return NULL;
 }
 
 int znp_start(int wfd, char * serialport){ 

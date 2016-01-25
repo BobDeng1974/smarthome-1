@@ -1,10 +1,13 @@
+#define _GNU_SOURCE
+#include <unistd.h>
 #include <sys/types.h>
 #include <sys/socket.h>
 #include <netdb.h>
 #include <fcntl.h>
 #include <stdlib.h>
+#include <netinet/in.h>
+#include <arpa/inet.h>
 #include <stdio.h>
-#include <unistd.h>
 #include <errno.h>
 #include <string.h>
 #include <assert.h>
@@ -76,7 +79,7 @@ create_and_bind (char *port) {
 
 int openclient(char *addr, char *port) {
 	typedef struct sockaddr SA;
-	int sockfd, fd, nbyte;
+	int sockfd;
 	struct sockaddr_in servaddr;
 
 	if ((sockfd = socket(PF_INET, SOCK_STREAM, 0)) < 0) {
@@ -116,7 +119,7 @@ struct connection * connectserver(){
 
 struct connection * createpipe(int * wfd){
 	int fdsig[2];
-	if(pipe2(fdsig,O_CLOEXEC | O_NONBLOCK) == -1){
+	if(pipe2(fdsig,O_CLOEXEC) == -1){
 		fprintf(stderr,"create pipe error.%s %s %d\n", __FILE__, __FUNCTION__, __LINE__);
 		*wfd = -1;
 
@@ -135,7 +138,7 @@ struct connection * createpipe(int * wfd){
 
 int createpipe2(int *wfd){
 	int fdsig[2];
-	if(pipe2(fdsig,O_CLOEXEC | O_NONBLOCK) == -1){
+	if(pipe2(fdsig,O_CLOEXEC) == -1){
 		fprintf(stderr,"create pipe error.%s %s %d\n", __FILE__, __FUNCTION__, __LINE__);
 		*wfd = -1;
 
@@ -143,20 +146,19 @@ int createpipe2(int *wfd){
 	}
 
 	*wfd = fdsig[1]; 
-	make_socket_non_blocking(fdsig[0]);
 
 	return fdsig[0];
 }
 
 int sendnonblocking(int fd, void * buf, int buflen){ 
-	int n;
+	int n = 0;
 	for(;;){
 		n = write(fd, buf, buflen);
 		if (n == -1) {
 			if(errno == EINTR) continue;
 			else if(errno == EAGAIN) break;
 			else {
-				fprintf(stdout, "errno %d error msg %s\n", strerror(errno));
+				fprintf(stdout, "errno %d error msg %s\n", errno,strerror(errno));
 				assert(0);
 				break;
 			}
@@ -170,7 +172,7 @@ int sendnonblocking(int fd, void * buf, int buflen){
 }
 
 int readnonblocking(int fd, void * buf, int buflen){
-	int n;
+	int n = -1;
 	for(;;){
 		n = read(fd, buf, buflen);
 		if (n == -1) {
@@ -181,7 +183,6 @@ int readnonblocking(int fd, void * buf, int buflen){
 				break;
 			}
 		} else if ((size_t)n != buflen) {
-			assert(0);
 			break;
 		} else { break; }
 	}

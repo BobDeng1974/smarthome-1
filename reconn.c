@@ -3,12 +3,15 @@
 #include <pthread.h>
 #include <stdio.h>
 #include <errno.h>
+#include <unistd.h>
 #include "eventhub.h"
 #include "connection.h"
 #include "socket.h"
 #include "parseserver.h"
 #include "gateway.h"
 #include "innercmd.h"
+
+struct connection * g_serverconn = NULL;
 
 struct reconn{ 
 	int rfd;
@@ -19,14 +22,14 @@ struct reconn{
 };
 
 void event_reconnect(struct eventhub * hub, int wfd){
-	struct list_head * head = connlist_get();
 	if(!connlist_check(CONNSOCKETSERVER)){
+		fprintf(stdout, "errno %d %s %s\n", errno, strerror(errno), __FUNCTION__);
 		struct connection * serverconn = connectserver();
+		
 		if(serverconn){
-			eventhub_register(hub,connection_getfd(serverconn)); 
-
+		        eventhub_register(hub,connection_getfd(serverconn)); 
 			int n = write(wfd, CESEND, 1);
-			if(n < 0){
+			if(n <= 0){
 				fprintf(stdout, "%d %s \n ", errno, strerror(errno));
 			}
 		}
@@ -39,11 +42,11 @@ void * ceconnect(void * args){
 	int wfd = rc->wfd;
 	struct eventhub * hub = rc->hub;
 	for(;;){
-		ssize_t count;
 		char buf[1024];
 
-		count = read (rfd, buf, sizeof buf);
-		event_reconnect(hub, wfd);
+		int n = read(rfd, buf, sizeof(buf)); 
+		if(n > 0)
+			event_reconnect(hub, wfd);
 	}
 }
 

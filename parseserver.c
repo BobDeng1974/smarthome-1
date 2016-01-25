@@ -1,5 +1,5 @@
 #include <stdio.h>
-#include <sys/time.h>
+#include <time.h>
 #include "sq.h"
 #include "bytebuffer.h"
 #include "gateway.h"
@@ -25,7 +25,7 @@ unsigned int encode_login(struct gateway *gw, unsigned char *buf) {
 		bytebuffer_writebyte(&p, d->ieeeaddr);
 		unsigned char devicenamelen = strlen(d->devicename);
 		bytebuffer_writebyte(&p, devicenamelen);
-		bytebuffer_writebytes(&p, d->devicename,devicenamelen);
+		bytebuffer_writebytes(&p, (unsigned char *)d->devicename,devicenamelen);
 
 		unsigned char clusteridcount = device_getclusteridcount(d);
 		bytebuffer_writebyte(&p, clusteridcount);

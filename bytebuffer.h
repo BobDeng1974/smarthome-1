@@ -185,7 +185,6 @@ static inline void bytebuffer_writequadwordl( unsigned char **s, unsigned long l
 }
 
 static inline void bytebuffer_writebytes( unsigned char **s, unsigned char * d, unsigned int len){
-	int i = 0;
 	memcpy(*s, d, len);
 	*s += len;
 }

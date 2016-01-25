@@ -1644,7 +1644,7 @@ void appProcess(void * args)
 	//	while(1);
 }
 
-uint32_t appInit(void)
+int appInit(void)
 {
 	int32_t status = 0;
 	uint32_t msgCnt = 0;

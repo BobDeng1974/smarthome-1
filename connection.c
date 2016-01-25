@@ -1,7 +1,9 @@
 #include <string.h>
 #include <stdio.h>
 #include <assert.h>
+#include <unistd.h>
 #include "connection.h"
+#include "ceconf.h"
 
 #define MAXBUFLEN 1024
 
@@ -29,7 +31,7 @@ void connection_put(struct connection * c, unsigned char * buf, unsigned int buf
 	kfifo_put(c->rawfifo, buf, buflen);
 }
 
-unsigned int connection_get(struct connection * c, char * buffer, unsigned int msglen){
+unsigned int connection_get(struct connection * c, unsigned char * buffer, unsigned int msglen){
 	return kfifo_get(c->rawfifo, buffer, msglen);
 }
 
@@ -119,6 +121,8 @@ int connlist_getserverfd(){
 			return c->fd;
 		}
 	}
+
+	return -1;
 }
 
 struct connection * connrbtree_getconn(int fd){
@@ -178,7 +182,7 @@ struct connection * _connrbtree_insert(struct connection *c){
 }
 
 void connrbtree_insert(struct connection *c){
-	fprintf(stdout, "insert %d %d %x\n", c->fd, c->type, c);
+	fprintf(stdout, "insert %d %d %x\n", c->fd, c->type, (unsigned int)c);
 	struct connection * ret;
 
 	if(( ret = _connrbtree_insert(c))){
@@ -191,7 +195,7 @@ void connrbtree_insert(struct connection *c){
 }
 
 void connrbtree_del(struct connection * c){ 
-	fprintf(stdout, "del %d %d %x\n", c->fd, c->type, c);
+	fprintf(stdout, "del %d %d %x\n", c->fd, c->type, (unsigned int)c);
 	rb_erase(&c->node, &connrbtreeroot);
 	list_del_init(&c->list);
 	freeconnlist_add(c);

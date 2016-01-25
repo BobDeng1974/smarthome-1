@@ -5,6 +5,7 @@
 #include <sys/socket.h>
 #include <netdb.h>
 #include <stdlib.h>
+#include <unistd.h>
 
 #include "socket.h"
 #include "connection.h"
@@ -125,7 +126,7 @@ void eventhub_start(struct eventhub * hub){
 				}else{
 				for(;;) {
 					ssize_t count;
-					char buf[1024];
+					unsigned char buf[1024];
 
 					count = read (events[i].data.fd, buf, sizeof buf);
 					if (count == -1) {

@@ -45,6 +45,8 @@ extern "C"
 #endif
 
 int appInit(void);
+void appProcess(void * args);
+void* appMsgProcess(void *argument);
 
 #ifdef __cplusplus
 }

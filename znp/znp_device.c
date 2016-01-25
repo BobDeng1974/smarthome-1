@@ -37,13 +37,15 @@ struct znp_device * _znp_device_insert(struct znp_device * d){
 		}else if(d->shortaddr > device->shortaddr){
 			newnode = &((*newnode)->rb_right);
 		}else{
-			fprintf(stdout, "!!!(((rbtree alread has the shortaddr %d the conn ieee is %016llX\n %01611X\n", device->shortaddr, device->ieeeaddr, d->ieeeaddr);
+			fprintf(stdout, "!!!(((rbtree alread has the shortaddr %d the tree ieee is %016llX the new %016llX\n", device->shortaddr, device->ieeeaddr, d->ieeeaddr);
 
 			return device;
 		}
 	}
 
 	rb_link_node(&d->node, parent, newnode);
+
+	return NULL;
 }
 
 void znp_device_insert(struct znp_device * d){

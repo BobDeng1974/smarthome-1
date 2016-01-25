@@ -1,5 +1,7 @@
 #include <stdlib.h>
 #include <stdio.h>
+#include <string.h>
+
 #include "zcl_ss.h" 
 #include "zcl.h"
 #include "mtParser.h"
@@ -233,12 +235,12 @@ int zclss_processincmd_zonestatus_enrollrequest(struct zclincomingmsg * pInMsg){
 	IAS_ACE_ZoneTable_t zone;
 	ZStatus_t stat = -1;
 	uint16 zoneType;
-	uint16 manuCode;
+	//uint16 manuCode;
 	uint8 responseCode;
 	uint8 zoneID;
 
 	zoneType = BUILD_UINT16( pInMsg->data[0], pInMsg->data[1] );
-	manuCode = BUILD_UINT16( pInMsg->data[2], pInMsg->data[3] );
+	//manuCode = BUILD_UINT16( pInMsg->data[2], pInMsg->data[3] );
 
 	if ( zclSS_ZoneTypeSupported( zoneType ) )
 	{
@@ -356,10 +358,10 @@ int zclss_processinzonestatuscmdsclient(struct zclincomingmsg * msg){
 
 	switch(msg->zclframehdr.commandid){
 		case COMMAND_SS_IAS_ZONE_STATUS_CHANGE_NOTIFICATION:
-			zclss_processincmd_zonestatus_changenotification(msg);
+			result = zclss_processincmd_zonestatus_changenotification(msg);
 			break;
 		case COMMAND_SS_IAS_ZONE_STATUS_ENROLL_REQUEST:
-			zclss_processincmd_zonestatus_enrollrequest(msg);
+			result = zclss_processincmd_zonestatus_enrollrequest(msg);
 			break; 
 		default:
 			result = -1;
@@ -372,13 +374,13 @@ int zclss_handlespecificcommands( struct zclincomingmsg * msg){
 	switch(msg->message->ClusterId){
 		case ZCL_CLUSTER_ID_SS_IAS_ZONE:
 			if(zcl_ServerCmd(msg->zclframehdr.control.direction)){
-				zclss_processinzonestatuscmdsserver(msg);
+				result = zclss_processinzonestatuscmdsserver(msg);
 			}else{
-				zclss_processinzonestatuscmdsclient(msg);
+				result = zclss_processinzonestatuscmdsclient(msg);
 			}
 			break;
 	}
-	return 0;
+	return result;
 }
 
 int zclss_handleincoming( struct zclincomingmsg * zclincomingmsg){

@@ -9,8 +9,8 @@ static struct ceconf{
 	int timeout;
 }s_conf = {
 	"8989",
-	"192.168.8.40",
-	"8990",
+	"192.168.8.178",
+	"8989",
 	"/dev/ttyUSB0",
 	60,
 };

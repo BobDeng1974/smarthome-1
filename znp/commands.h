@@ -80,7 +80,7 @@
 extern "C"
 {
 #endif
-static void sendcmd(unsigned char * req, unsigned char cmdtype);
+void sendcmd(unsigned char * req, unsigned char cmdtype);
 
 #ifdef __cplusplus
 }

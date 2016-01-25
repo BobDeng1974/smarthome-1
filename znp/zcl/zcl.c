@@ -1,5 +1,6 @@
 
 #include <stdlib.h>
+#include <string.h>
 #include "zcl.h"
 #include "commands.h"
 #include "mtAf.h"

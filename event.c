@@ -2,6 +2,7 @@
 #include <errno.h>
 #include <stdlib.h>
 #include <string.h>
+
 #include "connection.h"
 #include "protocol.h"
 #include "toolkit.h"
@@ -13,6 +14,9 @@
 #include "list.h"
 #include "zcl_datatype.h"
 #include "innercmd.h"
+#include "parseserver.h"
+
+extern struct connection * g_serverconn;
 
 void event_accept(int fd){
 	struct connection * c = freeconnlist_getconn();
@@ -33,7 +37,8 @@ int _check_command(unsigned char * buffer, int buflen, unsigned char command){
 }
 
 void event_recvmsg(struct eventhub * hub, int fd, unsigned char * buf, int buflen){
-	//toolkit_printbytes(buf, buflen);
+	fprintf(stdout, "recv ");
+	toolkit_printbytes(buf, buflen);
 	struct connection * c = connrbtree_getconn(fd);
 	if(c && connection_gettype(c) == CONNSOCKETCMD){ 
 		if( _check_command(buf, buflen, CECHECK[0])){
@@ -50,13 +55,12 @@ void event_recvmsg(struct eventhub * hub, int fd, unsigned char * buf, int bufle
 			unsigned char buf[2048] = {0}; 
 			unsigned int buflen = encode_login(getgateway(), buf); 
 			sendnonblocking(connlist_getserverfd(), buf, buflen);
-			fprintf(stdout, "should send to server  %d %d \n", connlist_getserverfd(), buflen);
 		}
 	}else if(c && (connection_gettype(c) == CONNSOCKETCLIENT || connection_gettype(c) == CONNSOCKETSERVER)){
 		connection_put(c, buf, buflen); 
 		unsigned short messageid = 0;
 		int messagelen = protocol_check(c, &messageid);
-		char buffer[1024] = {0};
+		unsigned char buffer[1024] = {0};
 		connection_get(c,buffer, messagelen);
 		switch(messageid){
 			case LOGINFEEDBACK:
