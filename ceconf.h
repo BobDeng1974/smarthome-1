@@ -8,5 +8,6 @@ char * ceconf_getserverport();
 char * ceconf_getserialport();
 
 int ceconf_gettimeout();
+void ceconf_load();
 
 #endif
