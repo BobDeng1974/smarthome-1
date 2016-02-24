@@ -9,8 +9,6 @@
 #include "znp_device.h"
 #include "socket.h"
 
-#define FALSE 0
-#define TRUE 1
 
 extern int g_znpwfd;
 /*******************************************************************************

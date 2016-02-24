@@ -6,6 +6,83 @@
 #include "mtAf.h"
 #include "mtParser.h"
 #include "zcl_ss.h"
+
+#define SEC_KEY_LEN 16 // ???
+void *zcl_mem_alloc( uint16 size ){
+	return malloc(size);
+};
+
+void *zcl_memset( void *dest, uint8 value, int len ){
+	return memset(dest, value, len);
+};
+
+void *zcl_memcpy( void *dst, void *src, unsigned int len ){
+	return memcpy(dst, src, len);
+};
+
+void zcl_mem_free(void *ptr){
+	free(ptr);
+};
+
+uint8* zcl_buffer_uint32( uint8 *buf, uint32 val ){ 
+	memcpy(buf, ((uint8 *)(&val)), 4);
+};
+
+static zclAttrRecsList *attrList = (zclAttrRecsList *)NULL;
+
+/*********************************************************************
+ * @fn          zcl_registerAttrList
+ *
+ * @brief       Register an Attribute List with ZCL Foundation
+ *
+ * @param       endpoint - endpoint the attribute list belongs to
+ * @param       numAttr - number of attributes in list
+ * @param       newAttrList - array of Attribute records.
+ *                            NOTE: THE ATTRIBUTE IDs (FOR A CLUSTER) MUST BE IN
+ *                            ASCENDING ORDER. OTHERWISE, THE DISCOVERY RESPONSE
+ *                            COMMAND WILL NOT HAVE THE RIGHT ATTRIBUTE INFO
+ *
+ * @return      ZSuccess if OK
+ */
+ZStatus_t zcl_registerAttrList( uint8 endpoint, uint8 numAttr, const zclAttrRec_t newAttrList[] )
+{
+	zclAttrRecsList *pNewItem;
+	zclAttrRecsList *pLoop;
+
+	// Fill in the new profile list
+	pNewItem = zcl_mem_alloc( sizeof( zclAttrRecsList ) );
+	if ( pNewItem == NULL )
+	{
+		return (ZMemError);
+	}
+
+	pNewItem->next = (zclAttrRecsList *)NULL;
+	pNewItem->endpoint = endpoint;
+	pNewItem->pfnReadWriteCB = NULL;
+	pNewItem->numAttributes = numAttr;
+	pNewItem->attrs = newAttrList;
+
+	// Find spot in list
+	if ( attrList == NULL )
+	{
+		attrList = pNewItem;
+	}
+	else
+	{
+		// Look for end of list
+		pLoop = attrList;
+		while ( pLoop->next != NULL )
+		{
+			pLoop = pLoop->next;
+		}
+
+		// Put new item at end of list
+		pLoop->next = pNewItem;
+	}
+
+	return ( ZSuccess );
+}
+
 /*********************************************************************
  * @fn      zclCalcHdrSize
  *
@@ -16,8 +93,7 @@
  *
  * @return  returns the number of bytes needed
  */
-static uint8 zclCalcHdrSize( struct zclframehdr *hdr )
-{
+static uint8 zclCalcHdrSize( struct zclframehdr *hdr ) {
 	uint8 needed = (1 + 1 + 1); // frame control + transaction seq num + cmd ID
 
 	// Add the manfacturer code
@@ -28,6 +104,8 @@ static uint8 zclCalcHdrSize( struct zclframehdr *hdr )
 
 	return ( needed );
 }
+
+
 
 /*********************************************************************
  * @fn      zclBuildHdr
@@ -210,6 +288,502 @@ ZStatus_t zcl_SendCommand( uint8 srcEP, uint8 dstEp, uint16 dstaddr,
 		free(msgBuf);
 		sendcmd((unsigned char *)&req, AF_DATA_REQUEST);
 
+	}
+	else
+	{
+		status = ZMemError;
+	}
+
+	return ( status );
+}
+
+/*********************************************************************
+ * @fn      zclGetDataTypeLength
+ *
+ * @brief   Return the length of the datatype in octet.
+ *
+ *          NOTE: Should not be called for ZCL_DATATYPE_OCTECT_STR or
+ *                ZCL_DATATYPE_CHAR_STR data types.
+ *
+ * @param   dataType - data type
+ *
+ * @return  length of data
+ */
+uint8 zclGetDataTypeLength( uint8 dataType )
+{
+	uint8 len;
+
+	switch ( dataType )
+	{
+		case ZCL_DATATYPE_DATA8:
+		case ZCL_DATATYPE_BOOLEAN:
+		case ZCL_DATATYPE_BITMAP8:
+		case ZCL_DATATYPE_INT8:
+		case ZCL_DATATYPE_UINT8:
+		case ZCL_DATATYPE_ENUM8:
+			len = 1;
+			break;
+
+		case ZCL_DATATYPE_DATA16:
+		case ZCL_DATATYPE_BITMAP16:
+		case ZCL_DATATYPE_UINT16:
+		case ZCL_DATATYPE_INT16:
+		case ZCL_DATATYPE_ENUM16:
+		case ZCL_DATATYPE_SEMI_PREC:
+		case ZCL_DATATYPE_CLUSTER_ID:
+		case ZCL_DATATYPE_ATTR_ID:
+			len = 2;
+			break;
+
+		case ZCL_DATATYPE_DATA24:
+		case ZCL_DATATYPE_BITMAP24:
+		case ZCL_DATATYPE_UINT24:
+		case ZCL_DATATYPE_INT24:
+			len = 3;
+			break;
+
+		case ZCL_DATATYPE_DATA32:
+		case ZCL_DATATYPE_BITMAP32:
+		case ZCL_DATATYPE_UINT32:
+		case ZCL_DATATYPE_INT32:
+		case ZCL_DATATYPE_SINGLE_PREC:
+		case ZCL_DATATYPE_TOD:
+		case ZCL_DATATYPE_DATE:
+		case ZCL_DATATYPE_UTC:
+		case ZCL_DATATYPE_BAC_OID:
+			len = 4;
+			break;
+
+		case ZCL_DATATYPE_UINT40:
+		case ZCL_DATATYPE_INT40:
+			len = 5;
+			break;
+
+		case ZCL_DATATYPE_UINT48:
+		case ZCL_DATATYPE_INT48:
+			len = 6;
+			break;
+
+		case ZCL_DATATYPE_UINT56:
+		case ZCL_DATATYPE_INT56:
+			len = 7;
+			break;
+
+		case ZCL_DATATYPE_DOUBLE_PREC:
+		case ZCL_DATATYPE_IEEE_ADDR:
+		case ZCL_DATATYPE_UINT64:
+		case ZCL_DATATYPE_INT64:
+			len = 8;
+			break;
+
+		case ZCL_DATATYPE_128_BIT_SEC_KEY:
+			len = SEC_KEY_LEN;
+			break;
+
+		case ZCL_DATATYPE_NO_DATA:
+		case ZCL_DATATYPE_UNKNOWN:
+			// Fall through
+
+		default:
+			len = 0;
+			break;
+	}
+
+	return ( len );
+}
+
+/*********************************************************************
+ * @fn      zclGetAttrDataLength
+ *
+ * @brief   Return the length of the attribute.
+ *
+ * @param   dataType - data type
+ * @param   pData - pointer to data
+ *
+ * @return  returns atrribute length
+ */
+uint16 zclGetAttrDataLength( uint8 dataType, uint8 *pData )
+{
+	uint16 dataLen = 0;
+
+	if ( dataType == ZCL_DATATYPE_LONG_CHAR_STR || dataType == ZCL_DATATYPE_LONG_OCTET_STR )
+	{
+		dataLen = BUILD_UINT16( pData[0], pData[1] ) + 2; // long string length + 2 for length field
+	}
+	else if ( dataType == ZCL_DATATYPE_CHAR_STR || dataType == ZCL_DATATYPE_OCTET_STR )
+	{
+		dataLen = *pData + 1; // string length + 1 for length field
+	}
+	else
+	{
+		dataLen = zclGetDataTypeLength( dataType );
+	}
+
+	return ( dataLen );
+}
+
+/*********************************************************************
+ * @fn      zclSerializeData
+ *
+ * @brief   Builds a buffer from the attribute data to sent out over
+ *          the air.
+ *          NOTE - Not compatible with application's attributes callbacks.
+ *
+ * @param   dataType - data types defined in zcl.h
+ * @param   attrData - pointer to the attribute data
+ * @param   buf - where to put the serialized data
+ *
+ * @return  pointer to end of destination buffer
+ */
+uint8 *zclSerializeData( uint8 dataType, void *attrData, uint8 *buf )
+{
+	uint8 *pStr;
+	uint16 len;
+
+	if ( attrData == NULL )
+	{
+		return ( buf );
+	}
+
+	switch ( dataType )
+	{
+		case ZCL_DATATYPE_DATA8:
+		case ZCL_DATATYPE_BOOLEAN:
+		case ZCL_DATATYPE_BITMAP8:
+		case ZCL_DATATYPE_INT8:
+		case ZCL_DATATYPE_UINT8:
+		case ZCL_DATATYPE_ENUM8:
+			*buf++ = *((uint8 *)attrData);
+			break;
+
+		case ZCL_DATATYPE_DATA16:
+		case ZCL_DATATYPE_BITMAP16:
+		case ZCL_DATATYPE_UINT16:
+		case ZCL_DATATYPE_INT16:
+		case ZCL_DATATYPE_ENUM16:
+		case ZCL_DATATYPE_SEMI_PREC:
+		case ZCL_DATATYPE_CLUSTER_ID:
+		case ZCL_DATATYPE_ATTR_ID:
+			*buf++ = LO_UINT16( *((uint16*)attrData) );
+			*buf++ = HI_UINT16( *((uint16*)attrData) );
+			break;
+
+		case ZCL_DATATYPE_DATA24:
+		case ZCL_DATATYPE_BITMAP24:
+		case ZCL_DATATYPE_UINT24:
+		case ZCL_DATATYPE_INT24:
+			*buf++ = BREAK_UINT32( *((uint32*)attrData), 0 );
+			*buf++ = BREAK_UINT32( *((uint32*)attrData), 1 );
+			*buf++ = BREAK_UINT32( *((uint32*)attrData), 2 );
+			break;
+
+		case ZCL_DATATYPE_DATA32:
+		case ZCL_DATATYPE_BITMAP32:
+		case ZCL_DATATYPE_UINT32:
+		case ZCL_DATATYPE_INT32:
+		case ZCL_DATATYPE_SINGLE_PREC:
+		case ZCL_DATATYPE_TOD:
+		case ZCL_DATATYPE_DATE:
+		case ZCL_DATATYPE_UTC:
+		case ZCL_DATATYPE_BAC_OID:
+			buf = zcl_buffer_uint32( buf, *((uint32*)attrData) );
+			break;
+
+		case ZCL_DATATYPE_UINT40:
+		case ZCL_DATATYPE_INT40:
+			pStr = (uint8*)attrData;
+			buf = zcl_memcpy( buf, pStr, 5 );
+			break;
+
+		case ZCL_DATATYPE_UINT48:
+		case ZCL_DATATYPE_INT48:
+			pStr = (uint8*)attrData;
+			buf = zcl_memcpy( buf, pStr, 6 );
+			break;
+
+		case ZCL_DATATYPE_UINT56:
+		case ZCL_DATATYPE_INT56:
+			pStr = (uint8*)attrData;
+			buf = zcl_memcpy( buf, pStr, 7 );
+			break;
+
+		case ZCL_DATATYPE_DOUBLE_PREC:
+		case ZCL_DATATYPE_IEEE_ADDR:
+		case ZCL_DATATYPE_UINT64:
+		case ZCL_DATATYPE_INT64:
+			pStr = (uint8*)attrData;
+			buf = zcl_memcpy( buf, pStr, 8 );
+			break;
+
+		case ZCL_DATATYPE_CHAR_STR:
+		case ZCL_DATATYPE_OCTET_STR:
+			pStr = (uint8*)attrData;
+			len = *pStr;
+			buf = zcl_memcpy( buf, pStr, len+1 ); // Including length field
+			break;
+
+		case ZCL_DATATYPE_LONG_CHAR_STR:
+		case ZCL_DATATYPE_LONG_OCTET_STR:
+			pStr = (uint8*)attrData;
+			len = BUILD_UINT16( pStr[0], pStr[1] );
+			buf = zcl_memcpy( buf, pStr, len+2 ); // Including length field
+			break;
+
+		case ZCL_DATATYPE_128_BIT_SEC_KEY:
+			pStr = (uint8*)attrData;
+			buf = zcl_memcpy( buf, pStr, SEC_KEY_LEN );
+			break;
+
+		case ZCL_DATATYPE_NO_DATA:
+		case ZCL_DATATYPE_UNKNOWN:
+			// Fall through
+
+		default:
+			break;
+	}
+
+	return ( buf );
+}
+/*********************************************************************
+ * @fn      zcl_SendRead
+ *
+ * @brief   Send a Read command
+ *
+ * @param   srcEP - Application's endpoint
+ * @param   dstAddr - destination address
+ * @param   clusterID - cluster ID
+ * @param   readCmd - read command to be sent
+ * @param   direction - direction of the command
+ * @param   seqNum - transaction sequence number
+ *
+ * @return  ZSuccess if OK
+ */
+ZStatus_t zcl_SendRead( uint8 srcEP, uint8 dstEp, uint16 dstAddr,
+		uint16 clusterID, zclReadCmd_t *readCmd,
+		uint8 direction, uint8 disableDefaultRsp, uint8 seqNum)
+{
+	uint16 dataLen;
+	uint8 *buf;
+	uint8 *pBuf;
+	ZStatus_t status;
+
+	dataLen = readCmd->numAttr * 2; // Attribute ID
+
+	buf = (uint8 *)malloc( dataLen );
+	if ( buf != NULL )
+	{
+		uint8 i;
+
+		// Load the buffer - serially
+		pBuf = buf;
+		for (i = 0; i < readCmd->numAttr; i++)
+		{
+			*pBuf++ = LO_UINT16( readCmd->attrID[i] );
+			*pBuf++ = HI_UINT16( readCmd->attrID[i] );
+		}
+
+		status = zcl_SendCommand( srcEP, dstEp, dstAddr, clusterID, ZCL_CMD_READ, FALSE,
+				direction, disableDefaultRsp, 0, seqNum, dataLen, buf );
+		free( buf );
+	}
+	else
+	{
+		status = ZMemError;
+	}
+
+	return ( status );
+}
+
+/*********************************************************************
+ * @fn      zclFindAttrRecsList
+ *
+ * @brief   Find the right attribute record list for an endpoint
+ *
+ * @param   clusterID - endpointto look for
+ *
+ * @return  pointer to record list, NULL if not found
+ */
+static zclAttrRecsList *zclFindAttrRecsList( uint8 endpoint )
+{
+	zclAttrRecsList *pLoop = attrList;
+
+	while ( pLoop != NULL )
+	{
+		if ( pLoop->endpoint == endpoint )
+		{
+			return ( pLoop );
+		}
+
+		pLoop = pLoop->next;
+	}
+
+	return ( NULL );
+}
+
+/*********************************************************************
+ * @fn      zclGetReadWriteCB
+ *
+ * @brief   Get the Read/Write callback function pointer for a given endpoint.
+ *
+ * @param   endpoint - Application's endpoint
+ *
+ * @return  Read/Write CB, NULL if not found
+ */
+static zclReadWriteCB_t zclGetReadWriteCB( uint8 endpoint )
+{
+	zclAttrRecsList *pRec = zclFindAttrRecsList( endpoint );
+
+	if ( pRec != NULL )
+	{
+		return ( pRec->pfnReadWriteCB );
+	}
+
+	return ( NULL );
+}
+
+/*********************************************************************
+ * @fn      zclReadAttrDataUsingCB
+ *
+ * @brief   Use application's callback to read the attribute's current
+ *          value stored in the database.
+ *
+ * @param   endpoint - application's endpoint
+ * @param   clusterId - cluster that attribute belongs to
+ * @param   attrId - attribute id
+ * @param   pAttrData - where to put attribute data
+ * @param   pDataLen - where to put attribute data length
+ *
+ * @return  Successful if data was read
+ */
+static ZStatus_t zclReadAttrDataUsingCB( uint8 endpoint, uint16 clusterId, uint16 attrId,
+                                         uint8 *pAttrData, uint16 *pDataLen )
+{
+  zclReadWriteCB_t pfnReadWriteCB = zclGetReadWriteCB( endpoint );
+
+  if ( pDataLen != NULL )
+  {
+    *pDataLen = 0; // Always initialize it to 0
+  }
+
+  if ( pfnReadWriteCB != NULL )
+  {
+    // Read the attribute value and its length
+    return ( (*pfnReadWriteCB)( clusterId, attrId, ZCL_OPER_READ, pAttrData, pDataLen ) );
+  }
+
+  return ( ZCL_STATUS_SOFTWARE_FAILURE );
+}
+
+/*********************************************************************
+ * @fn      zclGetAttrDataLengthUsingCB
+ *
+ * @brief   Use application's callback to get the length of the attribute's
+ *          current value stored in the database.
+ *
+ * @param   endpoint - application's endpoint
+ * @param   clusterId - cluster that attribute belongs to
+ * @param   attrId - attribute id
+ *
+ * @return  returns attribute length
+ */
+static uint16 zclGetAttrDataLengthUsingCB( uint8 endpoint, uint16 clusterId, uint16 attrId )
+{
+	uint16 dataLen = 0;
+	zclReadWriteCB_t pfnReadWriteCB = zclGetReadWriteCB( endpoint );
+
+	if ( pfnReadWriteCB != NULL )
+	{
+		// Only get the attribute length
+		(*pfnReadWriteCB)( clusterId, attrId, ZCL_OPER_LEN, NULL, &dataLen );
+	}
+
+	return ( dataLen );
+}
+
+/*********************************************************************
+ * @fn      zcl_SendReadRsp
+ *
+ * @brief   Send a Read Response command.
+ *
+ * @param   srcEP - Application's endpoint
+ * @param   dstAddr - destination address
+ * @param   clusterID - cluster ID
+ * @param   readRspCmd - read response command to be sent
+ * @param   direction - direction of the command
+ * @param   seqNum - transaction sequence number
+ *
+ * @return  ZSuccess if OK
+ */
+ZStatus_t zcl_SendReadRsp( uint8 srcEP, uint8 dstEp, uint16 dstAddr,
+		uint16 clusterID, zclReadRspCmd_t *readRspCmd,
+		uint8 direction, uint8 disableDefaultRsp, uint8 seqNum )
+{
+	uint8 *buf;
+	uint16 len = 0;
+	ZStatus_t status;
+	uint8 i;
+
+	// calculate the size of the command
+	for ( i = 0; i < readRspCmd->numAttr; i++ )
+	{
+		zclReadRspStatus_t *statusRec = &(readRspCmd->attrList[i]);
+
+		len += 2 + 1; // Attribute ID + Status
+
+		if ( statusRec->status == ZCL_STATUS_SUCCESS )
+		{
+			len++; // Attribute Data Type length
+
+			// Attribute Data length
+			if ( statusRec->data != NULL )
+			{
+				len += zclGetAttrDataLength( statusRec->dataType, statusRec->data );
+			}
+			else
+			{
+
+				len += zclGetAttrDataLengthUsingCB( srcEP, clusterID, statusRec->attrID );
+			}
+		}
+	}
+
+	buf = (uint8 *)malloc( len );
+	if ( buf != NULL )
+	{
+		// Load the buffer - serially
+		uint8 *pBuf = buf;
+
+		for ( i = 0; i < readRspCmd->numAttr; i++ )
+		{
+			zclReadRspStatus_t *statusRec = &(readRspCmd->attrList[i]);
+
+			*pBuf++ = LO_UINT16( statusRec->attrID );
+			*pBuf++ = HI_UINT16( statusRec->attrID );
+			*pBuf++ = statusRec->status;
+
+			if ( statusRec->status == ZCL_STATUS_SUCCESS )
+			{
+				*pBuf++ = statusRec->dataType;
+
+				if ( statusRec->data != NULL )
+				{
+					// Copy attribute data to the buffer to be sent out
+					pBuf = zclSerializeData( statusRec->dataType, statusRec->data, pBuf );
+				}
+				else
+				{
+					uint16 dataLen;
+
+					// Read attribute data directly into the buffer to be sent out
+					zclReadAttrDataUsingCB( srcEP, clusterID, statusRec->attrID, pBuf, &dataLen );
+					pBuf += dataLen;
+				}
+			}
+		} // for loop
+
+		status = zcl_SendCommand( srcEP, dstEp, dstAddr, clusterID, ZCL_CMD_READ_RSP, FALSE,
+				direction, disableDefaultRsp, 0, seqNum, len, buf );
+		zcl_mem_free( buf );
 	}
 	else
 	{

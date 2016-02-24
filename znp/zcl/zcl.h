@@ -353,6 +353,7 @@
 typedef unsigned char ZStatus_t;
 typedef unsigned char uint8;
 typedef unsigned short uint16;
+typedef unsigned int uint32;
 
 // Redefined Generic Status Return Values for code backwards compatibility
 #define ZSuccess                    SUCCESS
@@ -409,4 +410,84 @@ ZStatus_t zcl_SendCommand( uint8 srcEP, uint8 dstEp, uint16 dstaddr,
 
 // process incoming message
 int zcl_proccessincomingmessage(IncomingMsgFormat_t * message); 
+
+// ---- ZCL_READ
+// Read Attribute Command format
+typedef struct
+{
+  uint8  numAttr;            // number of attributes in the list
+  uint16 attrID[];           // supported attributes list - this structure should
+                             // be allocated with the appropriate number of attributes.
+} zclReadCmd_t;
+
+// Read Attribute Response Status record
+typedef struct
+{
+  uint16 attrID;            // attribute ID
+  uint8  status;            // should be ZCL_STATUS_SUCCESS or error
+  uint8  dataType;          // attribute data type
+  uint8  *data;             // this structure is allocated, so the data is HERE
+                            // - the size depends on the attribute data type
+} zclReadRspStatus_t;
+
+// Read Attribute Response Command format
+typedef struct
+{
+  uint8              numAttr;     // number of attributes in the list
+  zclReadRspStatus_t attrList[];  // attribute status list
+} zclReadRspCmd_t;
+// ZCL_READ
+//
+// Attribute record
+typedef struct
+{
+  uint16  attrId;         // Attribute ID
+  uint8   dataType;       // Data Type - defined in AF.h
+  uint8   accessControl;  // Read/write - bit field
+  void    *dataPtr;       // Pointer to data field
+} zclAttribute_t;
+
+typedef struct
+{
+  uint16          clusterID;    // Real cluster ID
+  zclAttribute_t  attr;
+} zclAttrRec_t;
+
+// Function pointer type to read/write attribute data.
+//
+//   clusterId - cluster that attribute belongs to
+//   attrId - attribute to be read or written
+//   oper - ZCL_OPER_LEN, ZCL_OPER_READ, or ZCL_OPER_WRITE
+//   pValue - pointer to attribute (length) value
+//   pLen - length of attribute value read
+//
+//   return  ZCL_STATUS_SUCCESS: Operation successful
+//           ZCL Error Status: Operation not successful
+typedef ZStatus_t (*zclReadWriteCB_t)( uint16 clusterId, uint16 attrId, uint8 oper,
+                                       uint8 *pValue, uint16 *pLen );
+
+// Callback function prototype to authorize a Read or Write operation
+//   on a given attribute.
+//
+//   srcAddr - source Address
+//   pAttr - pointer to attribute
+//   oper - ZCL_OPER_READ, or ZCL_OPER_WRITE
+//
+//   return  ZCL_STATUS_SUCCESS: Operation authorized
+//           ZCL_STATUS_NOT_AUTHORIZED: Operation not authorized
+typedef ZStatus_t (*zclAuthorizeCB_t)( afAddrType_t *srcAddr, zclAttrRec_t *pAttr, uint8 oper );
+// Attribute record list item
+typedef struct zclAttrRecsList
+{
+  struct zclAttrRecsList *next;
+  uint8                  endpoint;      // Used to link it into the endpoint descriptor
+  zclReadWriteCB_t       pfnReadWriteCB;// Read or Write attribute value callback function
+  zclAuthorizeCB_t       pfnAuthorizeCB;// Authorize Read or Write operation
+  uint8                  numAttributes; // Number of the following records
+  const zclAttrRec_t     *attrs;        // attribute records
+} zclAttrRecsList;
+
+#define FALSE 0
+#define TRUE 1
+
 #endif
