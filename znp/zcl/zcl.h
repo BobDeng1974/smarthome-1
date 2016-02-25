@@ -403,7 +403,13 @@ struct zclincomingmsg{
 /*
  *  Function for Sending a Command
  */
-ZStatus_t zcl_SendCommand( uint8 srcEP, uint8 dstEp, uint16 dstaddr,
+ZStatus_t zcl_sendcommand( uint8 srcEP, uint8 dstEp, uint16 dstaddr,
+                                  uint16 clusterID, uint8 cmd, uint8 specific, uint8 direction,
+                                  uint8 disableDefaultRsp, uint16 manuCode, uint8 seqNum,
+                                  uint16 cmdFormatLen, uint8 *cmdFormat );
+
+
+ZStatus_t zcl_SendCommand( uint8 srcEP, afAddrType_t *dstAddr,
                                   uint16 clusterID, uint8 cmd, uint8 specific, uint8 direction,
                                   uint8 disableDefaultRsp, uint16 manuCode, uint8 seqNum,
                                   uint16 cmdFormatLen, uint8 *cmdFormat );
@@ -487,6 +493,14 @@ typedef struct zclAttrRecsList
   const zclAttrRec_t     *attrs;        // attribute records
 } zclAttrRecsList;
 
+ZStatus_t zcl_SendReadRsp( uint8 srcEP, uint8 dstEp, uint16 dstAddr,
+		uint16 clusterID, zclReadRspCmd_t *readRspCmd,
+		uint8 direction, uint8 disableDefaultRsp, uint8 seqNum );
+
+
+ZStatus_t zcl_SendRead( uint8 srcEP, uint8 dstEp, uint16 dstAddr,
+		uint16 clusterID, zclReadCmd_t *readCmd,
+		uint8 direction, uint8 disableDefaultRsp, uint8 seqNum);
 #define FALSE 0
 #define TRUE 1
 

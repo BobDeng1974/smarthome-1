@@ -143,7 +143,7 @@ static uint8 *zclBuildHdr( struct zclframehdr *hdr, uint8 *pData )
 	return ( pData );
 }
 /*********************************************************************
- * @fn      zcl_SendCommand
+ * @fn      zcl_sendcommand
  *
  * @brief   Used to send Profile and Cluster Specific Command messages.
  *
@@ -164,7 +164,7 @@ static uint8 *zclBuildHdr( struct zclframehdr *hdr, uint8 *pData )
  *
  * @return  ZSuccess if OK
  */
-ZStatus_t zcl_SendCommand( uint8 srcEP, uint8 dstEp, uint16 dstaddr,
+ZStatus_t zcl_sendcommand( uint8 srcEP, uint8 dstEp, uint16 dstaddr,
 		uint16 clusterID, uint8 cmd, uint8 specific, uint8 direction,
 		uint8 disableDefaultRsp, uint16 manuCode, uint8 seqNum,
 		uint16 cmdFormatLen, uint8 *cmdFormat )
@@ -295,6 +295,15 @@ ZStatus_t zcl_SendCommand( uint8 srcEP, uint8 dstEp, uint16 dstaddr,
 	}
 
 	return ( status );
+}
+
+
+ZStatus_t zcl_SendCommand( uint8 srcEP, afAddrType_t *destAddr,
+                           uint16 clusterID, uint8 cmd, uint8 specific, uint8 direction,
+                           uint8 disableDefaultRsp, uint16 manuCode, uint8 seqNum,
+                           uint16 cmdFormatLen, uint8 *cmdFormat ){
+
+	return zcl_sendcommand(srcEP, destAddr->endPoint, destAddr->addr.shortAddr,clusterID, cmd, specific, direction, disableDefaultRsp, manuCode, seqNum, cmdFormatLen, cmdFormatLen);
 }
 
 /*********************************************************************
@@ -582,7 +591,7 @@ ZStatus_t zcl_SendRead( uint8 srcEP, uint8 dstEp, uint16 dstAddr,
 			*pBuf++ = HI_UINT16( readCmd->attrID[i] );
 		}
 
-		status = zcl_SendCommand( srcEP, dstEp, dstAddr, clusterID, ZCL_CMD_READ, FALSE,
+		status = zcl_sendcommand( srcEP, dstEp, dstAddr, clusterID, ZCL_CMD_READ, FALSE,
 				direction, disableDefaultRsp, 0, seqNum, dataLen, buf );
 		free( buf );
 	}
@@ -781,7 +790,7 @@ ZStatus_t zcl_SendReadRsp( uint8 srcEP, uint8 dstEp, uint16 dstAddr,
 			}
 		} // for loop
 
-		status = zcl_SendCommand( srcEP, dstEp, dstAddr, clusterID, ZCL_CMD_READ_RSP, FALSE,
+		status = zcl_sendcommand( srcEP, dstEp, dstAddr, clusterID, ZCL_CMD_READ_RSP, FALSE,
 				direction, disableDefaultRsp, 0, seqNum, len, buf );
 		zcl_mem_free( buf );
 	}

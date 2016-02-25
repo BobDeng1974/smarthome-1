@@ -223,7 +223,7 @@ ZStatus_t zclSS_IAS_Send_ZoneStatusEnrollResponseCmd( uint8 srcEP, uint8 dstEp, 
 	buf[0] = responseCode;
 	buf[1] = zoneID;
 
-	return zcl_SendCommand( srcEP, dstEp, dstaddr, ZCL_CLUSTER_ID_SS_IAS_ZONE,
+	return zcl_sendcommand( srcEP, dstEp, dstaddr, ZCL_CLUSTER_ID_SS_IAS_ZONE,
 			COMMAND_SS_IAS_ZONE_STATUS_ENROLL_RESPONSE, TRUE,
 			ZCL_FRAME_CLIENT_SERVER_DIR, disableDefaultRsp, 0,
 			seqNum, PAYLOAD_LEN_ZONE_STATUS_ENROLL_RSP, buf );
