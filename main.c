@@ -53,19 +53,19 @@ int main(){
 	}
 
 	// create pipe for znp to main
-//	int mainrfd, znpwfd;
-//	mainrfd = createpipe2(&znpwfd);
-//	struct connection * znpconnection = freeconnlist_getconn();
-//	connection_init(znpconnection, mainrfd, CONNZNP);
-//
-//	// open serial port
-//	if(znp_start(znpwfd, ceconf_getserialport()) == -1){
-//		return 1;
-//	}
-//	if(znpconnection){
-//		eventhub_register(hub, connection_getfd(znpconnection));
-//		connrbtree_insert(znpconnection);
-//	}
+	int mainrfd, znpwfd;
+	mainrfd = createpipe2(&znpwfd);
+	struct connection * znpconnection = freeconnlist_getconn();
+	connection_init(znpconnection, mainrfd, CONNZNP);
+
+	// open serial port
+	if(znp_start(znpwfd, ceconf_getserialport()) == -1){
+		return 1;
+	}
+	if(znpconnection){
+		eventhub_register(hub, connection_getfd(znpconnection));
+		connrbtree_insert(znpconnection);
+	}
 
 	eventhub_start(hub);
 }

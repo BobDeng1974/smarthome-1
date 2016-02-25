@@ -42,8 +42,8 @@ int _check_command(unsigned char * buffer, int buflen, unsigned char command){
 }
 
 void event_recvmsg(struct eventhub * hub, int fd, unsigned char * buf, int buflen){
-	fprintf(stdout, "recv ");
-	toolkit_printbytes(buf, buflen);
+//	fprintf(stdout, "recv ");
+//	toolkit_printbytes(buf, buflen);
 	struct connection * c = connrbtree_getconn(fd);
 	if(c && connection_gettype(c) == CONNSOCKETCMD){ 
 		if( _check_command(buf, buflen, CECHECK[0])){
