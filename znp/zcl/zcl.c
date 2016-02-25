@@ -836,3 +836,122 @@ int zcl_proccessincomingmessage(IncomingMsgFormat_t * message){
 
 	return result;
 }
+
+// ------------------------------ZCL_WRITE---------------------------
+/*********************************************************************
+ * @fn      sendWriteRequest
+ *
+ * @brief   Send a Write command
+ *
+ * @param   dstAddr - destination address
+ * @param   clusterID - cluster ID
+ * @param   writeCmd - write command to be sent
+ * @param   cmd - ZCL_CMD_WRITE, ZCL_CMD_WRITE_UNDIVIDED or ZCL_CMD_WRITE_NO_RSP
+ * @param   direction - direction of the command
+ * @param   seqNum - transaction sequence number
+ *
+ * @return  ZSuccess if OK
+ */
+ZStatus_t zcl_SendWriteRequest( uint8 srcEP, afAddrType_t *dstAddr, uint16 clusterID,
+                                zclWriteCmd_t *writeCmd, uint8 cmd, uint8 direction,
+                                uint8 disableDefaultRsp, uint8 seqNum )
+{
+  uint8 *buf;
+  uint16 dataLen = 0;
+  ZStatus_t status;
+  uint8 i;
+
+  for ( i = 0; i < writeCmd->numAttr; i++ )
+  {
+    zclWriteRec_t *statusRec = &(writeCmd->attrList[i]);
+
+    dataLen += 2 + 1; // Attribute ID + Attribute Type
+
+    // Attribute Data
+    dataLen += zclGetAttrDataLength( statusRec->dataType, statusRec->attrData );
+  }
+
+  buf = zcl_mem_alloc( dataLen );
+  if ( buf != NULL )
+  {
+    // Load the buffer - serially
+    uint8 *pBuf = buf;
+    for ( i = 0; i < writeCmd->numAttr; i++ )
+    {
+      zclWriteRec_t *statusRec = &(writeCmd->attrList[i]);
+
+      *pBuf++ = LO_UINT16( statusRec->attrID );
+      *pBuf++ = HI_UINT16( statusRec->attrID );
+      *pBuf++ = statusRec->dataType;
+
+      pBuf = zclSerializeData( statusRec->dataType, statusRec->attrData, pBuf );
+    }
+
+    status = zcl_SendCommand( srcEP, dstAddr, clusterID, cmd, FALSE,
+                              direction, disableDefaultRsp, 0, seqNum, dataLen, buf );
+    zcl_mem_free( buf );
+  }
+  else
+  {
+    status = ZMemError;
+  }
+
+  return ( status);
+}
+
+/*********************************************************************
+ * @fn      zcl_SendWriteRsp
+ *
+ * @brief   Send a Write Response command
+ *
+ * @param   dstAddr - destination address
+ * @param   clusterID - cluster ID
+ * @param   wrtieRspCmd - write response command to be sent
+ * @param   direction - direction of the command
+ * @param   seqNum - transaction sequence number
+ *
+ * @return  ZSuccess if OK
+ */
+ZStatus_t zcl_SendWriteRsp( uint8 srcEP, afAddrType_t *dstAddr,
+                            uint16 clusterID, zclWriteRspCmd_t *writeRspCmd,
+                            uint8 direction, uint8 disableDefaultRsp, uint8 seqNum )
+{
+  uint16 dataLen;
+  uint8 *buf;
+  ZStatus_t status;
+
+  dataLen = writeRspCmd->numAttr * ( 1 + 2 ); // status + attribute id
+
+  buf = zcl_mem_alloc( dataLen );
+  if ( buf != NULL )
+  {
+    // Load the buffer - serially
+    uint8 i;
+    uint8 *pBuf = buf;
+    for ( i = 0; i < writeRspCmd->numAttr; i++ )
+    {
+      *pBuf++ = writeRspCmd->attrList[i].status;
+      *pBuf++ = LO_UINT16( writeRspCmd->attrList[i].attrID );
+      *pBuf++ = HI_UINT16( writeRspCmd->attrList[i].attrID );
+    }
+
+    // If there's only a single status record and its status field is set to
+    // SUCCESS then omit the attribute ID field.
+    if ( writeRspCmd->numAttr == 1 && writeRspCmd->attrList[0].status == ZCL_STATUS_SUCCESS )
+    {
+      dataLen = 1;
+    }
+
+    status = zcl_SendCommand( srcEP, dstAddr, clusterID, ZCL_CMD_WRITE_RSP, FALSE,
+                              direction, disableDefaultRsp, 0, seqNum, dataLen, buf );
+    zcl_mem_free( buf );
+  }
+  else
+  {
+    status = ZMemError;
+  }
+
+  return ( status );
+}
+
+// ------------------------------ZCL_WRITE---------------------------

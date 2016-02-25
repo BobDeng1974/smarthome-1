@@ -417,7 +417,7 @@ ZStatus_t zcl_SendCommand( uint8 srcEP, afAddrType_t *dstAddr,
 // process incoming message
 int zcl_proccessincomingmessage(IncomingMsgFormat_t * message); 
 
-// ---- ZCL_READ
+// ------------------------------------------------------------------------ ZCL_READ
 // Read Attribute Command format
 typedef struct
 {
@@ -501,6 +501,75 @@ ZStatus_t zcl_SendReadRsp( uint8 srcEP, uint8 dstEp, uint16 dstAddr,
 ZStatus_t zcl_SendRead( uint8 srcEP, uint8 dstEp, uint16 dstAddr,
 		uint16 clusterID, zclReadCmd_t *readCmd,
 		uint8 direction, uint8 disableDefaultRsp, uint8 seqNum);
+// ------------------------------------------------------------------------ ZCL_READ
+// ------------------------------------------------------------------------ ZCL_WRITE
+
+// Write Attribute record
+typedef struct
+{
+  uint16 attrID;             // attribute ID
+  uint8  dataType;           // attribute data type
+  uint8  *attrData;          // this structure is allocated, so the data is HERE
+                             //  - the size depends on the attribute data type
+} zclWriteRec_t;
+
+// Write Attribute Command format
+typedef struct
+{
+  uint8         numAttr;     // number of attribute records in the list
+  zclWriteRec_t attrList[];  // attribute records
+} zclWriteCmd_t;
+
+// Write Attribute Status record
+typedef struct
+{
+  uint8  status;             // should be ZCL_STATUS_SUCCESS or error
+  uint16 attrID;             // attribute ID
+} zclWriteRspStatus_t;
+
+// Write Attribute Response Command format
+typedef struct
+{
+  uint8               numAttr;     // number of attribute status in the list
+  zclWriteRspStatus_t attrList[];  // attribute status records
+} zclWriteRspCmd_t;
+
+/*
+ *  Send a Write Command - ZCL_CMD_WRITE
+ *  Use like:
+ *      ZStatus_t zcl_SendWrite( uint8 srcEP, afAddrType_t *dstAddr, uint16 realClusterID, zclWriteCmd_t *writeCmd, uint8 direction, uint8 disableDefaultRsp, uint8 seqNum );
+ */
+#define zcl_SendWrite(a,b,c,d,e,f,g) (zcl_SendWriteRequest( (a), (b), (c), (d), ZCL_CMD_WRITE, (e), (f), (g) ))
+
+/*
+ *  Send a Write Undivided Command - ZCL_CMD_WRITE_UNDIVIDED
+ *  Use like:
+ *      ZStatus_t zcl_SendWriteUndivided( uint8 srcEP, afAddrType_t *dstAddr, uint16 realClusterID, zclWriteCmd_t *writeCmd, uint8 direction, uint8 disableDefaultRsp, uint8 seqNum );
+ */
+#define zcl_SendWriteUndivided(a,b,c,d,e,f,g) (zcl_SendWriteRequest( (a), (b), (c), (d), ZCL_CMD_WRITE_UNDIVIDED, (e), (f), (g) ))
+
+/*
+ *  Send a Write No Response Command - ZCL_CMD_WRITE_NO_RSP
+ *  Use like:
+ *      ZStatus_t zcl_SendWriteNoRsp( uint8 srcEP, afAddrType_t *dstAddr, uint16 realClusterID, zclWriteCmd_t *writeCmd, uint8 direction, uint8 disableDefaultRsp, uint8 seqNum );
+ */
+#define zcl_SendWriteNoRsp(a,b,c,d,e,f,g) (zcl_SendWriteRequest( (a), (b), (c), (d), ZCL_CMD_WRITE_NO_RSP, (e), (f), (g) ))
+
+/*
+ *  Function for Writing an Attribute
+ */
+ZStatus_t zcl_SendWriteRequest( uint8 srcEP, afAddrType_t *dstAddr, uint16 clusterID,
+                                zclWriteCmd_t *writeCmd, uint8 cmd, uint8 direction,
+                                uint8 disableDefaultRsp, uint8 seqNum );
+
+/*
+ *  Function for sending a Write response command
+ */
+extern ZStatus_t zcl_SendWriteRsp( uint8 srcEP, afAddrType_t *dstAddr,
+                                   uint16 realClusterID, zclWriteRspCmd_t *writeRspCmd,
+                                   uint8 direction, uint8 disableDefaultRsp, uint8 seqNum );
+
+// ------------------------------------------------------------------------ ZCL_WRITE
 #define FALSE 0
 #define TRUE 1
 
