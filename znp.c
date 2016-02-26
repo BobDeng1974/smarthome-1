@@ -36,7 +36,7 @@ void *appinmessagetask(void *argument)
 	return NULL;
 }
 
-int znp_start(int wfd, char * serialport){ 
+int znp_start(int wfd, int znprfd, char * serialport){ 
 
 	g_znpwfd = wfd;
 
@@ -57,9 +57,8 @@ int znp_start(int wfd, char * serialport){
 	pthread_create(&rpcthread, NULL, rpctask, (void *) &serialportfd);
 
 	//dbg_print(PRINT_LEVEL_INFO, "creating  thread\n");
-	pthread_create(&appthread, NULL, apptask, NULL);
+	pthread_create(&appthread, NULL, apptask, (void *)&znprfd);
 	pthread_create(&inmthread, NULL, appinmessagetask, NULL);
 
 	return 0;
-
 }

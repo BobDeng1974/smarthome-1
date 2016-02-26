@@ -1608,6 +1608,7 @@ void* appMsgProcess(void *argument)
 
 void appProcess(void * args)
 {
+	int znprfd = *((int *)args);
 	int32_t status;
 
 	//Flush all messages from the que
@@ -1641,6 +1642,9 @@ void appProcess(void * args)
 	status = sysOsalNvWrite(&nvWrite);
 	initDone = 1;
 	
+	for(;;){ 
+		rpcWaitMqClientMsg(10000);
+	}
 	//	while(1);
 }
 

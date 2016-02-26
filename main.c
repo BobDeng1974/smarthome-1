@@ -58,8 +58,13 @@ int main(){
 	struct connection * znpconnection = freeconnlist_getconn();
 	connection_init(znpconnection, mainrfd, CONNZNP);
 
+	// create pipe for main to znp
+	int mainwfd, znprfd;
+	znprfd = createpipe2(&mainwfd);
+	make_socket_non_blocking(mainwfd);
+
 	// open serial port
-	if(znp_start(znpwfd, ceconf_getserialport()) == -1){
+	if(znp_start(znpwfd, znprfd, ceconf_getserialport()) == -1){
 		return 1;
 	}
 	if(znpconnection){

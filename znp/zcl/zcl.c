@@ -955,3 +955,19 @@ ZStatus_t zcl_SendWriteRsp( uint8 srcEP, afAddrType_t *dstAddr,
 }
 
 // ------------------------------ZCL_WRITE---------------------------
+// ------------------------------ZCL_REPORT---------------------------
+
+/*********************************************************************
+ * @fn      zcl_SendConfigReportRspCmd
+ *
+ * @brief   Send a Configure Reporting Response command
+ *
+ * @param   dstAddr - destination address
+ * @param   clusterID - cluster ID
+ * @param   cfgReportRspCmd - configure reporting response command to be sent
+ * @param   direction - direction of the command
+ * @param   seqNum - transaction sequence number
+ *
+ * @return  ZSuccess if OK
+ */
+// ------------------------------ZCL_REPORT---------------------------
