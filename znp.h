@@ -5,6 +5,6 @@ int znp_start(int wfd, int znprfd, char * serialport);
 
 struct zcl_command{
 	unsigned long long ieee;
-}
+};
 
 #endif

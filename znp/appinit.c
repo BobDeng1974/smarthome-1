@@ -934,6 +934,14 @@ static uint8_t mtZdoEndDeviceAnnceIndCb(EndDeviceAnnceIndFormat_t *msg)
 	consolePrint("IEEEAddr: 0x%016llX\n",
 	        (long long unsigned int) msg->IEEEAddr);
 	consolePrint("Capabilities: 0x%02X\n", msg->Capabilities);
+
+	ActiveEpReqFormat_t queryep;
+	memset(&queryep, 0, sizeof(ActiveEpReqFormat_t));
+	queryep.NwkAddrOfInterest = msg->NwkAddr;
+	queryep.DstAddr = msg->SrcAddr;
+	sendcmd((unsigned char *)&queryep, ZDO_ACTIVE_EP_REQ);
+
+
 	struct znp_device * device = (struct znp_device *)malloc(sizeof(struct znp_device));
 	memset(device, 0, sizeof(struct znp_device));
 	device->shortaddr = msg->SrcAddr;

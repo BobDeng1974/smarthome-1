@@ -290,17 +290,18 @@ int zclss_processincmd_zonestatus_enrollrequest(struct zclincomingmsg * pInMsg){
 	//
 	
 	struct zclzoneenrollreq req;
-	req.shortaddr = pInMsg->message->SrcAddr;
-	struct znp_device * d = znp_device_get(req.shortaddr);
-	
+	struct znp_device * d = znp_device_get(pInMsg->message->SrcAddr);
 
 	d->device_data.ss_device.clusterid = pInMsg->message->ClusterId;
 	d->device_data.ss_device.zonetype = zoneType;
 	
 	req.ieeeaddr = d->ieeeaddr; 
-	req.zonetype = zoneType;
-	req.zoneid = zoneID;
+///	req.zonetype = zoneType;
+///	req.zoneid = zoneID;
 	req.clusterid = pInMsg->message->ClusterId;
+	req.srcep = pInMsg->message->SrcEndpoint;
+	req.dstep = pInMsg->message->DstEndpoint;
+	req.groupid = pInMsg->message->GroupId;
 	int tmp = ZCLZONEENROLLREQ;
 	sendnonblocking(g_znpwfd, &tmp, sizeof(int));
 	sendnonblocking(g_znpwfd, &req, sizeof(struct zclzoneenrollreq));

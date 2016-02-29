@@ -4,53 +4,21 @@
 
 #define min(a,b) a>b?b:a
 
-struct endpoint * _endpiont_create(unsigned char ep, unsigned short clusterid){ 
-	struct endpoint * endpoint = (struct endpoint *)malloc(sizeof(struct endpoint));
-	memset(endpoint, 0, sizeof(struct endpoint));
-	INIT_LIST_HEAD(&endpoint->list);
-	endpoint->ep = ep;
-	endpoint->clusterid[endpoint->clusteridcount] = clusterid;
-	endpoint->clusteridcount++; 
-
-	return endpoint;
-}
-
-struct device * device_create(unsigned short deviceid){
+struct device * device_create(unsigned long long deviceieee){
 	struct device * device = (struct device *)malloc(sizeof(struct device)); 
 	memset(device, 0, sizeof(struct device));
 	INIT_LIST_HEAD(&device->list);
-	INIT_LIST_HEAD(&device->eplisthead);
-	device->deviceid = deviceid;
+	device->ieeeaddr = deviceieee;
 
 	return device; 
 }
 
-struct endpoint * device_getep(struct device * d, unsigned short ep){
-	struct list_head *pos, *n;
-	struct endpoint * endpoint;
-	list_for_each_safe(pos, n, &d->eplisthead){ 
-		endpoint = list_entry(pos, struct endpoint, list);
-		if (endpoint->ep == ep){
-			return endpoint;
-		}
-	}
-
-	return NULL;
-}
-
-void device_addcluster(struct device *d,  unsigned long long ieeeaddr, unsigned char ep, unsigned short clusterid, char * name){ 
-	if(strlen(d->devicename) == 0){
-		memcpy(d->devicename, name,min(strlen(name), MAXNAMELEN-1));
-	}
-	d->ieeeaddr = ieeeaddr;
-	struct endpoint * endpoint = NULL;
-	if((endpoint = device_getep(d, ep))){
-		endpoint->clusterid[endpoint->clusteridcount] = clusterid;
-		endpoint->clusteridcount++;
-	}else{ 
-		endpoint = _endpiont_create(ep, clusterid);
-		list_add_tail(&d->eplisthead, &endpoint->list);
-	}
+void device_addcluster(struct device *d, unsigned short groupid, unsigned short clusterid, unsigned char srcep, unsigned char dstep){
+	d->clusterids[d->clusteridcount].clusterid = clusterid;
+	d->clusterids[d->clusteridcount].groupid = groupid;
+	d->clusterids[d->clusteridcount].srcep = srcep;
+	d->clusterids[d->clusteridcount].dstep = dstep;
+	d->clusteridcount++;
 }
 
 static struct gateway gatewayinstance;
@@ -74,26 +42,29 @@ void gateway_adddevice(struct gateway * gw, struct device * d){
 
 void gateway_deldevice(struct gateway * gw, struct device *d){
 	list_del(&d->list);
-	struct list_head *pos, *n;
-	struct endpoint * endpoint;
-	list_for_each_safe(pos, n, &d->eplisthead){ 
-		endpoint = list_entry(pos, struct endpoint, list);
-		list_del(pos);
-		free(endpoint);
-	}
-
 	free(d);
 }
 
-unsigned char device_getclusteridcount(struct device * d){
-	int result = 0;
-
-	struct endpoint * endpoint;
+struct device * gateway_getdevice(struct gateway * gw, unsigned long long ieee){
+	struct device * d;
 	struct list_head * pos, *n;
-	list_for_each_safe(pos, n, &d->eplisthead){ 
-		endpoint = list_entry(pos, struct endpoint, list); 
-		result += endpoint->clusteridcount;
+	list_for_each_safe(pos, n, &gw->head){ 
+		d = list_entry(pos, struct device, list); 
+		if(d->ieeeaddr == ieee){
+			return d;
+		}
 	}
 
-	return result;
+	return NULL;
+}
+
+struct clusterid * device_getclusterid(struct device * d, unsigned short clusterid){
+	unsigned char i = 0;
+	for(i = 0; i < d->clusteridcount; i++){
+		if(d->clusterids[i].clusterid == clusterid){
+			return &d->clusterids[i];
+		}
+	}
+
+	return NULL;
 }

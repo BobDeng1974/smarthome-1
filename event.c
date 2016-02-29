@@ -2,6 +2,7 @@
 #include <errno.h>
 #include <stdlib.h>
 #include <string.h>
+#include <assert.h>
 
 #include "connection.h"
 #include "protocol.h"
@@ -93,8 +94,12 @@ void event_recvznp(struct eventhub * hub, int fd){
 			{ 
 				struct zclzoneenrollreq req;
 				readnonblocking(fd, &req, sizeof(struct zclzoneenrollreq));
-				struct device * device = device_create(req.shortaddr);
-				device_addcluster(device, req.ieeeaddr, 1, req.clusterid, "");
+				struct device *d = gateway_getdevice(getgateway(),req.ieeeaddr);
+				if(d == NULL){ 
+					d = device_create(req.ieeeaddr);
+					gateway_adddevice(getgateway(), d);
+				}
+				device_addcluster(d, req.groupid, req.clusterid, req.srcep, req.dstep);
 				unsigned char buf[64] = {0};
 				unsigned int buflen = encode_adddeldevice(buf, req.ieeeaddr, 1);
 				broadcast(buf, buflen);

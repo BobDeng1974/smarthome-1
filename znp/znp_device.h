@@ -15,7 +15,7 @@ struct znp_endpoint{
 	struct list_head list;
 	unsigned char ep;
 	unsigned char peerep;
-	unsigned char short clusteridcount;
+	unsigned char clusteridcount;
 	unsigned short clusterid[MAXCLUSTER];
 };
 

@@ -6,10 +6,10 @@
 
 struct zclzoneenrollreq{
 	unsigned long long ieeeaddr;
-	unsigned short shortaddr;
-	unsigned short zonetype;
+	unsigned short groupid;
 	unsigned short clusterid;
-	unsigned char zoneid; 
+	unsigned char srcep;
+	unsigned char dstep;
 };
 
 //ZoneStatusAttribute

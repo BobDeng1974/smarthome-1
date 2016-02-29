@@ -19,6 +19,7 @@ unsigned int encode_login(struct gateway *gw, unsigned char *buf) {
 
 	struct list_head *pos, *n;
 	struct device *d;
+	int i;
 	list_for_each_safe(pos, n,&gw->head)
 	{
 		d=list_entry(pos, struct device, list);
@@ -27,18 +28,10 @@ unsigned int encode_login(struct gateway *gw, unsigned char *buf) {
 		bytebuffer_writebyte(&p, devicenamelen);
 		bytebuffer_writebytes(&p, (unsigned char *)d->devicename,devicenamelen);
 
-		unsigned char clusteridcount = device_getclusteridcount(d);
-		bytebuffer_writebyte(&p, clusteridcount);
+		bytebuffer_writebyte(&p, d->clusteridcount);
 
-		struct endpoint * endpoint;
-		unsigned short i;
-		struct list_head * epos, *en;
-		list_for_each_safe(epos, en, &d->eplisthead){
-			endpoint = list_entry(epos, struct endpoint, list);
-			for(i = 0; i < endpoint->clusteridcount; i++){
-				bytebuffer_writeword(&p, endpoint->clusterid[i]);
-			}
-
+		for(i = 0; i < d->clusteridcount; i++){
+			bytebuffer_writeword(&p, d->clusterids[i].clusterid);
 		}
 	}	
 	unsigned int templen = p-buf;

@@ -22,7 +22,7 @@ void *rpctask(void *argument)
 
 void *apptask(void *argument)
 {
-	appProcess(NULL);
+	appProcess(argument);
 
 	return NULL;
 }

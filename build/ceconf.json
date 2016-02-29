@@ -2,7 +2,7 @@
 	"listenport":"8989",
 	"serveraddr":"0",
 	"serverport":"8989",
-	"serialport":"/dev/ttyO1",
+	"serialport":"/dev/ttyUSB0",
 	"timeout":"60"
 }
 
