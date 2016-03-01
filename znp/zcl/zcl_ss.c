@@ -7,6 +7,7 @@
 #include "mtParser.h"
 #include "zcl_datatype.h"
 #include "znp_device.h"
+#include "znp_map.h"
 #include "socket.h"
 
 
@@ -289,13 +290,14 @@ int zclss_processincmd_zonestatus_enrollrequest(struct zclincomingmsg * pInMsg){
 	//  }
 	//
 	
-	struct zclzoneenrollreq req;
-	struct znp_device * d = znp_device_get(pInMsg->message->SrcAddr);
+	//struct znp_device * d = znp_device_get(pInMsg->message->SrcAddr);
 
-	d->device_data.ss_device.clusterid = pInMsg->message->ClusterId;
-	d->device_data.ss_device.zonetype = zoneType;
+	//d->device_data.ss_device.clusterid = pInMsg->message->ClusterId;
+	//d->device_data.ss_device.zonetype = zoneType;
 	
-	req.ieeeaddr = d->ieeeaddr; 
+	struct znp_map * map = znp_map_get_ieee(pInMsg->message->SrcAddr);
+	struct zclzoneenrollreq req;
+	req.ieeeaddr = map->ieee; 
 ///	req.zonetype = zoneType;
 ///	req.zoneid = zoneID;
 	req.clusterid = pInMsg->message->ClusterId;
@@ -321,16 +323,16 @@ int zclss_processincmd_zonestatus_enrollrequest(struct zclincomingmsg * pInMsg){
 
 int zclss_processincmd_zonestatus_changenotification(struct zclincomingmsg * msg){
 	fprintf(stdout, "---------------------------------------datalen %d\n", msg->datalen); 
-	struct zclzonechangenotification req;
-	req.zonechangenotification.uszonestatus = BUILD_UINT16(msg->data[0],msg->data[1]);
-	struct znp_device * device = znp_device_get(msg->message->SrcAddr);
-	req.ieeeaddr = device->ieeeaddr;
-	req.clusterid = device->device_data.ss_device.clusterid;
-	req.zonetype = device->device_data.ss_device.zonetype;
-
-	int tmp = ZCLZONECHANGENOTIFICATION;
-	sendnonblocking(g_znpwfd, &tmp, sizeof(int));
-	sendnonblocking(g_znpwfd, &req, sizeof(struct zclzonechangenotification));
+//	struct zclzonechangenotification req;
+//	req.zonechangenotification.uszonestatus = BUILD_UINT16(msg->data[0],msg->data[1]);
+//	struct znp_device * device = znp_device_get(msg->message->SrcAddr);
+//	req.ieeeaddr = device->ieeeaddr;
+//	req.clusterid = device->device_data.ss_device.clusterid;
+//	req.zonetype = device->device_data.ss_device.zonetype;
+//
+//	int tmp = ZCLZONECHANGENOTIFICATION;
+//	sendnonblocking(g_znpwfd, &tmp, sizeof(int));
+//	sendnonblocking(g_znpwfd, &req, sizeof(struct zclzonechangenotification));
 	
 	return 0;
 }

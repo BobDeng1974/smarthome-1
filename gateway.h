@@ -3,21 +3,24 @@
 
 #include "list.h"
 #include "cluster.h"
+#include "mtZdo.h"
 
 #define MAXNAMELEN 256
+#define MAXEPCOUNT 64
 
-struct clusterid{
-	unsigned short clusterid;
-	unsigned short groupid;
-	unsigned char srcep;
-	unsigned char dstep;
+
+struct endpoint{
+	SimpleDescRspFormat_t simpledesc;
+	struct list_head list;
 };
 
 struct device{
 	char devicename[MAXNAMELEN];
 	unsigned long long ieeeaddr;
-	struct clusterid clusterids[CLUSTERCOUNT]; //clusterids:w
-	unsigned char clusteridcount;
+
+	unsigned char epcurse;
+	ActiveEpRspFormat_t activeep;
+	struct list_head eplisthead;
 	struct list_head list;
 };
 
@@ -30,16 +33,25 @@ struct gateway{
 	struct list_head head;
 };
 
+// endpoint 
+struct endpoint * endpoint_create(SimpleDescRspFormat_t * simpledesc);
+void endpoint_destroy(struct endpoint * ep);
+
+// device
 struct device * device_create(unsigned long long deviceieee);
+void device_addendpoint(struct device * d, struct endpoint * ep);
+unsigned char device_getepcount(struct device * d);
+void device_destroy(struct device * d);
+void device_setep(struct device * d, ActiveEpRspFormat_t * activeep);
+static void device_increase(struct device * d){
+	d->epcurse++;
+}
 
-void device_addcluster(struct device *d,unsigned short groupid, unsigned short clusterid,unsigned char srcep, unsigned char dstep);
-
+// gateway
 struct gateway * getgateway();
 void gateway_init(struct gateway * gw,unsigned long long gatewayid, char * gatewayname, unsigned char boxversion, unsigned char protocolversion);
-void gateway_adddevice(struct gateway * gw, struct device *d);
+void gateway_adddevice(struct gateway * gw, struct device * d);
 void gateway_deldevice(struct gateway * gw, struct device *d);
-
 struct device * gateway_getdevice(struct gateway * gw, unsigned long long ieee);
-struct clusterid * device_getclusterid(struct device * d, unsigned short clusterid);
 
 #endif

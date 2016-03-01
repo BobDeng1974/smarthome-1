@@ -28,11 +28,11 @@ unsigned int encode_login(struct gateway *gw, unsigned char *buf) {
 		bytebuffer_writebyte(&p, devicenamelen);
 		bytebuffer_writebytes(&p, (unsigned char *)d->devicename,devicenamelen);
 
-		bytebuffer_writebyte(&p, d->clusteridcount);
+		//bytebuffer_writebyte(&p, d->clusteridcount);
 
-		for(i = 0; i < d->clusteridcount; i++){
-			bytebuffer_writeword(&p, d->clusterids[i].clusterid);
-		}
+		//for(i = 0; i < d->clusteridcount; i++){
+		//	bytebuffer_writeword(&p, d->clusterids[i].clusterid);
+		//}
 	}	
 	unsigned int templen = p-buf;
 	unsigned char *p1=buf+1;

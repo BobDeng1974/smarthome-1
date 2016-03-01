@@ -58,10 +58,21 @@
 #include "zcl.h"
 
 #include "znp_device.h"
+#include "znp_map.h"
+#include "gateway.h"
 
 #define consolePrint printf
 #define consoleClearLn(); printf("%c[2K", 27);
 #define consoleFlush(); fflush(stdout);
+
+
+static struct device * _get_device(unsigned short shortaddr){
+	struct znp_map * map = znp_map_get_ieee(shortaddr);
+	if(map){ 
+		return gateway_getdevice(getgateway(), map->ieee);
+	}
+}
+
 /*********************************************************************
  * MACROS
  */
@@ -574,6 +585,18 @@ static uint8_t mtZdoSimpleDescRspCb(SimpleDescRspFormat_t *msg)
 			consolePrint("OutClusterList[%d]: 0x%04X\n", i,
 			        msg->OutClusterList[i]);
 		}
+
+		struct device * d = _get_device(msg->SrcAddr);
+		if(d->epcurse < d->activeep.ActiveEPCount){
+			SimpleDescReqFormat_t req;
+			req.DstAddr = msg->SrcAddr;
+			req.NwkAddrOfInterest = msg->NwkAddr;
+			req.Endpoint = d->activeep.ActiveEPList[d->epcurse];
+			sendcmd((unsigned char *)&req,ZDO_SIMPLE_DESC_REQ);
+
+			device_increase(d);
+		}
+
 	}
 	else
 	{
@@ -591,10 +614,23 @@ static uint8_t mtZdoActiveEpRspCb(ActiveEpRspFormat_t *msg)
 		consolePrint("Status: 0x%02X\n", msg->Status);
 		consolePrint("NwkAddr: 0x%04X\n", msg->NwkAddr);
 		consolePrint("ActiveEPCount: 0x%02X\n", msg->ActiveEPCount);
+		struct device * d = _get_device(msg->SrcAddr);
+
+		if(device_getepcount(d) == 0){
+			SimpleDescReqFormat_t req;
+			req.DstAddr = msg->SrcAddr;
+			req.NwkAddrOfInterest = msg->NwkAddr;
+			req.Endpoint = msg->ActiveEPList[0];
+			sendcmd((unsigned char *)&req,ZDO_SIMPLE_DESC_REQ);
+
+			device_increase(d);
+			device_setep(d, msg);
+		}
+
 		uint32_t i;
 		for (i = 0; i < msg->ActiveEPCount; i++)
 		{
-			consolePrint("ActiveEPList[%d]: 0x%02X\n", i, msg->ActiveEPList[i]);
+			consolePrint("ActiveEPList[%d]: 0x%02X\n", i, msg->ActiveEPList[i]); 
 		}
 	}
 	else
@@ -935,18 +971,18 @@ static uint8_t mtZdoEndDeviceAnnceIndCb(EndDeviceAnnceIndFormat_t *msg)
 	        (long long unsigned int) msg->IEEEAddr);
 	consolePrint("Capabilities: 0x%02X\n", msg->Capabilities);
 
-	ActiveEpReqFormat_t queryep;
-	memset(&queryep, 0, sizeof(ActiveEpReqFormat_t));
-	queryep.NwkAddrOfInterest = msg->NwkAddr;
-	queryep.DstAddr = msg->SrcAddr;
-	sendcmd((unsigned char *)&queryep, ZDO_ACTIVE_EP_REQ);
+	znp_map_insert(msg->NwkAddr, msg->IEEEAddr);
+	struct device * d = gateway_getdevice(getgateway(), msg->IEEEAddr);
+	if(!d){
+		struct device * d = device_create(msg->IEEEAddr);
+		gateway_adddevice(getgateway(), d);
 
-
-	struct znp_device * device = (struct znp_device *)malloc(sizeof(struct znp_device));
-	memset(device, 0, sizeof(struct znp_device));
-	device->shortaddr = msg->SrcAddr;
-	device->ieeeaddr = msg->IEEEAddr;
-	znp_device_insert(device);
+		ActiveEpReqFormat_t queryep;
+		memset(&queryep, 0, sizeof(ActiveEpReqFormat_t));
+		queryep.NwkAddrOfInterest = msg->NwkAddr;
+		queryep.DstAddr = msg->SrcAddr;
+		sendcmd((unsigned char *)&queryep, ZDO_ACTIVE_EP_REQ);
+	}
 
 	return 0;
 }
@@ -1062,7 +1098,9 @@ static uint8_t mtZdoLeaveIndCb(LeaveIndFormat_t *msg)
 	consolePrint("Request: 0x%02X\n", msg->Request);
 	consolePrint("Remove: 0x%02X\n", msg->Remove);
 	consolePrint("Rejoin: 0x%02X\n", msg->Rejoin);
-	znp_device_del(msg->SrcAddr);
+
+	znp_map_del_ieee(msg->ExtAddr);
+
 	return 0;
 }
 static uint8_t mtZdoMsgCbIncomingCb(MsgCbIncomingFormat_t *msg)

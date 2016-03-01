@@ -99,7 +99,6 @@ void event_recvznp(struct eventhub * hub, int fd){
 					d = device_create(req.ieeeaddr);
 					gateway_adddevice(getgateway(), d);
 				}
-				device_addcluster(d, req.groupid, req.clusterid, req.srcep, req.dstep);
 				unsigned char buf[64] = {0};
 				unsigned int buflen = encode_adddeldevice(buf, req.ieeeaddr, 1);
 				broadcast(buf, buflen);

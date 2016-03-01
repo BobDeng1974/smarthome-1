@@ -172,7 +172,7 @@ struct connection * _connrbtree_insert(struct connection *c){
 			newnode = &((*newnode)->rb_right);
 		}else{
 			fprintf(stdout, "!!!(((rbtree alread has the fd  %d the conn type is %d\n", c->fd, c->type);
-			_connrbtree_dump();
+			//_connrbtree_dump();
 			return conn;
 		}
 	}
@@ -182,7 +182,7 @@ struct connection * _connrbtree_insert(struct connection *c){
 }
 
 void connrbtree_insert(struct connection *c){
-	fprintf(stdout, "insert %d %d %x\n", c->fd, c->type, (unsigned int)c);
+	//fprintf(stdout, "insert %d %d %x\n", c->fd, c->type, (unsigned int)c);
 	struct connection * ret;
 
 	if(( ret = _connrbtree_insert(c))){
@@ -191,13 +191,13 @@ void connrbtree_insert(struct connection *c){
 	}
 	rb_insert_color(&c->node, &connrbtreeroot);
 	list_add_tail(&c->list, &connlisthead);
-	_connrbtree_dump();
+	//_connrbtree_dump();
 }
 
 void connrbtree_del(struct connection * c){ 
-	fprintf(stdout, "del %d %d %x\n", c->fd, c->type, (unsigned int)c);
+	//fprintf(stdout, "del %d %d %x\n", c->fd, c->type, (unsigned int)c);
 	rb_erase(&c->node, &connrbtreeroot);
 	list_del_init(&c->list);
 	freeconnlist_add(c);
-	_connrbtree_dump();
+	//_connrbtree_dump();
 }
