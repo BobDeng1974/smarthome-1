@@ -351,9 +351,9 @@
 //**************
 
 typedef unsigned char ZStatus_t;
-typedef unsigned char uint8;
-typedef unsigned short uint16;
-typedef unsigned int uint32;
+typedef signed char int8;typedef unsigned char uint8;
+typedef signed short int16;typedef unsigned short uint16;
+typedef signed int int32;typedef unsigned int uint32;
 
 // Redefined Generic Status Return Values for code backwards compatibility
 #define ZSuccess                    SUCCESS
@@ -422,7 +422,7 @@ int zcl_proccessincomingmessage(IncomingMsgFormat_t * message);
 typedef struct
 {
   uint8  numAttr;            // number of attributes in the list
-  uint16 attrID[];           // supported attributes list - this structure should
+  uint16 attrID[50];           // supported attributes list - this structure should
                              // be allocated with the appropriate number of attributes.
 } zclReadCmd_t;
 

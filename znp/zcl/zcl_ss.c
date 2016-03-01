@@ -3,7 +3,7 @@
 #include <string.h>
 
 #include "zcl_ss.h" 
-#include "zcl.h"
+#include "zcl_general.h" #include "zcl.h"
 #include "mtParser.h"
 #include "zcl_datatype.h"
 #include "znp_device.h"
@@ -354,7 +354,17 @@ int zclss_processinzonestatuscmdsserver(struct zclincomingmsg * msg){
 	return result;
 }
 
-int zclss_processinzonestatuscmdsclient(struct zclincomingmsg * msg){
+//for test
+int zclgeneral_send_identify_query(struct zclincomingmsg *msg)
+{
+  int result = -1;
+  IncomingMsgFormat_t *message = (IncomingMsgFormat_t *)msg->message;
+  uint8 srcEP = message->DstEndpoint;
+  uint8 dstEP = message->SrcEndpoint;
+  uint16 dstAddr = message->SrcAddr;
+  zclGeneral_SendIdentifyQuery(srcEP, dstEP, dstAddr,0, 0);
+  return result;
+}int zclss_processinzonestatuscmdsclient(struct zclincomingmsg * msg){
 	int result = -1;
 
 	switch(msg->zclframehdr.commandid){
@@ -363,6 +373,16 @@ int zclss_processinzonestatuscmdsclient(struct zclincomingmsg * msg){
 			break;
 		case COMMAND_SS_IAS_ZONE_STATUS_ENROLL_REQUEST:
 			result = zclss_processincmd_zonestatus_enrollrequest(msg);
+			//IncomingMsgFormat_t *message = (IncomingMsgFormat_t *)msg->message;
+            //            uint8 srcEP = message->DstEndpoint;
+            //            uint8 dstEP = message->SrcEndpoint;
+            //            uint16 dstAddr = message->SrcAddr;
+            //            uint16 identifyTime = 0x0014;
+//                        zclGeneral_SendIdentify(srcEP, dstEP, dstAddr, identifyTime, 0, 0); 
+            //            zclReadCmd_t cmd;
+            //            cmd.numAttr = 1;
+            //            cmd.attrID[0] = 0x0005;
+            //            zcl_SendRead(srcEP,dstEP,dstAddr,ZCL_CLUSTER_ID_GEN_BASIC, &cmd, ZCL_FRAME_CLIENT_SERVER_DIR, 0,0 );
 			break; 
 		default:
 			result = -1;

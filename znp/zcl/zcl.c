@@ -303,7 +303,7 @@ ZStatus_t zcl_SendCommand( uint8 srcEP, afAddrType_t *destAddr,
                            uint8 disableDefaultRsp, uint16 manuCode, uint8 seqNum,
                            uint16 cmdFormatLen, uint8 *cmdFormat ){
 
-	return zcl_sendcommand(srcEP, destAddr->endPoint, destAddr->addr.shortAddr,clusterID, cmd, specific, direction, disableDefaultRsp, manuCode, seqNum, cmdFormatLen, cmdFormatLen);
+	return zcl_sendcommand(srcEP, destAddr->endPoint, destAddr->addr.shortAddr,clusterID, cmd, specific, direction, disableDefaultRsp, manuCode, seqNum, cmdFormatLen, cmdFormat);
 }
 
 /*********************************************************************
