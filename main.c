@@ -11,11 +11,18 @@
 #include "reconn.h"
 #include "gateway.h"
 #include "znp.h"
+#include "sqlitedb.h"
 
 int main(){
         ceconf_load();	
+
+	sqlitedb_table_build(DBPATH);
+
 	unsigned long long mac = toolkit_getmac();
-	gateway_init(getgateway(), mac, "gateway", 1, 1);
+	if(sqlitedb_load_gateway_name(DBPATH, mac)){ 
+		gateway_init(getgateway(), mac, "网关", 1, 1);
+		sqlitedb_add_gateway(mac, "网关"); 
+	}
 
 	// create pipe for timer to main
 	int wfd;

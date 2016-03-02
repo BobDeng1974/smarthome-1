@@ -13,7 +13,6 @@
 #define TIMEOUT "timeout"
 
 
-
 static struct ceconf{
 	char * listenport;
 	char * serveraddr;
@@ -22,6 +21,7 @@ static struct ceconf{
 	char * serialport;
 
 	int timeout;
+
 }s_conf = {
 	"8989",
 	"192.168.8.178",
