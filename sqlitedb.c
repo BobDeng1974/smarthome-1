@@ -5,16 +5,8 @@
 #include "sqlite3.h"
 #include "sqlitedb.h"
 //static int sn = 0;
-#define GATEWAY 1
-#define SENSOR 0
 #define GATEWAYTABLENAME "gateway"
 #define DEVICETABLENAME "device"
-
-static const char create_device_table[] = "create table device(ieee integer primary key,name text, zclversion integer, applicationversion integer, stackversion integer, hwversion integer, manufacturername text,modelidentifier text text,datecode text,endpoint blob);";
-
-static const char create_gateway_table[] = "create table gateway(mac integer primary key, name text);";
-
-static const char table_exist[] = "SELECT name FROM sqlite_master WHERE type='table' AND name='%s';";
 
 struct sqlitedb{ 
 	sqlite3 * db;
@@ -155,6 +147,8 @@ void sqlitedb_updata_data(struct sqlitedb *sdb,int terminalID,char *terminalname
 
 }
 
+static const char table_exist[] = "SELECT name FROM sqlite_master WHERE type='table' AND name='%s';";
+
 int _sqlitedb_table_exist(struct sqlitedb * db, char * tablename){ 
 	struct sqlite3_stmt * stmt;
 	const char pztile[256];
@@ -180,7 +174,8 @@ int _sqlitedb_table_exist(struct sqlitedb * db, char * tablename){
 
 }
 
-
+static const char create_gateway_table[] = "create table gateway(mac integer primary key, name text);";
+static const char create_device_table[] = "create table device(ieee integer primary key,name text, zclversion integer, applicationversion integer, stackversion integer, hwversion integer, manufacturername text,modelidentifier text text,datecode text,endpoint blob);";
 
 void sqlitedb_table_build(char * filepath){
 	struct sqlitedb * db = sqlitedb_create(filepath);
