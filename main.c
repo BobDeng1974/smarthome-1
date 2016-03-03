@@ -23,6 +23,12 @@ int main(){
 		gateway_init(getgateway(), mac, "网关", 1, 1);
 		sqlitedb_add_gateway(mac, "网关"); 
 	}
+	struct device * d = device_create(12345);
+	ActiveEpRspFormat_t activeep;
+	activeep.SrcAddr = 123;
+	device_setep(d, &activeep);
+	sqlitedb_update_device_endpoint(d);
+	
 	sqlitedb_load_device();
 	
 

@@ -19,10 +19,9 @@ struct sqlitedb * sqlitedb_create(char * filepath){
 	struct sqlitedb * sdb = (struct sqlitedb *) malloc(sizeof(struct sqlitedb));
 	memset(sdb,0,sizeof(struct sqlitedb));
 
-	char * zErrMsg = 0;
-	int rc;
 
-	rc = sqlite3_open(filepath,&sdb->db);
+	//rc = sqlite3_open(filepath,&sdb->db);
+	int rc = sqlite3_open_v2(filepath, &sdb->db, SQLITE_OPEN_READWRITE | SQLITE_OPEN_CREATE, NULL);
 	if (rc) {
 		fprintf(stderr,"can't open database%s\n",sqlite3_errmsg(sdb->db));
 		sqlite3_close(sdb->db);
@@ -262,6 +261,9 @@ void _sqlite3_load_device(sqlite3_stmt *stmt, int col, struct device *d){
 	int bytes;
 	const unsigned char * blob;
 	bytes = sqlite3_column_bytes(stmt, col);
+	if(bytes < sizeof(ActiveEpRspFormat_t)){
+		return;
+	}
 	blob = sqlite3_column_blob(stmt, col);
 	ActiveEpRspFormat_t activeep;
 	memset(&activeep, 0, sizeof(ActiveEpRspFormat_t));
@@ -326,5 +328,52 @@ void sqlitedb_load_device(){
 	}
 	sqlite3_finalize(stmt);
 
+	sqlitedb_destroy(db);
+}
+
+static const char sql_insert_device_ieee[] = "insert into device(ieee) values(%lld);";
+int sqlitedb_insert_device_ieee(unsigned long long ieee){
+	struct sqlitedb * db = sqlitedb_create(DBPATH);
+
+	char insert_device[128] = {0};
+	sprintf(insert_device, sql_insert_device_ieee, ieee);
+	char errmsg[128] = {0};
+	sqlite3_exec(db->db,insert_device,NULL,NULL,&errmsg);
+
+	sqlitedb_destroy(db);
+
+	return 0;
+}
+
+int sqlitedb_update_device_endpoint(struct device * d){
+	struct sqlitedb * db = sqlitedb_create(DBPATH);
+	if(db){ 
+		sqlite3_blob * blob = NULL;
+		int ret = sqlite3_blob_open(db->db, 
+				"main",
+				"device",
+				"endpoint",
+				d->ieeeaddr,
+				1,
+				&blob);
+		const char* result = sqlite3_errmsg(db->db);
+		fprintf(stdout, "------------------ %s \n", result);
+		if(ret == SQLITE_OK){
+			int cursor = 0;
+			sqlite3_blob_write(blob, &d->activeep, sizeof(ActiveEpRspFormat_t),cursor);
+			cursor += sizeof(ActiveEpRspFormat_t);
+			struct endpoint * ep;
+			struct list_head * pos, *n;
+			list_for_each_safe(pos, n, &d->eplisthead){ 
+				ep = list_entry(pos, struct endpoint, list); 
+				sqlite3_blob_write(blob, &ep->simpledesc, sizeof(SimpleDescRspFormat_t), cursor);
+				cursor += sizeof(SimpleDescRspFormat_t);
+			}
+
+		}
+
+		sqlite3_blob_close(blob);
+
+	}
 	sqlitedb_destroy(db);
 }

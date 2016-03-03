@@ -4,6 +4,7 @@
 #define DBPATH "./gateway.db"
 
 struct sqlitedb;
+
 struct sqlitedb * sqlitedb_create(char * filepath);
 void sqlitedb_exec(struct sqlitedb *, char *sql);
 void sqlitedb_close_table(struct sqlitedb * sdb);
@@ -20,5 +21,8 @@ void sqlitedb_table_build(char * filepath);
 int sqlitedb_add_gateway(unsigned long long ieee, char * name);
 int sqlitedb_load_gateway_name(char * filepath, unsigned long long mac);
 void sqlitedb_load_device();
+int sqlitedb_insert_device_ieee(unsigned long long ieee);
+struct device;
+int sqlitedb_update_device_endpoint(struct device * d);
 
 #endif

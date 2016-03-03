@@ -54,6 +54,7 @@
 #include "dbgPrint.h"
 #include "cluster.h"
 #include "commands.h"
+#include "sqlitedb.h"
 
 #include "zcl.h"
 
@@ -587,16 +588,18 @@ static uint8_t mtZdoSimpleDescRspCb(SimpleDescRspFormat_t *msg)
 		}
 
 		struct device * d = _get_device(msg->SrcAddr);
-		if(d->epcurse < d->activeep.ActiveEPCount){
+		if(d && (d->epcursor < d->activeep.ActiveEPCount)){
 			SimpleDescReqFormat_t req;
 			req.DstAddr = msg->SrcAddr;
 			req.NwkAddrOfInterest = msg->NwkAddr;
-			req.Endpoint = d->activeep.ActiveEPList[d->epcurse];
+			req.Endpoint = d->activeep.ActiveEPList[d->epcursor];
 			sendcmd((unsigned char *)&req,ZDO_SIMPLE_DESC_REQ);
 
 			device_increase(d);
 		}
-
+		if(d && (d->epcursor == d->activeep.ActiveEPCount)){ 
+			sqlitedb_update_device_endpoint(d);
+		}
 	}
 	else
 	{
@@ -614,9 +617,16 @@ static uint8_t mtZdoActiveEpRspCb(ActiveEpRspFormat_t *msg)
 		consolePrint("Status: 0x%02X\n", msg->Status);
 		consolePrint("NwkAddr: 0x%04X\n", msg->NwkAddr);
 		consolePrint("ActiveEPCount: 0x%02X\n", msg->ActiveEPCount);
+
+		uint32_t i;
+		for (i = 0; i < msg->ActiveEPCount; i++)
+		{
+			consolePrint("ActiveEPList[%d]: 0x%02X\n", i, msg->ActiveEPList[i]); 
+		}
+
 		struct device * d = _get_device(msg->SrcAddr);
 
-		if(device_getepcount(d) == 0){
+		if(d && device_getepcount(d) == 0){
 			SimpleDescReqFormat_t req;
 			req.DstAddr = msg->SrcAddr;
 			req.NwkAddrOfInterest = msg->NwkAddr;
@@ -627,11 +637,6 @@ static uint8_t mtZdoActiveEpRspCb(ActiveEpRspFormat_t *msg)
 			device_setep(d, msg);
 		}
 
-		uint32_t i;
-		for (i = 0; i < msg->ActiveEPCount; i++)
-		{
-			consolePrint("ActiveEPList[%d]: 0x%02X\n", i, msg->ActiveEPList[i]); 
-		}
 	}
 	else
 	{
@@ -974,9 +979,12 @@ static uint8_t mtZdoEndDeviceAnnceIndCb(EndDeviceAnnceIndFormat_t *msg)
 	znp_map_insert(msg->NwkAddr, msg->IEEEAddr);
 	struct device * d = gateway_getdevice(getgateway(), msg->IEEEAddr);
 	if(!d){
-		struct device * d = device_create(msg->IEEEAddr);
+		d = device_create(msg->IEEEAddr);
 		gateway_adddevice(getgateway(), d);
+		sqlitedb_insert_device_ieee(msg->IEEEAddr);
 
+	}
+	if(device_getepcount(d) == 0){
 		ActiveEpReqFormat_t queryep;
 		memset(&queryep, 0, sizeof(ActiveEpReqFormat_t));
 		queryep.NwkAddrOfInterest = msg->NwkAddr;
@@ -1689,7 +1697,6 @@ void appProcess(void * args)
 	initDone = 1;
 	
 	for(;;){ 
-		rpcWaitMqClientMsg(10000);
 	}
 	//	while(1);
 }

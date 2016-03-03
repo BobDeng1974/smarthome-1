@@ -28,7 +28,7 @@ struct device{
 	char modelidentifier[33];
 	char datecode[17];
 
-	unsigned char epcurse;
+	unsigned char epcursor;
 	ActiveEpRspFormat_t activeep;
 	struct list_head eplisthead;
 	struct list_head list;
@@ -59,7 +59,7 @@ unsigned char device_getepcount(struct device * d);
 void device_destroy(struct device * d);
 void device_setep(struct device * d, ActiveEpRspFormat_t * activeep);
 static void device_increase(struct device * d){
-	d->epcurse++;
+	d->epcursor++;
 }
 
 // gateway
