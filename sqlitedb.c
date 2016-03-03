@@ -4,9 +4,12 @@
 #include <string.h>
 #include "sqlite3.h"
 #include "sqlitedb.h"
+#include "gateway.h"
+#include "mtZdo.h"
 //static int sn = 0;
 #define GATEWAYTABLENAME "gateway"
 #define DEVICETABLENAME "device"
+
 
 struct sqlitedb{ 
 	sqlite3 * db;
@@ -174,32 +177,32 @@ int _sqlitedb_table_exist(struct sqlitedb * db, char * tablename){
 
 }
 
-static const char create_gateway_table[] = "create table gateway(mac integer primary key, name text);";
-static const char create_device_table[] = "create table device(ieee integer primary key,name text, zclversion integer, applicationversion integer, stackversion integer, hwversion integer, manufacturername text,modelidentifier text text,datecode text,endpoint blob);";
+static const char sql_create_gateway_table[] = "create table gateway(mac integer primary key, name text);";
+static const char sql_create_device_table[] = "create table device(ieee integer primary key,name text, status integer,zclversion integer, applicationversion integer, stackversion integer, hwversion integer, manufacturername text,modelidentifier text,datecode text,endpoint blob);";
 
 void sqlitedb_table_build(char * filepath){
 	struct sqlitedb * db = sqlitedb_create(filepath);
 	
 	if(db){ 
 		if(!_sqlitedb_table_exist(db, GATEWAYTABLENAME)){
-			sqlite3_exec(db->db,create_gateway_table,NULL,NULL,NULL);
+			sqlite3_exec(db->db,sql_create_gateway_table,NULL,NULL,NULL);
 		}
 
 		if(!_sqlitedb_table_exist(db, DEVICETABLENAME)){
-			sqlite3_exec(db->db,create_device_table,NULL,NULL,NULL);
+			sqlite3_exec(db->db,sql_create_device_table,NULL,NULL,NULL);
 		}
 	}
 	sqlitedb_destroy(db);
 }
 
-static const char select_gateway[] = "select name from gateway where mac=%lld";
+static const char sql_select_gateway[] = "select name from gateway where mac=%lld";
 
 int sqlitedb_load_gateway_name(char * filepath, unsigned long long mac){
 	struct sqlitedb * db = sqlitedb_create(filepath);
 	struct sqlite3_stmt * stmt;
 
 	char select_gateway_name[64] = {0};
-	sprintf(select_gateway_name, select_gateway, mac);
+	sprintf(select_gateway_name, sql_select_gateway, mac);
 	const char pztile[256];
 	int ret = sqlite3_prepare_v2(db->db, select_gateway_name, sizeof(select_gateway_name), &stmt, &pztile);
 
@@ -215,7 +218,7 @@ int sqlitedb_load_gateway_name(char * filepath, unsigned long long mac){
 		        text  = sqlite3_column_text (stmt, 0);
 			memcpy(gatewayname, text, bytes);
 
-			gateway_init(getgateway(), mac, gatewayname);
+			gateway_init(getgateway(), mac, gatewayname, 1, 1);
 
 			result = 0;
 		}else{
@@ -231,18 +234,97 @@ int sqlitedb_load_gateway_name(char * filepath, unsigned long long mac){
 	return result;
 }
 
-static const char insert_gateway[256] = "insert into gateway(mac, name)values(%lld, \"%s\");";
+static const char sql_insert_gateway[256] = "insert into gateway(mac, name)values(%lld, \"%s\");";
 
 int sqlitedb_add_gateway(unsigned long long ieee, char * name){ 
 
 	struct sqlitedb * db = sqlitedb_create(DBPATH);
 
-	char insert_table_network[512] = {0};
-	sprintf(insert_table_network, insert_gateway, ieee, name);
+	char insert_table_gateway[512] = {0};
+	sprintf(insert_table_gateway, sql_insert_gateway, ieee, name);
 	char errmsg[128] = {0};
-	int ret = sqlite3_exec(db->db,insert_table_network,NULL,NULL,&errmsg);
+	int ret = sqlite3_exec(db->db,insert_table_gateway,NULL,NULL,&errmsg);
 
 	sqlitedb_destroy(db);
 
 	return 0;
+}
+
+void _sqlite3_gettext(sqlite3_stmt *stmt, int col, char * value){
+	int bytes;
+	const unsigned char * text;
+	bytes = sqlite3_column_bytes(stmt, col);
+	text  = sqlite3_column_text (stmt, col);
+	memcpy(value, text, bytes);
+}
+
+void _sqlite3_load_device(sqlite3_stmt *stmt, int col, struct device *d){
+	int bytes;
+	const unsigned char * blob;
+	bytes = sqlite3_column_bytes(stmt, col);
+	blob = sqlite3_column_blob(stmt, col);
+	ActiveEpRspFormat_t activeep;
+	memset(&activeep, 0, sizeof(ActiveEpRspFormat_t));
+	memcpy(&activeep, blob, sizeof(ActiveEpRspFormat_t));
+	blob += sizeof(ActiveEpRspFormat_t);
+	device_setep(d, &activeep);
+
+	struct endpoint * ep;
+	SimpleDescRspFormat_t simpledesc;
+	unsigned char i;
+	for(i = 0; i < activeep.ActiveEPCount; i++){ 
+		memcpy(&simpledesc, blob, sizeof(SimpleDescRspFormat_t));
+		blob += sizeof(SimpleDescRspFormat_t);
+		ep = endpoint_create(&simpledesc);
+		device_addendpoint(d, ep);
+	}
+
+
+}
+
+static const char sql_select_device[] = "select ieee ,name , status ,zclversion , applicationversion , stackversion , hwversion , manufacturername ,modelidentifier ,datecode ,endpoint from device;";
+void sqlitedb_load_device(){ 
+	struct sqlitedb * db = sqlitedb_create(DBPATH);
+
+	struct sqlite3_stmt * stmt;
+	const char pztile[256];
+	int ret = sqlite3_prepare_v2(db->db, sql_select_device, sizeof(sql_select_device), &stmt, &pztile);
+
+	unsigned long long ieee;
+	char devicename[MAXNAMELEN]; 
+	unsigned char status;
+	unsigned char zclversion;
+	unsigned char applicationversion;
+	unsigned char stackversion;
+	unsigned char hwversion;
+	char manufacturername[33];
+	char modelidentifier[33];
+	char datecode[17];
+
+	if (ret==SQLITE_OK){
+		while(sqlite3_step(stmt) == SQLITE_ROW){
+			ieee = sqlite3_column_int64(stmt,0);
+			memset(devicename, 0, MAXNAMELEN);
+			_sqlite3_gettext(stmt, 1, devicename);
+			status = sqlite3_column_int(stmt,2);
+			zclversion = sqlite3_column_int(stmt,3);
+			applicationversion = sqlite3_column_int(stmt,4);
+			stackversion = sqlite3_column_int(stmt,5);
+			hwversion = sqlite3_column_int(stmt,6);
+			memset(manufacturername, 0, 33);
+			_sqlite3_gettext(stmt,7,manufacturername);
+			memset(modelidentifier, 0, 33);
+			_sqlite3_gettext(stmt,8,modelidentifier);
+			memset(datecode, 0, 17);
+			_sqlite3_gettext(stmt,9,datecode);
+			struct device * d = device_create2(ieee, devicename, status, zclversion, applicationversion, stackversion, hwversion, manufacturername, modelidentifier, datecode);
+			_sqlite3_load_device(stmt,10,d);
+			gateway_adddevice(getgateway(),d);
+
+		}
+		sqlite3_reset(stmt);
+	}
+	sqlite3_finalize(stmt);
+
+	sqlitedb_destroy(db);
 }

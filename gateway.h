@@ -8,6 +8,8 @@
 #define MAXNAMELEN 256
 #define MAXEPCOUNT 64
 
+#define DEVICE_NORMAL 0
+#define DEVICE_APP_DEL 1
 
 struct endpoint{
 	SimpleDescRspFormat_t simpledesc;
@@ -15,8 +17,16 @@ struct endpoint{
 };
 
 struct device{
-	char devicename[MAXNAMELEN];
 	unsigned long long ieeeaddr;
+	char devicename[MAXNAMELEN];
+	unsigned char status;
+	unsigned char zclversion;
+	unsigned char applicationversion;
+	unsigned char stackversion;
+	unsigned char hwversion;
+	char manufacturername[33];
+	char modelidentifier[33];
+	char datecode[17];
 
 	unsigned char epcurse;
 	ActiveEpRspFormat_t activeep;
@@ -39,6 +49,11 @@ void endpoint_destroy(struct endpoint * ep);
 
 // device
 struct device * device_create(unsigned long long deviceieee);
+struct device * device_create2(unsigned long long ieee, char * name, unsigned char status,
+		unsigned char zclversion, unsigned char applicationversion, 
+		unsigned char stackversion, unsigned char hwversion,
+		char * manufacturername, char * modelidentifier, char * datecode);
+
 void device_addendpoint(struct device * d, struct endpoint * ep);
 unsigned char device_getepcount(struct device * d);
 void device_destroy(struct device * d);

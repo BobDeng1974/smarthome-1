@@ -51,6 +51,24 @@ void device_destroy(struct device * d){
 	free(d);
 }
 
+struct device * device_create2(unsigned long long ieee, char * name, unsigned char status,
+		unsigned char zclversion, unsigned char applicationversion, 
+		unsigned char stackversion, unsigned char hwversion,
+		char * manufacturername, char * modelidentifier, char * datecode){
+	struct device * d = device_create(ieee);
+	d->status = status;
+	d->zclversion = zclversion;
+	d->applicationversion = applicationversion;
+	d->stackversion = stackversion;
+	d->hwversion = hwversion;
+	memcpy(d->manufacturername, manufacturername, strlen(manufacturername));
+	memcpy(d->modelidentifier, modelidentifier, strlen(modelidentifier));
+	memcpy(d->datecode, datecode, strlen(datecode));
+
+	return d;
+}
+
+
 // ---------------device---------------
 //
 // ---------------gateway---------------

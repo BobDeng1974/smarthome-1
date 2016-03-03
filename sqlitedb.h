@@ -19,5 +19,6 @@ void sqlitedb_updata_data(struct sqlitedb *,int terminalID,char *terminalname);
 void sqlitedb_table_build(char * filepath);
 int sqlitedb_add_gateway(unsigned long long ieee, char * name);
 int sqlitedb_load_gateway_name(char * filepath, unsigned long long mac);
+void sqlitedb_load_device();
 
 #endif
