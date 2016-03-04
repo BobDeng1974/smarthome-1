@@ -6,6 +6,11 @@
 #include "mtAf.h"
 #include "mtParser.h"
 #include "zcl_ss.h"
+#include "znp_map.h"
+#include "zcl_general.h"
+#include "gateway.h"
+#include "bytebuffer.h"
+#include "sqlitedb.h"
 
 #define SEC_KEY_LEN 16 // ???
 void *zcl_mem_alloc( uint16 size ){
@@ -27,6 +32,7 @@ void zcl_mem_free(void *ptr){
 uint8* zcl_buffer_uint32( uint8 *buf, uint32 val ){ 
 	memcpy(buf, ((uint8 *)(&val)), 4);
 };
+int zcl_handle_basic(unsigned char * buf, unsigned short buflen, struct device * d); 
 
 static zclAttrRecsList *attrList = (zclAttrRecsList *)NULL;
 
@@ -828,9 +834,34 @@ int zcl_proccessincomingmessage(IncomingMsgFormat_t * message){
 	zclmessage.data = zclpayload;
 	zclmessage.datalen = message->Len;
 	zclmessage.datalen -= zclmessage.data - message->Data;
+
+	// to get attribute 
+	struct znp_map * map = znp_map_get_ieee(message->SrcAddr); 
+	struct device * d = gateway_getdevice(getgateway(), map->ieee);
+	if(!(d->status & DEVICE_SEND_ATTR)){ 
+		zclReadCmd_t readcmd; 
+		readcmd.numAttr = 8;
+		readcmd.attrID[0] = ATTRID_BASIC_ZCL_VERSION;
+		readcmd.attrID[1] = ATTRID_BASIC_APPL_VERSION;
+		readcmd.attrID[2] = ATTRID_BASIC_STACK_VERSION;
+		readcmd.attrID[3] = ATTRID_BASIC_HW_VERSION;
+		readcmd.attrID[4] = ATTRID_BASIC_MANUFACTURER_NAME;
+		readcmd.attrID[5] = ATTRID_BASIC_MODEL_ID;
+		readcmd.attrID[6] = ATTRID_BASIC_DATE_CODE;         
+		readcmd.attrID[7] = ATTRID_BASIC_POWER_SOURCE;
+
+		zcl_SendRead(message->DstEndpoint, message->SrcEndpoint, message->SrcAddr, ZCL_CLUSTER_ID_GEN_BASIC, &readcmd, ZCL_CLUSTER_ID_GEN_BASIC,0,0);
+		device_set_status(d, DEVICE_SEND_ATTR);
+	}
+	// to get attribute
 	switch(zclmessage.message->ClusterId){ 
 		case ZCL_CLUSTER_ID_SS_IAS_ZONE: 
 			result = zclss_handleincoming(&zclmessage);
+			break;
+		case ZCL_CLUSTER_ID_GEN_BASIC:
+			device_set_status(d, DEVICE_GET_ATTR);
+			zcl_handle_basic(zclmessage.data,zclmessage.datalen, d);
+			sqlitedb_update_device_attr(d);
 			break;
 	}
 
@@ -955,6 +986,69 @@ ZStatus_t zcl_SendWriteRsp( uint8 srcEP, afAddrType_t *dstAddr,
 }
 
 // ------------------------------ZCL_WRITE---------------------------
+//
+struct zcl_basic_attr{
+	unsigned short attrid;
+	unsigned char status;
+	unsigned char datatype;
+	union{
+		unsigned char uint8_value;
+		unsigned short uint16_value;
+		unsigned int uint32_value;
+		unsigned long long uint_value;
+		unsigned char bytes[256];
+	}value;
+	
+};
+
+int zcl_handle_basic(unsigned char * buf, unsigned short buflen, struct device * d){ 
+	struct zcl_basic_attr attr; 
+	unsigned char * cursor = buf;
+
+	unsigned char datalen;
+	
+	while(cursor < buf+buflen){
+		bytebuffer_readwordl(&cursor, &attr.attrid);
+		bytebuffer_readbyte(&cursor, &attr.status);
+		if(attr.status == ZCL_STATUS_SUCCESS){
+			bytebuffer_readbyte(&cursor, &attr.datatype);
+
+			switch(attr.attrid){
+				case ATTRID_BASIC_ZCL_VERSION: 
+					bytebuffer_readbyte(&cursor, &d->zclversion);
+					break;
+				case ATTRID_BASIC_APPL_VERSION:
+					bytebuffer_readbyte(&cursor, &d->applicationversion);
+					break;
+				case ATTRID_BASIC_STACK_VERSION:
+					bytebuffer_readbyte(&cursor, &d->stackversion);
+					break;
+				case ATTRID_BASIC_HW_VERSION:
+					bytebuffer_readbyte(&cursor, &d->hwversion);
+					break;
+				case ATTRID_BASIC_MANUFACTURER_NAME: 
+					bytebuffer_readbyte(&cursor, &datalen);
+					bytebuffer_readbytes(&cursor, d->manufacturername, datalen);
+					d->manufacturername[datalen] = 0;
+					break;
+				case ATTRID_BASIC_MODEL_ID:
+					bytebuffer_readbyte(&cursor, &datalen);
+					bytebuffer_readbytes(&cursor, d->modelidentifier, datalen);
+					d->modelidentifier[datalen] = 0;
+					break;
+				case ATTRID_BASIC_DATE_CODE:
+					bytebuffer_readbyte(&cursor, &datalen);
+					bytebuffer_readbytes(&cursor, d->datecode, datalen);
+					d->datecode[datalen] = 0;
+					break;
+				case ATTRID_BASIC_POWER_SOURCE:
+					bytebuffer_readbyte(&cursor, &d->powersource);
+					break;
+			}
+		}
+	}
+
+}
 // ------------------------------ZCL_REPORT---------------------------
 
 /*********************************************************************

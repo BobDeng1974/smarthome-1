@@ -323,10 +323,12 @@ int zclss_processincmd_zonestatus_changenotification(struct zclincomingmsg * msg
 	fprintf(stdout, "---------------------------------------datalen %d\n", msg->datalen); 
 //	struct zclzonechangenotification req;
 //	req.zonechangenotification.uszonestatus = BUILD_UINT16(msg->data[0],msg->data[1]);
-//	struct znp_device * device = znp_device_get(msg->message->SrcAddr);
-//	req.ieeeaddr = device->ieeeaddr;
-//	req.clusterid = device->device_data.ss_device.clusterid;
-//	req.zonetype = device->device_data.ss_device.zonetype;
+//	struct znp_map * map = znp_map_get_ieee(shortaddr);
+//	if(map){ 
+//		struct device * device = gateway_getdevice(getgateway(), map->ieee);
+//		req.ieeeaddr = device->ieeeaddr;
+//	}
+//	req.clusterid = msg->message->ClusterId;
 //
 //	int tmp = ZCLZONECHANGENOTIFICATION;
 //	sendnonblocking(g_znpwfd, &tmp, sizeof(int));
@@ -362,7 +364,9 @@ int zclgeneral_send_identify_query(struct zclincomingmsg *msg)
   uint16 dstAddr = message->SrcAddr;
   zclGeneral_SendIdentifyQuery(srcEP, dstEP, dstAddr,0, 0);
   return result;
-}int zclss_processinzonestatuscmdsclient(struct zclincomingmsg * msg){
+}
+
+int zclss_processinzonestatuscmdsclient(struct zclincomingmsg * msg){
 	int result = -1;
 
 	switch(msg->zclframehdr.commandid){

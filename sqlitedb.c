@@ -331,14 +331,22 @@ void sqlitedb_load_device(){
 	sqlitedb_destroy(db);
 }
 
-static const char sql_insert_device_ieee[] = "insert into device(ieee) values(%lld);";
+static const char sql_insert_device_ieee[] = "insert into device(ieee, endpoint) values(?,?);";
 int sqlitedb_insert_device_ieee(unsigned long long ieee){
 	struct sqlitedb * db = sqlitedb_create(DBPATH);
 
 	char insert_device[128] = {0};
 	sprintf(insert_device, sql_insert_device_ieee, ieee);
-	char errmsg[128] = {0};
-	sqlite3_exec(db->db,insert_device,NULL,NULL,&errmsg);
+
+	sqlite3_stmt * stmt;
+	int ret = sqlite3_prepare_v2(db->db, sql_insert_device_ieee, -1, &stmt, 0);
+
+	sqlite3_bind_int64(stmt,1, ieee);
+	unsigned int blob_size = sizeof(ActiveEpRspFormat_t) + 77*sizeof(SimpleDescRspFormat_t); // 77 magic number is from the ActiveEpRspFormt_t
+	unsigned char blob[sizeof(ActiveEpRspFormat_t) + 77 * sizeof(SimpleDescRspFormat_t)] = {0};
+	sqlite3_bind_blob(stmt, 2, blob, blob_size, SQLITE_STATIC);
+	ret = sqlite3_step(stmt);
+	sqlite3_finalize(stmt);
 
 	sqlitedb_destroy(db);
 
@@ -356,11 +364,13 @@ int sqlitedb_update_device_endpoint(struct device * d){
 				d->ieeeaddr,
 				1,
 				&blob);
-		const char* result = sqlite3_errmsg(db->db);
-		fprintf(stdout, "------------------ %s \n", result);
 		if(ret == SQLITE_OK){
 			int cursor = 0;
-			sqlite3_blob_write(blob, &d->activeep, sizeof(ActiveEpRspFormat_t),cursor);
+			ret = sqlite3_blob_write(blob, &d->activeep, sizeof(ActiveEpRspFormat_t),cursor);
+			if( ret != SQLITE_OK){
+				const char* result = sqlite3_errmsg(db->db);
+				fprintf(stdout, "------------------ %s \n", result);
+			}
 			cursor += sizeof(ActiveEpRspFormat_t);
 			struct endpoint * ep;
 			struct list_head * pos, *n;
@@ -374,6 +384,20 @@ int sqlitedb_update_device_endpoint(struct device * d){
 
 		sqlite3_blob_close(blob);
 
+	}
+	sqlitedb_destroy(db);
+}
+
+
+static const char sql_update_device_attr[] = "update device set status = %d, zclversion = %d, applicationversion = %d, stackversion = %d, hwversion = %d, manufacturername = '%s', modelidentifier = '%s', datecode = '%s' where ieee = %lld";
+
+int sqlitedb_update_device_attr(struct device * d){
+	struct sqlitedb * db = sqlitedb_create(DBPATH);
+	if(db){ 
+		char update_device_attr[1024]={0};
+		sprintf(update_device_attr, sql_update_device_attr, d->status, d->zclversion, d->applicationversion, d->stackversion, d->hwversion, d->manufacturername, d->modelidentifier, d->datecode, d->ieeeaddr);
+
+		sqlite3_exec(db->db, update_device_attr, NULL, NULL, NULL);
 	}
 	sqlitedb_destroy(db);
 }

@@ -72,6 +72,8 @@ static struct device * _get_device(unsigned short shortaddr){
 	if(map){ 
 		return gateway_getdevice(getgateway(), map->ieee);
 	}
+
+	return NULL;
 }
 
 /*********************************************************************
@@ -1108,6 +1110,7 @@ static uint8_t mtZdoLeaveIndCb(LeaveIndFormat_t *msg)
 	consolePrint("Rejoin: 0x%02X\n", msg->Rejoin);
 
 	znp_map_del_ieee(msg->ExtAddr);
+	znp_map_del_shortaddr(msg->SrcAddr);
 
 	return 0;
 }

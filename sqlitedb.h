@@ -24,5 +24,6 @@ void sqlitedb_load_device();
 int sqlitedb_insert_device_ieee(unsigned long long ieee);
 struct device;
 int sqlitedb_update_device_endpoint(struct device * d);
+int sqlitedb_update_device_attr(struct device * d);
 
 #endif

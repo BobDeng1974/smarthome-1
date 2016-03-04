@@ -8,8 +8,13 @@
 #define MAXNAMELEN 256
 #define MAXEPCOUNT 64
 
-#define DEVICE_NORMAL 0
+#define DEVICE_NULL 0
 #define DEVICE_APP_DEL 1
+#define DEVICE_SEND_ATTR 2
+#define DEVICE_GET_ATTR 4
+#define DEVICE_WITH_ZCLATTR 8
+#define DEVICE_WITH_ENDPOINT 16
+#define DEVICE_WITH_CLUSTERID 32
 
 struct endpoint{
 	SimpleDescRspFormat_t simpledesc;
@@ -19,7 +24,7 @@ struct endpoint{
 struct device{
 	unsigned long long ieeeaddr;
 	char devicename[MAXNAMELEN];
-	unsigned char status;
+	unsigned int status;
 	unsigned char zclversion;
 	unsigned char applicationversion;
 	unsigned char stackversion;
@@ -27,6 +32,7 @@ struct device{
 	char manufacturername[33];
 	char modelidentifier[33];
 	char datecode[17];
+	unsigned char powersource;
 
 	unsigned char epcursor;
 	ActiveEpRspFormat_t activeep;
@@ -60,6 +66,10 @@ void device_destroy(struct device * d);
 void device_setep(struct device * d, ActiveEpRspFormat_t * activeep);
 static void device_increase(struct device * d){
 	d->epcursor++;
+}
+
+static void device_set_status(struct device * d, unsigned int status){ 
+	d->status |= status;
 }
 
 // gateway
