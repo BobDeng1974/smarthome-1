@@ -31,7 +31,7 @@ unsigned int encode_login(struct gateway *gw, unsigned char *buf) {
 		bytebuffer_writebyte(&p, devicetypeidcounte);
 
 		struct list_head *pos1, *n1;
-		struct endpoint *e
+		struct endpoint *e;
 			list_for_each_safe(pos1, n1,&d->list)
 			{
 				e=list_entry(pos1, struct endpoint, list);

@@ -43,8 +43,8 @@ int _check_command(unsigned char * buffer, int buflen, unsigned char command){
 }
 
 void event_recvmsg(struct eventhub * hub, int fd, unsigned char * buf, int buflen){
-//	fprintf(stdout, "recv ");
-//	toolkit_printbytes(buf, buflen);
+	//	fprintf(stdout, "recv ");
+	//	toolkit_printbytes(buf, buflen);
 	struct connection * c = connrbtree_getconn(fd);
 	if(c && connection_gettype(c) == CONNSOCKETCMD){ 
 		if( _check_command(buf, buflen, CECHECK[0])){
@@ -80,18 +80,19 @@ void event_recvmsg(struct eventhub * hub, int fd, unsigned char * buf, int bufle
 				break;
 			case REQDELDEVICE:
 				break;
-            case DEVICEPROPERTIES:
-			unsigned int serialid;
-			unsigned long long IEEE;
-			unsigned char *p = buffer;
+			case DEVICEPROPERTIES:{
+						      unsigned int serialid;
+						      unsigned long long IEEE;
+						      unsigned char *p = buffer;
 
-			serialid = bytebuffer_getdword(p+5);
-			IEEE = bytebuffer_getquadword(p+9);
-			unsigned char devicebuf[2048] = {0};
-			unsigned int buflen = encode_deviceattr(devicebuf, IEEE, serialid);
-			sendnonblocking(connlist_getserverfd(), devicebuf, buflen);
+						      serialid = bytebuffer_getdword(p+5);
+						      IEEE = bytebuffer_getquadword(p+9);
+						      unsigned char devicebuf[2048] = {0};
+						      unsigned int buflen = encode_deviceattr(devicebuf, IEEE, serialid);
+						      sendnonblocking(connlist_getserverfd(), devicebuf, buflen);
+					      }
 			case ILLEGAL:
-				break;
+					      break;
 		}
 	}
 }
