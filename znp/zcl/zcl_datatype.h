@@ -9,6 +9,7 @@ struct zclzoneenrollreq{
 	unsigned short groupid;
 	unsigned short clusterid;
 	unsigned short zonetype;
+	unsigned char endpoint;
 	unsigned char zoneid;
 };
 

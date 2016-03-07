@@ -592,6 +592,13 @@ static uint8_t mtZdoSimpleDescRspCb(SimpleDescRspFormat_t *msg)
 
 		struct device * d = _get_device(msg->SrcAddr);
 		if(d && (d->epcursor < d->activeep.ActiveEPCount)){
+			struct simpledesc sc;
+			memset(&sc, 0, sizeof(struct simpledesc));
+			memcpy(&sc.simpledesc, msg, sizeof(struct simpledesc));
+
+			struct endpoint * ep = endpoint_create(&sc);
+			device_addendpoint(d, ep);
+
 			SimpleDescReqFormat_t req;
 			req.DstAddr = msg->SrcAddr;
 			req.NwkAddrOfInterest = msg->NwkAddr;
@@ -632,7 +639,7 @@ static uint8_t mtZdoActiveEpRspCb(ActiveEpRspFormat_t *msg)
 
 		struct device * d = _get_device(msg->SrcAddr);
 
-		if(d && !device_check_status(d, DEVICE_SEND_SIMPLESESC)){
+		if(d && !device_check_status(d, DEVICE_SEND_SIMPLEDESC)){
 
 			device_set_status(d, DEVICE_SEND_SIMPLEDESC);
 			device_set_status(d, DEVICE_GET_ACTIVEEP);

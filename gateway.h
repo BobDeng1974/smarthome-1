@@ -17,10 +17,13 @@
 #define DEVICE_GET_ACTIVEEP 32
 #define DEVICE_GET_SIMPLEDESC 64
 
-
+struct simpledesc{
+	SimpleDescRspFormat_t simpledesc; 
+	unsigned short zonetype; // used for ss device
+};
 
 struct endpoint{
-	SimpleDescRspFormat_t simpledesc;
+	struct simpledesc simpledesc;
 	struct list_head list;
 };
 
@@ -36,6 +39,8 @@ struct device{
 	char modelidentifier[33];
 	char datecode[17];
 	unsigned char powersource;
+
+	unsigned int endpoint_zonetype[8];
 
 	unsigned char epcursor;
 	ActiveEpRspFormat_t activeep;
@@ -53,7 +58,7 @@ struct gateway{
 };
 
 // endpoint 
-struct endpoint * endpoint_create(SimpleDescRspFormat_t * simpledesc);
+struct endpoint * endpoint_create(struct simpledesc * simpledesc);
 void endpoint_destroy(struct endpoint * ep);
 
 // device
@@ -76,6 +81,10 @@ void device_set_status(struct device * d, unsigned int status);
 static int device_check_status(struct device * d, unsigned int status){
 	return d->status & status;
 }
+
+void device_set_zonetype(struct device *d, unsigned char endpoint, unsigned short zonetype);
+
+int device_get_index(struct device *d, unsigned char endpoint);
 
 // gateway
 struct gateway * getgateway();

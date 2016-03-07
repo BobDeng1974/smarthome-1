@@ -1,6 +1,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
+#include <assert.h>
 
 #include "zcl_ss.h" 
 #include "zcl_general.h" #include "zcl.h"
@@ -276,32 +277,21 @@ int zclss_processincmd_zonestatus_enrollrequest(struct zclincomingmsg * pInMsg){
 		responseCode = SS_IAS_ZONE_STATUS_ENROLL_RESPONSE_CODE_NOT_SUPPORTED;
 	}
 
-	// Callback the application so it can fill in the Device IEEE Address
-	//  if ( pCBs->pfnEnrollRequest )
-	//  {
-	//    zclZoneEnrollReq_t req;
-	//
-	//    req.srcAddr = &(pInMsg->msg->srcAddr);
-	//    req.zoneID = zoneID;
-	//    req.zoneType = zoneType;
-	//    req.manufacturerCode = manuCode;
-	//
-	//    stat = pCBs->pfnEnrollRequest( &req, pInMsg->msg->endPoint );
-	//  }
-	//
-	
-	//struct znp_device * d = znp_device_get(pInMsg->message->SrcAddr);
-
-	//d->device_data.ss_device.clusterid = pInMsg->message->ClusterId;
-	//d->device_data.ss_device.zonetype = zoneType;
 	
 	struct znp_map * map = znp_map_get_ieee(pInMsg->message->SrcAddr);
+	if(map){
+		struct device * d = gateway_getdevice(getgateway(), map->ieee);
+		device_set_zonetype(d, pInMsg->message->SrcEndpoint, zoneType); 
+	}else{
+		assert(0);
+	}
 	struct zclzoneenrollreq req;
 	req.ieeeaddr = map->ieee; 
 	req.zonetype = zoneType;
 	req.zoneid = zoneID;
 	req.clusterid = pInMsg->message->ClusterId;
 	req.groupid = pInMsg->message->GroupId;
+	req.endpoint = pInMsg->message->SrcEndpoint;
 	int tmp = ZCLZONEENROLLREQ;
 	sendnonblocking(g_znpwfd, &tmp, sizeof(int));
 	sendnonblocking(g_znpwfd, &req, sizeof(struct zclzoneenrollreq));
@@ -321,18 +311,18 @@ int zclss_processincmd_zonestatus_enrollrequest(struct zclincomingmsg * pInMsg){
 
 int zclss_processincmd_zonestatus_changenotification(struct zclincomingmsg * msg){
 	fprintf(stdout, "---------------------------------------datalen %d\n", msg->datalen); 
-//	struct zclzonechangenotification req;
-//	req.zonechangenotification.uszonestatus = BUILD_UINT16(msg->data[0],msg->data[1]);
-//	struct znp_map * map = znp_map_get_ieee(shortaddr);
-//	if(map){ 
-//		struct device * device = gateway_getdevice(getgateway(), map->ieee);
-//		req.ieeeaddr = device->ieeeaddr;
-//	}
-//	req.clusterid = msg->message->ClusterId;
-//
-//	int tmp = ZCLZONECHANGENOTIFICATION;
-//	sendnonblocking(g_znpwfd, &tmp, sizeof(int));
-//	sendnonblocking(g_znpwfd, &req, sizeof(struct zclzonechangenotification));
+	struct zclzonechangenotification req;
+	memset(&req, 0, sizeof(struct zclzonechangenotification));
+	req.zonechangenotification.uszonestatus = BUILD_UINT16(msg->data[0],msg->data[1]);
+	struct znp_map * map = znp_map_get_ieee(msg->message->SrcAddr);
+	if(map){ 
+		req.ieeeaddr = map->ieee;
+	}
+	req.clusterid = msg->message->ClusterId;
+
+	int tmp = ZCLZONECHANGENOTIFICATION;
+	sendnonblocking(g_znpwfd, &tmp, sizeof(int));
+	sendnonblocking(g_znpwfd, &req, sizeof(struct zclzonechangenotification));
 	
 	return 0;
 }

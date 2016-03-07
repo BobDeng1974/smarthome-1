@@ -272,11 +272,11 @@ void _sqlite3_load_device(sqlite3_stmt *stmt, int col, struct device *d){
 	device_setep(d, &activeep);
 
 	struct endpoint * ep;
-	SimpleDescRspFormat_t simpledesc;
+	struct simpledesc simpledesc;
 	unsigned char i;
 	for(i = 0; i < activeep.ActiveEPCount; i++){ 
-		memcpy(&simpledesc, blob, sizeof(SimpleDescRspFormat_t));
-		blob += sizeof(SimpleDescRspFormat_t);
+		memcpy(&simpledesc, blob, sizeof(struct simpledesc));
+		blob += sizeof(struct simpledesc);
 		ep = endpoint_create(&simpledesc);
 		device_addendpoint(d, ep);
 	}
@@ -342,8 +342,8 @@ int sqlitedb_insert_device_ieee(unsigned long long ieee){
 	int ret = sqlite3_prepare_v2(db->db, sql_insert_device_ieee, -1, &stmt, 0);
 
 	sqlite3_bind_int64(stmt,1, ieee);
-	unsigned int blob_size = sizeof(ActiveEpRspFormat_t) + 77*sizeof(SimpleDescRspFormat_t); // 77 magic number is from the ActiveEpRspFormt_t
-	unsigned char blob[sizeof(ActiveEpRspFormat_t) + 77 * sizeof(SimpleDescRspFormat_t)] = {0};
+	unsigned int blob_size = sizeof(ActiveEpRspFormat_t) + 77*sizeof(struct simpledesc); // 77 magic number is from the ActiveEpRspFormt_t
+	unsigned char blob[sizeof(ActiveEpRspFormat_t) + 77 * sizeof(struct simpledesc)] = {0};
 	sqlite3_bind_blob(stmt, 2, blob, blob_size, SQLITE_STATIC);
 	ret = sqlite3_step(stmt);
 	sqlite3_finalize(stmt);
@@ -371,13 +371,13 @@ int sqlitedb_update_device_endpoint(struct device * d){
 				const char* result = sqlite3_errmsg(db->db);
 				fprintf(stdout, "------------------ %s \n", result);
 			}
-			cursor += sizeof(ActiveEpRspFormat_t);
+			cursor += sizeof(struct simpledesc);
 			struct endpoint * ep;
 			struct list_head * pos, *n;
 			list_for_each_safe(pos, n, &d->eplisthead){ 
 				ep = list_entry(pos, struct endpoint, list); 
-				sqlite3_blob_write(blob, &ep->simpledesc, sizeof(SimpleDescRspFormat_t), cursor);
-				cursor += sizeof(SimpleDescRspFormat_t);
+				sqlite3_blob_write(blob, &ep->simpledesc, sizeof(struct simpledesc), cursor);
+				cursor += sizeof(struct simpledesc);
 			}
 
 		}
@@ -388,6 +388,37 @@ int sqlitedb_update_device_endpoint(struct device * d){
 	sqlitedb_destroy(db);
 }
 
+int sqlitedb_update_device_endpoint_zonetype(struct device * d, unsigned char endpoint, unsigned short zonetype){ 
+	int epindex = device_get_index(d, endpoint);
+	if(epindex == -1){
+		return 1;
+	}
+	struct sqlitedb * db = sqlitedb_create(DBPATH);
+	if(db){ 
+		sqlite3_blob * blob = NULL;
+		int ret = sqlite3_blob_open(db->db, 
+				"main",
+				"device",
+				"endpoint",
+				d->ieeeaddr,
+				1,
+				&blob);
+		if(ret == SQLITE_OK){
+			int cursor = 0;
+			cursor+=sizeof(ActiveEpRspFormat_t) + sizeof(struct simpledesc)*epindex + sizeof(SimpleDescRspFormat_t);
+			ret = sqlite3_blob_write(blob, &zonetype, sizeof(unsigned short),cursor);
+			if( ret != SQLITE_OK){
+				const char* result = sqlite3_errmsg(db->db);
+				fprintf(stdout, "------------------ %s \n", result);
+			}
+
+		}
+
+		sqlite3_blob_close(blob);
+
+	}
+	sqlitedb_destroy(db);
+}
 
 static const char sql_update_device_attr[] = "update device set status = %d, zclversion = %d, applicationversion = %d, stackversion = %d, hwversion = %d, manufacturername = '%s', modelidentifier = '%s', datecode = '%s' where ieee = %lld";
 
@@ -402,7 +433,7 @@ int sqlitedb_update_device_attr(struct device * d){
 	sqlitedb_destroy(db);
 }
 
-static const char sql_update_device_status = "update device set status = %d where ieee = %lld";
+static const char sql_update_device_status[] = "update device set status = %d where ieee = %lld";
 
 int sqlitedb_update_device_status(struct device * d){
 	struct sqlitedb * db = sqlitedb_create(DBPATH);

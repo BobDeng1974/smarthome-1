@@ -26,5 +26,6 @@ struct device;
 int sqlitedb_update_device_endpoint(struct device * d);
 int sqlitedb_update_device_attr(struct device * d);
 int sqlitedb_update_device_status(struct device * d);
+int sqlitedb_update_device_endpoint_zonetype(struct device * d, unsigned char endpoint, unsigned short zonetype);
 
 #endif
