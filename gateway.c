@@ -1,5 +1,6 @@
 #include <stdlib.h>
 #include <string.h>
+#include <assert.h>
 #include "gateway.h"
 #include "sqlitedb.h"
 
@@ -7,10 +8,10 @@
 
 static struct gateway gatewayinstance;
 // ---------------endpoint---------------
-struct endpoint * endpoint_create(SimpleDescRspFormat_t * simpledesc){
+struct endpoint * endpoint_create(struct simpledesc * simpledesc){
 	struct endpoint * endpoint = (struct endpoint *)malloc(sizeof(struct endpoint));
 	memset(endpoint, 0, sizeof(struct endpoint));
-	memcpy(&endpoint->simpledesc, simpledesc, sizeof(SimpleDescRspFormat_t));
+	memcpy(&endpoint->simpledesc, simpledesc, sizeof(struct simpledesc));
 	INIT_LIST_HEAD(&endpoint->list);
 
 	return endpoint;
@@ -34,6 +35,16 @@ struct device * device_create(unsigned long long deviceieee){
 }
 
 void device_addendpoint(struct device * d, struct endpoint * ep){ 
+	unsigned int i;
+	for(i = 0; i < 8; i++){ 
+		if(d->endpoint_zonetype[i] != 0){
+			if((d->endpoint_zonetype[i] >> 16) == ep->simpledesc.simpledesc.Endpoint){
+				ep->simpledesc.zonetype = d->endpoint_zonetype[i]&0x00FF;
+				d->endpoint_zonetype[i] = 0;
+			}
+		}
+	}
+
 	list_add_tail(&ep->list, &d->eplisthead);
 }
 
@@ -69,6 +80,63 @@ struct device * device_create2(unsigned long long ieee, char * name, unsigned ch
 	return d;
 }
 
+unsigned char device_getepcount(struct device * d){
+	unsigned char count = 0;
+	struct list_head * pos, *n;
+	list_for_each_safe(pos, n, &d->eplisthead){ 
+		count++;
+	}
+
+	return count;
+}
+
+void device_set_status(struct device * d, unsigned int status) { 
+	d->status |= status;
+	sqlitedb_update_device_status(d);
+}
+
+struct endpoint * _device_get_enpint(struct device *d,  unsigned char endpoint){ 
+	struct list_head *pos, *n;
+	struct endpoint * ep;
+	list_for_each_safe(pos, n, &d->eplisthead){
+		ep = list_entry(pos, struct endpoint, list); 
+		if(ep->simpledesc.simpledesc.Endpoint == endpoint){
+			return ep;
+		}
+	}
+
+	return NULL;
+}
+
+void device_set_zonetype(struct device *d, unsigned char endpoint, unsigned short zonetype){
+	struct endpoint * ep = _device_get_enpint(d, endpoint);
+	if(ep){
+		ep->simpledesc.zonetype = zonetype;
+		sqlitedb_update_device_endpoint_zonetype(d, endpoint, zonetype);
+	}else{ 
+		unsigned char i;
+		for(i = 0; i < 8; i++){
+			if(d->endpoint_zonetype[i]==0){
+				d->endpoint_zonetype[i] = (endpoint << 16)+zonetype;
+			}
+		}
+	}
+}
+
+int device_get_index(struct device *d, unsigned char endpoint){
+	int result = -1;
+	struct list_head *pos, *n;
+	struct endpoint * ep;
+	list_for_each_safe(pos, n, &d->eplisthead){
+		result++;
+		ep = list_entry(pos, struct endpoint, list); 
+		if(ep->simpledesc.simpledesc.Endpoint == endpoint){
+			return result;
+		}
+	}
+
+	return -1;
+}
 
 // ---------------device---------------
 //
@@ -109,18 +177,4 @@ struct device * gateway_getdevice(struct gateway * gw, unsigned long long ieee){
 	return NULL;
 }
 
-unsigned char device_getepcount(struct device * d){
-	unsigned char count = 0;
-	struct list_head * pos, *n;
-	list_for_each_safe(pos, n, &d->eplisthead){ 
-		count++;
-	}
-
-	return count;
-}
-
-void device_set_status(struct device * d, unsigned int status) { 
-	d->status |= status;
-	sqlitedb_update_device_status(d);
-}
 // ---------------gateway---------------
