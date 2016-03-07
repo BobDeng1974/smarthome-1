@@ -1,6 +1,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include "gateway.h"
+#include "sqlitedb.h"
 
 #define min(a,b) a>b?b:a
 
@@ -116,5 +117,10 @@ unsigned char device_getepcount(struct device * d){
 	}
 
 	return count;
+}
+
+void device_set_status(struct device * d, unsigned int status) { 
+	d->status |= status;
+	sqlitedb_update_device_status(d);
 }
 // ---------------gateway---------------

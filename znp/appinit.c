@@ -576,6 +576,7 @@ static uint8_t mtZdoSimpleDescRspCb(SimpleDescRspFormat_t *msg)
 		consolePrint("DeviceID: 0x%04X\n", msg->DeviceID);
 		consolePrint("DeviceVersion: 0x%02X\n", msg->DeviceVersion);
 		consolePrint("NumInClusters: 0x%02X\n", msg->NumInClusters);
+		fprintf(stdout, "simple ****** %lld\n", pthread_self());
 		uint32_t i;
 		for (i = 0; i < msg->NumInClusters; i++)
 		{
@@ -599,8 +600,9 @@ static uint8_t mtZdoSimpleDescRspCb(SimpleDescRspFormat_t *msg)
 
 			device_increase(d);
 		}
-		if(d && (d->epcursor == d->activeep.ActiveEPCount)){ 
+		if(d && (d->epcursor == d->activeep.ActiveEPCount)){
 			sqlitedb_update_device_endpoint(d);
+			device_set_status(d, DEVICE_GET_SIMPLEDESC);
 		}
 	}
 	else
@@ -610,6 +612,7 @@ static uint8_t mtZdoSimpleDescRspCb(SimpleDescRspFormat_t *msg)
 
 	return msg->Status;
 }
+
 static uint8_t mtZdoActiveEpRspCb(ActiveEpRspFormat_t *msg)
 {
 	consolePrint("mtZdoActiveEpRspCb\n");
@@ -619,6 +622,7 @@ static uint8_t mtZdoActiveEpRspCb(ActiveEpRspFormat_t *msg)
 		consolePrint("Status: 0x%02X\n", msg->Status);
 		consolePrint("NwkAddr: 0x%04X\n", msg->NwkAddr);
 		consolePrint("ActiveEPCount: 0x%02X\n", msg->ActiveEPCount);
+		fprintf(stdout, "active ****** %lld\n", pthread_self());
 
 		uint32_t i;
 		for (i = 0; i < msg->ActiveEPCount; i++)
@@ -628,7 +632,12 @@ static uint8_t mtZdoActiveEpRspCb(ActiveEpRspFormat_t *msg)
 
 		struct device * d = _get_device(msg->SrcAddr);
 
-		if(d && device_getepcount(d) == 0){
+		if(d && !device_check_status(d, DEVICE_SEND_SIMPLESESC)){
+
+			device_set_status(d, DEVICE_SEND_SIMPLEDESC);
+			device_set_status(d, DEVICE_GET_ACTIVEEP);
+			device_setep(d, msg);
+
 			SimpleDescReqFormat_t req;
 			req.DstAddr = msg->SrcAddr;
 			req.NwkAddrOfInterest = msg->NwkAddr;
@@ -636,7 +645,6 @@ static uint8_t mtZdoActiveEpRspCb(ActiveEpRspFormat_t *msg)
 			sendcmd((unsigned char *)&req,ZDO_SIMPLE_DESC_REQ);
 
 			device_increase(d);
-			device_setep(d, msg);
 		}
 
 	}
@@ -984,14 +992,14 @@ static uint8_t mtZdoEndDeviceAnnceIndCb(EndDeviceAnnceIndFormat_t *msg)
 		d = device_create(msg->IEEEAddr);
 		gateway_adddevice(getgateway(), d);
 		sqlitedb_insert_device_ieee(msg->IEEEAddr);
-
 	}
-	if(device_getepcount(d) == 0){
+	if(!device_check_status(d, DEVICE_SEND_ACTIVEEP)){
 		ActiveEpReqFormat_t queryep;
 		memset(&queryep, 0, sizeof(ActiveEpReqFormat_t));
 		queryep.NwkAddrOfInterest = msg->NwkAddr;
 		queryep.DstAddr = msg->SrcAddr;
 		sendcmd((unsigned char *)&queryep, ZDO_ACTIVE_EP_REQ);
+		device_set_status(d, DEVICE_SEND_ACTIVEEP);
 	}
 
 	return 0;

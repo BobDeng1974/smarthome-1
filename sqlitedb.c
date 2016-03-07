@@ -401,3 +401,17 @@ int sqlitedb_update_device_attr(struct device * d){
 	}
 	sqlitedb_destroy(db);
 }
+
+static const char sql_update_device_status = "update device set status = %d where ieee = %lld";
+
+int sqlitedb_update_device_status(struct device * d){
+	struct sqlitedb * db = sqlitedb_create(DBPATH);
+
+	if(db){
+		char update_device_status[128] = {0};
+		sprintf(update_device_status, sql_update_device_status, d->status, d->ieeeaddr);
+		sqlite3_exec(db->db, update_device_status, NULL, NULL, NULL);
+	}
+
+	sqlitedb_destroy(db);
+}

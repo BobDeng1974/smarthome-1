@@ -12,9 +12,12 @@
 #define DEVICE_APP_DEL 1
 #define DEVICE_SEND_ATTR 2
 #define DEVICE_GET_ATTR 4
-#define DEVICE_WITH_ZCLATTR 8
-#define DEVICE_WITH_ENDPOINT 16
-#define DEVICE_WITH_CLUSTERID 32
+#define DEVICE_SEND_ACTIVEEP 8
+#define DEVICE_SEND_SIMPLEDESC 16
+#define DEVICE_GET_ACTIVEEP 32
+#define DEVICE_GET_SIMPLEDESC 64
+
+
 
 struct endpoint{
 	SimpleDescRspFormat_t simpledesc;
@@ -68,8 +71,10 @@ static void device_increase(struct device * d){
 	d->epcursor++;
 }
 
-static void device_set_status(struct device * d, unsigned int status){ 
-	d->status |= status;
+void device_set_status(struct device * d, unsigned int status);
+
+static int device_check_status(struct device * d, unsigned int status){
+	return d->status & status;
 }
 
 // gateway

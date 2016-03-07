@@ -838,7 +838,7 @@ int zcl_proccessincomingmessage(IncomingMsgFormat_t * message){
 	// to get attribute 
 	struct znp_map * map = znp_map_get_ieee(message->SrcAddr); 
 	struct device * d = gateway_getdevice(getgateway(), map->ieee);
-	if(!(d->status & DEVICE_SEND_ATTR)){ 
+	if(!device_check_status(DEVICE_SEND_ATTR)){ 
 		zclReadCmd_t readcmd; 
 		readcmd.numAttr = 8;
 		readcmd.attrID[0] = ATTRID_BASIC_ZCL_VERSION;
