@@ -80,6 +80,16 @@ void event_recvmsg(struct eventhub * hub, int fd, unsigned char * buf, int bufle
 				break;
 			case REQDELDEVICE:
 				break;
+            case DEVICEPROPERTIES:
+			unsigned int serialid;
+			unsigned long long IEEE;
+			unsigned char *p = buffer;
+
+			serialid = bytebuffer_getdword(p+5);
+			IEEE = bytebuffer_getquadword(p+9);
+			unsigned char devicebuf[2048] = {0};
+			unsigned int buflen = encode_deviceattr(devicebuf, IEEE, serialid);
+			sendnonblocking(connlist_getserverfd(), devicebuf, buflen);
 			case ILLEGAL:
 				break;
 		}
