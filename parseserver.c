@@ -1,11 +1,13 @@
 #include <stdio.h>
 #include <time.h>
+#include <assert.h>
 #include "sqlitedb.h"
 #include "bytebuffer.h"
 #include "gateway.h"
 #include "bussinessdata.h"
 #include "zcl_datatype.h"
-                                             
+#include "zcl_ha.h"
+
 unsigned char encode_checksum(unsigned char * buf, unsigned int buflen);
 
 #define  LOGIN     0x0001
@@ -23,26 +25,24 @@ unsigned int encode_login(struct gateway *gw, unsigned char *buf) {
 	list_for_each_safe(pos, n,&gw->head)
 	{
 		d=list_entry(pos, struct device, list);
-		bytebuffer_writequadword(&p, d->ieeeaddr);
-		unsigned char devicenamelen = strlen(d->devicename);
-		bytebuffer_writebyte(&p, devicenamelen);
-		bytebuffer_writebytes(&p, (unsigned char *)d->devicename,devicenamelen);
-	    unsigned char devicetypeidcounte = device_getepcount(d);
-		bytebuffer_writebyte(&p, devicetypeidcounte);
+		if(device_check_status(d, DEVICE_ACTIVE)){
+			bytebuffer_writequadword(&p, d->ieeeaddr);
+			unsigned char devicenamelen = strlen(d->devicename);
+			bytebuffer_writebyte(&p, devicenamelen);
+			bytebuffer_writebytes(&p, (unsigned char *)d->devicename,devicenamelen);
+			unsigned char devicetypeidcounte = device_getepcount(d);
+			bytebuffer_writebyte(&p, devicetypeidcounte);
 
-		struct list_head *pos1, *n1;
-		struct endpoint *e;
-			list_for_each_safe(pos1, n1,&d->list)
-			{
+			struct list_head *pos1, *n1;
+			struct endpoint *e;
+			list_for_each_safe(pos1, n1,&d->eplisthead) {
 				e=list_entry(pos1, struct endpoint, list);
 				bytebuffer_writeword(&p,e->simpledesc.simpledesc.DeviceID);
-
+				if(e->simpledesc.simpledesc.DeviceID == ZCL_HA_DEVICEID_IAS_ZONE){
+					bytebuffer_writeword(&p,e->simpledesc.zonetype);
+				}
 			}
-		//bytebuffer_writebyte(&p, d->clusteridcount);
-
-		//for(i = 0; i < d->clusteridcount; i++){
-		//	bytebuffer_writeword(&p, d->clusterids[i].clusterid);
-		//}
+		}
 	}	
 	unsigned int templen = p-buf;
 	unsigned char *p1=buf+1;
@@ -136,16 +136,24 @@ unsigned int encode_alarm(unsigned char *buf, struct zclzonechangenotification *
 	bytebuffer_writebyte(&p,0xCE);
 	bytebuffer_writeword(&p,0);
 	bytebuffer_writeword(&p,ALARM);
-	bytebuffer_writeword(&p,notification->clusterid);
-	bytebuffer_writeword(&p,notification->zonetype);
 	bytebuffer_writequadword(&p,notification->ieeeaddr);
 
 	ctime = time(NULL);
 	bytebuffer_writequadword(&p,ctime);
-	switch(notification->zonetype){
-		case CONTACTSWITCH:
-			break;
+	struct device * d = gateway_getdevice(getgateway(), notification->ieeeaddr);
+	assert(d);
+	if(d){ 
+		struct endpoint * ep = device_get_endpoint(d, notification->endpoint);
+		assert(ep);
+		if(ep){
+			bytebuffer_writebyte(&p, ep->simpledesc.simpledesc.DeviceID);
+			if(ep->simpledesc.simpledesc.DeviceID == ZCL_HA_DEVICEID_IAS_ZONE){
+				bytebuffer_writebyte(&p, ep->simpledesc.zonetype);
+			}
+		}
+
 	}
+
 	bytebuffer_writebyte(&p,notification->zonechangenotification.zonestatus.alarm1);
 	bytebuffer_writebyte(&p,notification->zonechangenotification.zonestatus.alarm2);
 
@@ -176,10 +184,12 @@ unsigned int encode_adddeldevice(unsigned char * buf, unsigned long long ieeeadd
 
 	struct list_head *pos, *n;
 	struct endpoint *e;
-	list_for_each_safe(pos, n,&d->list)
-	{
+	list_for_each_safe(pos, n,&d->eplisthead) {
 		e=list_entry(pos, struct endpoint, list);
 		bytebuffer_writeword(&p,e->simpledesc.simpledesc.DeviceID);
+		if(e->simpledesc.simpledesc.DeviceID == ZCL_HA_DEVICEID_IAS_ZONE){
+			bytebuffer_writeword(&p, e->simpledesc.zonetype);
+		}	
 	}
 	unsigned int templen = p-buf;
 	unsigned char *p1=buf+1;
@@ -216,39 +226,39 @@ unsigned int encode_deviceattr(unsigned char * buf, unsigned long long ieeeaddr,
 	bytebuffer_writebyte(&p,&d->applicationversion);
 	bytebuffer_writebyte(&p,&d->stackversion);
 	bytebuffer_writebyte(&p,&d->hwversion);
-	
+
 	unsigned char manufacturernamelen = strlen(d->manufacturername);
 	bytebuffer_writebyte(&p, manufacturernamelen);
 	bytebuffer_writebytes(&p, (unsigned char *)d->manufacturername,manufacturernamelen);
-	
+
 	unsigned char modelidentifierlen = strlen(d->modelidentifier);
 	bytebuffer_writebyte(&p, modelidentifierlen);
 	bytebuffer_writebytes(&p, (unsigned char *)d->modelidentifier,modelidentifierlen);
 
-        unsigned char datecodelen = strlen(d->datecode);
-        bytebuffer_writebyte(&p, datecodelen);
-        bytebuffer_writebytes(&p, (unsigned char *)d->datecode,datecodelen);
+	unsigned char datecodelen = strlen(d->datecode);
+	bytebuffer_writebyte(&p, datecodelen);
+	bytebuffer_writebytes(&p, (unsigned char *)d->datecode,datecodelen);
 
 	bytebuffer_writebyte(&p, d->powersource);
-	
+
 	unsigned char deviceepcount = device_getepcount(d);
 	bytebuffer_writebyte(&p, deviceepcount);
 
-        struct list_head *pos, *n;
+	struct list_head *pos, *n;
 	struct endpoint *e;
 	list_for_each_safe(pos, n,&d->list)
 	{
-		    e=list_entry(pos, struct endpoint, list);
-		    bytebuffer_writebyte(&p,e->simpledesc.simpledesc.Endpoint);
-		    bytebuffer_writeword(&p,e->simpledesc.simpledesc.ProfileID);
-		    bytebuffer_writeword(&p,e->simpledesc.simpledesc.DeviceID);
-		    bytebuffer_writebyte(&p,e->simpledesc.simpledesc.DeviceVersion);
-	 }
+		e=list_entry(pos, struct endpoint, list);
+		bytebuffer_writebyte(&p,e->simpledesc.simpledesc.Endpoint);
+		bytebuffer_writeword(&p,e->simpledesc.simpledesc.ProfileID);
+		bytebuffer_writeword(&p,e->simpledesc.simpledesc.DeviceID);
+		bytebuffer_writebyte(&p,e->simpledesc.simpledesc.DeviceVersion);
+	}
 	unsigned int templen = p-buf;
 	unsigned char *p1=buf+1;
 	bytebuffer_writeword(&p1,templen+2);
 
-        unsigned checksum = encode_checksum(buf,templen);
+	unsigned checksum = encode_checksum(buf,templen);
 	bytebuffer_writebyte(&p,checksum);
 	bytebuffer_writebyte(&p,0XCE);
 	return p-buf;

@@ -152,6 +152,19 @@ int device_has_enpoint(struct device * d, unsigned char endpoint){
 	return 0;
 }
 
+struct endpoint * device_get_endpoint(struct device * d, unsigned char endpoint){
+	struct list_head *pos, *n; 
+	struct endpoint * ep;
+	list_for_each_safe(pos, n, &d->eplisthead){
+		ep = list_entry(pos, struct endpoint, list);
+		if(ep->simpledesc.simpledesc.Endpoint == endpoint){
+			return ep;
+		}
+	}
+
+	return NULL;
+}
+
 // ---------------device---------------
 //
 // ---------------gateway---------------

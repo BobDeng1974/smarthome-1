@@ -319,6 +319,7 @@ int zclss_processincmd_zonestatus_changenotification(struct zclincomingmsg * msg
 		req.ieeeaddr = map->ieee;
 	}
 	req.clusterid = msg->message->ClusterId;
+	req.endpoint = msg->message->SrcEndpoint;
 
 	int tmp = ZCLZONECHANGENOTIFICATION;
 	sendnonblocking(g_znpwfd, &tmp, sizeof(int));

@@ -106,11 +106,10 @@ void event_recvznp(struct eventhub * hub, int fd){
 				struct zclzoneenrollreq req;
 				readnonblocking(fd, &req, sizeof(struct zclzoneenrollreq));
 				struct device *d = gateway_getdevice(getgateway(),req.ieeeaddr);
-				if(d == NULL){ 
-					d = device_create(req.ieeeaddr);
-					gateway_adddevice(getgateway(), d);
+				if(d){ 
+					device_set_status(d, DEVICE_ACTIVE);
 				}
-				unsigned char buf[64] = {0};
+				unsigned char buf[128] = {0};
 				unsigned int buflen = encode_adddeldevice(buf, req.ieeeaddr, 1);
 				broadcast(buf, buflen);
 			}

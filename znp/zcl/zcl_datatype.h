@@ -52,6 +52,7 @@ struct zclzonechangenotification{
 	unsigned long long ieeeaddr;
 	unsigned short clusterid;
 	unsigned short zonetype;
+	unsigned char endpoint;
 	union _zonechangenotification{
 		unsigned short uszonestatus;
 		struct{ 

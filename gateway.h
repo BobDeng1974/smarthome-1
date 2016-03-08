@@ -16,6 +16,7 @@
 #define DEVICE_SEND_SIMPLEDESC 16
 #define DEVICE_GET_ACTIVEEP 32
 #define DEVICE_GET_SIMPLEDESC 64
+#define DEVICE_ACTIVE 128
 
 struct simpledesc{
 	SimpleDescRspFormat_t simpledesc; 
@@ -86,6 +87,8 @@ void device_set_zonetype(struct device *d, unsigned char endpoint, unsigned shor
 
 int device_get_index(struct device *d, unsigned char endpoint);
 int device_has_enpoint(struct device * d, unsigned char endpoint);
+
+struct endpoint * device_get_endpoint(struct device * d, unsigned char endpoint);
 
 // gateway
 struct gateway * getgateway();
