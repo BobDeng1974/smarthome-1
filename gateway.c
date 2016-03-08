@@ -118,6 +118,7 @@ void device_set_zonetype(struct device *d, unsigned char endpoint, unsigned shor
 		for(i = 0; i < 8; i++){
 			if(d->endpoint_zonetype[i]==0){
 				d->endpoint_zonetype[i] = (endpoint << 16)+zonetype;
+				break;
 			}
 		}
 	}
@@ -136,6 +137,19 @@ int device_get_index(struct device *d, unsigned char endpoint){
 	}
 
 	return -1;
+}
+
+int device_has_enpoint(struct device * d, unsigned char endpoint){
+	struct list_head *pos, *n;
+	struct endpoint * ep;
+	list_for_each_safe(pos, n, &d->eplisthead){
+		ep = list_entry(pos, struct endpoint, list);
+		if(ep->simpledesc.simpledesc.Endpoint == endpoint){
+			return 1;
+		}
+	}
+
+	return 0;
 }
 
 // ---------------device---------------

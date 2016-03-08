@@ -35,7 +35,7 @@ unsigned int encode_login(struct gateway *gw, unsigned char *buf) {
 			list_for_each_safe(pos1, n1,&d->list)
 			{
 				e=list_entry(pos1, struct endpoint, list);
-				bytebuffer_writeword(&p,e->simpledesc.DeviceID);
+				bytebuffer_writeword(&p,e->simpledesc.simpledesc.DeviceID);
 
 			}
 		//bytebuffer_writebyte(&p, d->clusteridcount);
@@ -169,18 +169,18 @@ unsigned int encode_adddeldevice(unsigned char * buf, unsigned long long ieeeadd
 	bytebuffer_writequadword(&p, ieeeaddr);
 
 	struct device *d;
-	d = gateway_getdevice(gw, ieeeaddr);
+	d = gateway_getdevice(getgateway(), ieeeaddr);
 
 	unsigned char devicetypeidcount = device_getepcount(d);
 	bytebuffer_writebyte(&p, devicetypeidcount);
 
 	struct list_head *pos, *n;
-	struct endpoint *e
-		list_for_each_safe(pos, n,&d->list)
-		{
-			e=list_entry(pos, struct endpoint, list);
-			bytebuffer_writeword(&p,e->simpledesc.DeviceID);
-		}
+	struct endpoint *e;
+	list_for_each_safe(pos, n,&d->list)
+	{
+		e=list_entry(pos, struct endpoint, list);
+		bytebuffer_writeword(&p,e->simpledesc.simpledesc.DeviceID);
+	}
 	unsigned int templen = p-buf;
 	unsigned char *p1=buf+1;
 	bytebuffer_writeword(&p1,templen+2);
@@ -211,7 +211,7 @@ unsigned int encode_deviceattr(unsigned char * buf, unsigned long long ieeeaddr,
 	bytebuffer_writedword(&p,serialid);
 	bytebuffer_writequadword(&p, ieeeaddr);
 	struct device *d;
-	d = gateway_getdevice(gw, ieeeaddr);
+	d = gateway_getdevice(getgateway(), ieeeaddr);
 	bytebuffer_writebyte(&p,&d->zclversion);
 	bytebuffer_writebyte(&p,&d->applicationversion);
 	bytebuffer_writebyte(&p,&d->stackversion);
@@ -235,15 +235,15 @@ unsigned int encode_deviceattr(unsigned char * buf, unsigned long long ieeeaddr,
 	bytebuffer_writebyte(&p, deviceepcount);
 
         struct list_head *pos, *n;
-	struct endpoint *e
-                list_for_each_safe(pos, n,&d->list)
-                {
-                            e=list_entry(pos, struct endpoint, list);
-			    bytebuffer_writebyte(&p,e->simpledesc.Endpoint);
-                            bytebuffer_writeword(&p,e->simpledesc.ProfileID);
-			    bytebuffer_writeword(&p,e->simpledesc.DeviceID);
-			    bytebuffer_writebyte(&p,e->simpledesc.DeviceVersion);
-                 }
+	struct endpoint *e;
+	list_for_each_safe(pos, n,&d->list)
+	{
+		    e=list_entry(pos, struct endpoint, list);
+		    bytebuffer_writebyte(&p,e->simpledesc.simpledesc.Endpoint);
+		    bytebuffer_writeword(&p,e->simpledesc.simpledesc.ProfileID);
+		    bytebuffer_writeword(&p,e->simpledesc.simpledesc.DeviceID);
+		    bytebuffer_writebyte(&p,e->simpledesc.simpledesc.DeviceVersion);
+	 }
 	unsigned int templen = p-buf;
 	unsigned char *p1=buf+1;
 	bytebuffer_writeword(&p1,templen+2);

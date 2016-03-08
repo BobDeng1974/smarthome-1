@@ -85,6 +85,7 @@ static int device_check_status(struct device * d, unsigned int status){
 void device_set_zonetype(struct device *d, unsigned char endpoint, unsigned short zonetype);
 
 int device_get_index(struct device *d, unsigned char endpoint);
+int device_has_enpoint(struct device * d, unsigned char endpoint);
 
 // gateway
 struct gateway * getgateway();

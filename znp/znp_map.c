@@ -59,7 +59,7 @@ struct znp_map * _znp_map_insert_ieee(struct znp_map * map){
 		}else if(map->ieee> m->ieee){
 			newnode = &((*newnode)->rb_right);
 		}else{
-	//		fprintf(stdout, "!!!(((rbtree alread has the shortaddr %d the tree ieee is %016llX the new %016llX\n", device->shortaddr, device->ieeeaddr, d->ieeeaddr);
+			//		fprintf(stdout, "!!!(((rbtree alread has the shortaddr %d the tree ieee is %016llX the new %016llX\n", device->shortaddr, device->ieeeaddr, d->ieeeaddr);
 			m->shortaddr = map->shortaddr;
 
 			return m;
@@ -69,25 +69,27 @@ struct znp_map * _znp_map_insert_ieee(struct znp_map * map){
 	rb_link_node(&map->node, parent, newnode);
 
 	return NULL;
-	
+
 }
 
 void _znp_map_ieee_dump(){
 	struct rb_node * node = rb_first(&znp_map_ieee_to_shortaddr);
 	struct znp_map * m = rb_entry(node, struct znp_map, node);
 	fprintf(stdout, "e2aieee 0x%016llX addr 0x%04X \n",m->ieee, m->shortaddr);
-	struct rb_node * n = rb_next(&m->node);
-	while(n){
-		struct znp_map *m = rb_entry(n, struct znp_map, node);
-		fprintf(stdout, "e2aieee 0x%016llX addr 0x%04X \n",m->ieee, m->shortaddr);
-		n=rb_next(&m->node);
+	if(m){
+		struct rb_node * n = rb_next(&m->node);
+		while(n){
+			struct znp_map *m = rb_entry(n, struct znp_map, node);
+			fprintf(stdout, "e2aieee 0x%016llX addr 0x%04X \n",m->ieee, m->shortaddr);
+			n=rb_next(&m->node);
+		}
 	}
 }
 
 
 void znp_map_insert_ieee(struct znp_map * map){
 	struct znp_map * ret;
-	
+
 	if((ret = _znp_map_insert_ieee(map))){
 		free(map);
 		return;
@@ -111,7 +113,7 @@ struct znp_map * _znp_map_insert_shortaddr(struct znp_map * map){
 		}else if(map->shortaddr > m->shortaddr){
 			newnode = &((*newnode)->rb_right);
 		}else{
-	//		fprintf(stdout, "!!!(((rbtree alread has the shortaddr %d the tree ieee is %016llX the new %016llX\n", device->shortaddr, device->ieeeaddr, d->ieeeaddr);
+			//		fprintf(stdout, "!!!(((rbtree alread has the shortaddr %d the tree ieee is %016llX the new %016llX\n", device->shortaddr, device->ieeeaddr, d->ieeeaddr);
 			m->ieee= map->ieee;
 
 			return m;
@@ -121,18 +123,20 @@ struct znp_map * _znp_map_insert_shortaddr(struct znp_map * map){
 	rb_link_node(&map->node, parent, newnode);
 
 	return NULL;
-	
+
 }
 
 void _znp_map_shortaddr_dump(){
 	struct rb_node * node = rb_first(&znp_map_shortaddr_to_ieee);
 	struct znp_map * m = rb_entry(node, struct znp_map, node);
-	fprintf(stdout, "a2eieee 0x%016llX addr 0x%04X \n",m->ieee, m->shortaddr);
-	struct rb_node * n = rb_next(&m->node);
-	while(n){
-		struct znp_map *m = rb_entry(n, struct znp_map, node);
+	if(m){
 		fprintf(stdout, "a2eieee 0x%016llX addr 0x%04X \n",m->ieee, m->shortaddr);
-		n=rb_next(&m->node);
+		struct rb_node * n = rb_next(&m->node);
+		while(n){
+			struct znp_map *m = rb_entry(n, struct znp_map, node);
+			fprintf(stdout, "a2eieee 0x%016llX addr 0x%04X \n",m->ieee, m->shortaddr);
+			n=rb_next(&m->node);
+		}
 	}
 }
 

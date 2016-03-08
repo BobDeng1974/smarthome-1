@@ -371,7 +371,7 @@ int sqlitedb_update_device_endpoint(struct device * d){
 				const char* result = sqlite3_errmsg(db->db);
 				fprintf(stdout, "------------------ %s \n", result);
 			}
-			cursor += sizeof(struct simpledesc);
+			cursor += sizeof(ActiveEpRspFormat_t);
 			struct endpoint * ep;
 			struct list_head * pos, *n;
 			list_for_each_safe(pos, n, &d->eplisthead){ 

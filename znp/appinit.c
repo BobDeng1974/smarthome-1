@@ -591,10 +591,14 @@ static uint8_t mtZdoSimpleDescRspCb(SimpleDescRspFormat_t *msg)
 		}
 
 		struct device * d = _get_device(msg->SrcAddr);
+		if(d && !device_has_enpoint(d, msg->Endpoint)){ 
+			device_increase(d);
+		}
+				
 		if(d && (d->epcursor < d->activeep.ActiveEPCount)){
 			struct simpledesc sc;
 			memset(&sc, 0, sizeof(struct simpledesc));
-			memcpy(&sc.simpledesc, msg, sizeof(struct simpledesc));
+			memcpy(&sc.simpledesc, msg, sizeof(SimpleDescRspFormat_t));
 
 			struct endpoint * ep = endpoint_create(&sc);
 			device_addendpoint(d, ep);
@@ -605,9 +609,14 @@ static uint8_t mtZdoSimpleDescRspCb(SimpleDescRspFormat_t *msg)
 			req.Endpoint = d->activeep.ActiveEPList[d->epcursor];
 			sendcmd((unsigned char *)&req,ZDO_SIMPLE_DESC_REQ);
 
-			device_increase(d);
-		}
-		if(d && (d->epcursor == d->activeep.ActiveEPCount)){
+		}else if(d && (d->epcursor == d->activeep.ActiveEPCount)){
+			struct simpledesc sc;
+			memset(&sc, 0, sizeof(struct simpledesc));
+			memcpy(&sc.simpledesc, msg, sizeof(SimpleDescRspFormat_t));
+
+			struct endpoint * ep = endpoint_create(&sc);
+			device_addendpoint(d, ep);
+
 			sqlitedb_update_device_endpoint(d);
 			device_set_status(d, DEVICE_GET_SIMPLEDESC);
 		}
@@ -651,7 +660,7 @@ static uint8_t mtZdoActiveEpRspCb(ActiveEpRspFormat_t *msg)
 			req.Endpoint = msg->ActiveEPList[0];
 			sendcmd((unsigned char *)&req,ZDO_SIMPLE_DESC_REQ);
 
-			device_increase(d);
+//			device_increase(d);
 		}
 
 	}

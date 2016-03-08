@@ -837,8 +837,11 @@ int zcl_proccessincomingmessage(IncomingMsgFormat_t * message){
 
 	// to get attribute 
 	struct znp_map * map = znp_map_get_ieee(message->SrcAddr); 
-	struct device * d = gateway_getdevice(getgateway(), map->ieee);
-	if(!device_check_status(d, DEVICE_SEND_ATTR)){ 
+	struct device * d = NULL; 
+	if(map){
+		d = gateway_getdevice(getgateway(), map->ieee);
+	}
+	if(d && !device_check_status(d, DEVICE_SEND_ATTR)){ 
 		zclReadCmd_t readcmd; 
 		readcmd.numAttr = 8;
 		readcmd.attrID[0] = ATTRID_BASIC_ZCL_VERSION;
