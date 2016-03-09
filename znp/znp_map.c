@@ -75,7 +75,6 @@ struct znp_map * _znp_map_insert_ieee(struct znp_map * map){
 void _znp_map_ieee_dump(){
 	struct rb_node * node = rb_first(&znp_map_ieee_to_shortaddr);
 	struct znp_map * m = rb_entry(node, struct znp_map, node);
-	fprintf(stdout, "e2aieee 0x%016llX addr 0x%04X \n",m->ieee, m->shortaddr);
 	if(m){
 		struct rb_node * n = rb_next(&m->node);
 		while(n){

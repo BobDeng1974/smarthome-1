@@ -10,7 +10,7 @@
 #include "znp_device.h"
 #include "znp_map.h"
 #include "socket.h"
-
+#include "gateway.h" 
 
 extern int g_znpwfd;
 /*******************************************************************************
@@ -281,20 +281,25 @@ int zclss_processincmd_zonestatus_enrollrequest(struct zclincomingmsg * pInMsg){
 	struct znp_map * map = znp_map_get_ieee(pInMsg->message->SrcAddr);
 	if(map){
 		struct device * d = gateway_getdevice(getgateway(), map->ieee);
+		assert(d);
 		device_set_zonetype(d, pInMsg->message->SrcEndpoint, zoneType); 
+		if(!device_check_status(d, DEVICE_ACTIVE)){
+			device_set_status(d, DEVICE_ACTIVE);
+			struct zclzoneenrollreq req;
+			req.ieeeaddr = map->ieee; 
+			req.zonetype = zoneType;
+			req.zoneid = zoneID;
+			req.clusterid = pInMsg->message->ClusterId;
+			req.groupid = pInMsg->message->GroupId;
+			req.endpoint = pInMsg->message->SrcEndpoint;
+			fprintf(stdout, "********send add new device %d\n", g_znpwfd);
+			int tmp = ZCLZONEENROLLREQ;
+			write(g_znpwfd, &tmp, sizeof(int));
+			write(g_znpwfd, &req, sizeof(struct zclzoneenrollreq));
+		}
 	}else{
 		assert(0);
 	}
-	struct zclzoneenrollreq req;
-	req.ieeeaddr = map->ieee; 
-	req.zonetype = zoneType;
-	req.zoneid = zoneID;
-	req.clusterid = pInMsg->message->ClusterId;
-	req.groupid = pInMsg->message->GroupId;
-	req.endpoint = pInMsg->message->SrcEndpoint;
-	int tmp = ZCLZONEENROLLREQ;
-	sendnonblocking(g_znpwfd, &tmp, sizeof(int));
-	sendnonblocking(g_znpwfd, &req, sizeof(struct zclzoneenrollreq));
 
 	// if ( stat == ZSuccess )
 	{
@@ -322,8 +327,8 @@ int zclss_processincmd_zonestatus_changenotification(struct zclincomingmsg * msg
 	req.endpoint = msg->message->SrcEndpoint;
 
 	int tmp = ZCLZONECHANGENOTIFICATION;
-	sendnonblocking(g_znpwfd, &tmp, sizeof(int));
-	sendnonblocking(g_znpwfd, &req, sizeof(struct zclzonechangenotification));
+	write(g_znpwfd, &tmp, sizeof(int));
+	write(g_znpwfd, &req, sizeof(struct zclzonechangenotification));
 	
 	return 0;
 }

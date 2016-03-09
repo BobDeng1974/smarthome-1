@@ -165,6 +165,15 @@ struct endpoint * device_get_endpoint(struct device * d, unsigned char endpoint)
 	return NULL;
 }
 
+void device_set_short_addr(struct device * d, unsigned short shortaddr){
+	struct endpoint * ep;
+	struct list_head * pos, * n;
+	list_for_each_safe(pos, n, &d->eplisthead){ 
+		ep = list_entry(pos, struct endpoint, list);
+		ep->simpledesc.simpledesc.NwkAddr = shortaddr;
+	}
+}
+
 // ---------------device---------------
 //
 // ---------------gateway---------------
@@ -198,6 +207,46 @@ struct device * gateway_getdevice(struct gateway * gw, unsigned long long ieee){
 		d = list_entry(pos, struct device, list); 
 		if(d->ieeeaddr == ieee){
 			return d;
+		}
+	}
+
+	return NULL;
+}
+
+unsigned char gateway_get_outcluster_endpoint(unsigned short clusterid){ 
+	unsigned char i, j;
+	for(i = 0; i < 3; i++){
+		for(j = 0; j < gatewayinstance.endpoint_inout_clusterlist[i].outclustercount; j++){ 
+			if(clusterid == gatewayinstance.endpoint_inout_clusterlist[i].outclusterlist[j]){
+				return gatewayinstance.endpoint_inout_clusterlist[i].endpoint;
+			}
+		}
+	}
+
+	return 0;
+}
+
+int gateway_update_device_networkaddr(unsigned long long ieee, unsigned short shortaddr){
+	struct device * d = gateway_getdevice(&gatewayinstance, ieee);
+	if(d){
+		device_set_short_addr( d, shortaddr);
+	}
+}
+
+struct endpoint * gateway_get_endpoint_incluster(unsigned long long ieee, unsigned short clusterid){
+	struct device * d = gateway_getdevice(&gatewayinstance, ieee);
+	if(d){
+		struct list_head * pos, *n;
+		struct endpoint * ep;
+		unsigned char i;
+		list_for_each_safe(pos, n, &d->eplisthead){
+			ep = list_entry(pos, struct endpoint, list); 
+			for(i = 0; i < ep->simpledesc.simpledesc.NumInClusters; i++){ 
+				if(ep->simpledesc.simpledesc.InClusterList[i] == clusterid){
+					return ep;
+				}
+			}
+			
 		}
 	}
 

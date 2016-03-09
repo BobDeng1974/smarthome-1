@@ -61,6 +61,7 @@
 #include "znp_device.h"
 #include "znp_map.h"
 #include "gateway.h"
+#include "zcl_down_cmd.h"
 
 #define consolePrint printf
 #define consoleClearLn(); printf("%c[2K", 27);
@@ -1198,7 +1199,11 @@ static uint8_t mtAfIncomingMsgCb(IncomingMsgFormat_t *msg)
 	{
 		consolePrint("Data[%d]: 0x%02X\n", i, msg->Data[i]);
 	}
-	zcl_proccessincomingmessage(msg);
+	struct znp_map * map = znp_map_get_ieee(msg->SrcAddr);
+	if(map){ 
+		zcl_proccessincomingmessage(msg);
+		gateway_update_device_networkaddr(map->ieee, msg->SrcAddr);
+	}
 
 	return 0;
 }
@@ -1615,6 +1620,7 @@ static int32_t startNetwork(void)
 
 static int32_t registerAf(void)
 {
+	struct gateway * gw = getgateway();
 	// register the in and out clusterid. step one
 	RegisterFormat_t req;
 	memset(&req, 0, sizeof(RegisterFormat_t));
@@ -1631,6 +1637,10 @@ static int32_t registerAf(void)
 		req.AppOutClusterList[i] = g_clusters[i];
 	}
 	sendcmd((unsigned char *)&req, AF_REGISTER);
+
+	gw->endpoint_inout_clusterlist[0].endpoint = 1;
+	memcpy(gw->endpoint_inout_clusterlist[0].inclusterlist,req.AppInClusterList, sizeof(unsigned short) * 16);
+	memcpy(gw->endpoint_inout_clusterlist[0].outclusterlist,req.AppOutClusterList, sizeof(unsigned short) * 16);
 
 //	StartupFromAppFormat_t startupfromapp;
 //	startupfromapp.StartDelay = 0;
@@ -1650,6 +1660,9 @@ static int32_t registerAf(void)
 		req.AppOutClusterList[i] = g_clusters[16+i];
 	}
 	sendcmd((unsigned char *)&req, AF_REGISTER);
+	gw->endpoint_inout_clusterlist[1].endpoint = 10;
+	memcpy(gw->endpoint_inout_clusterlist[1].inclusterlist,req.AppInClusterList, sizeof(unsigned short) * 16);
+	memcpy(gw->endpoint_inout_clusterlist[1].outclusterlist,req.AppOutClusterList, sizeof(unsigned short) * 16);
 	//sendcmd((unsigned char *)&startupfromapp, ZDO_STARTUP_FROM_APP);
 
 	// register step three
@@ -1666,6 +1679,9 @@ static int32_t registerAf(void)
 		req.AppOutClusterList[i] = g_clusters[16+i];
 	}
 	sendcmd((unsigned char *)&req, AF_REGISTER);
+	gw->endpoint_inout_clusterlist[2].endpoint = 3;
+	memcpy(gw->endpoint_inout_clusterlist[2].inclusterlist,req.AppInClusterList, sizeof(unsigned short) * (CLUSTERCOUNT - 32));
+	memcpy(gw->endpoint_inout_clusterlist[2].outclusterlist,req.AppOutClusterList, sizeof(unsigned short) * (CLUSTERCOUNT - 32));
 	//sendcmd((unsigned char *)&startupfromapp, ZDO_STARTUP_FROM_APP);
 
 	return 1;
@@ -1723,9 +1739,20 @@ void appProcess(void * args)
 	status = sysOsalNvWrite(&nvWrite);
 	initDone = 1;
 	
+	int commandtype = 0;
 	for(;;){ 
+		read(znprfd, &commandtype, sizeof(int));
+		switch(commandtype){
+			case ZCL_DOWN_IDENTIFY:
+				{
+					struct zcl_down_cmd_identify_t cmd_identify;
+					read(znprfd, &cmd_identify, sizeof(struct zcl_down_cmd_identify_t));
+					zcl_down_cmd_identify(&cmd_identify);
+				}
+				break;
+		}
+
 	}
-	//	while(1);
 }
 
 int appInit(void)

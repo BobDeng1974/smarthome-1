@@ -1,7 +1,7 @@
 
 SBU_REV= "0.1"
 
-INCLUDE = -I$(PROJ_DIR)../ -I$(PROJ_DIR)../framework/platform/gnu -I$(PROJ_DIR)../framework/rpc/ -I$(PROJ_DIR)../framework/mt/ -I$(PROJ_DIR)../framework/mt/Af -I$(PROJ_DIR)../framework/mt/Zdo -I$(PROJ_DIR)../framework/mt/Sys -I$(PROJ_DIR)../framework/mt/Sapi -I$(PROJ_DIR)../znp/zcl -I$(PROJ_DIR)../znp -I$(PROJ_DIR)../sqlite/include -L$(PROJ_DIR)../sqlite/lib
+INCLUDE = -I$(PROJ_DIR)../ -I$(PROJ_DIR)../framework/platform/gnu -I$(PROJ_DIR)../framework/rpc/ -I$(PROJ_DIR)../framework/mt/ -I$(PROJ_DIR)../framework/mt/Af -I$(PROJ_DIR)../framework/mt/Zdo -I$(PROJ_DIR)../framework/mt/Sys -I$(PROJ_DIR)../framework/mt/Sapi -I$(PROJ_DIR)../znp/zcl -I$(PROJ_DIR)../znp -I$(PROJ_DIR)../sqlite/include -I$(PROJ_DIR)../protocol -L$(PROJ_DIR)../sqlite/lib
 
 CC= gcc
 #CC=arm-arago-linux-gnueabi-gcc
@@ -13,8 +13,8 @@ PROJ_DIR=
 
 all: gateway.bin
 
-gateway.bin: main.o rpc.o mtParser.o mtZdo.o mtSys.o mtAf.o mtSapi.o dbgPrint.o rpcTransport.o queue.o appinit.o commands.o zcl.o zcl_ss.o ceconf.o cetimer.o connection.o event.o eventhub.o gateway.o kfifo.o protocol.o rbtree.o reconn.o socket.o toolkit.o parseserver.o znp.o znp_device.o cJSON.o znp_map.o sqlitedb.o sqlite3.o
-	$(CC) main.o appinit.o rpc.o mtParser.o mtZdo.o mtSys.o mtAf.o mtSapi.o dbgPrint.o rpcTransport.o queue.o commands.o zcl.o zcl_ss.o ceconf.o cetimer.o connection.o event.o eventhub.o gateway.o kfifo.o protocol.o rbtree.o reconn.o socket.o toolkit.o parseserver.o znp.o znp_device.o cJSON.o znp_map.o  sqlitedb.o sqlite3.o $(LIBS) -o gateway.bin
+gateway.bin: main.o rpc.o mtParser.o mtZdo.o mtSys.o mtAf.o mtSapi.o dbgPrint.o rpcTransport.o queue.o appinit.o commands.o zcl.o zcl_ss.o ceconf.o cetimer.o connection.o event.o eventhub.o gateway.o kfifo.o protocol.o rbtree.o reconn.o socket.o toolkit.o parseserver.o znp.o znp_device.o cJSON.o znp_map.o sqlitedb.o sqlite3.o zcl_down_cmd.o zcl_general.o protocol_identify.o
+	$(CC) main.o appinit.o rpc.o mtParser.o mtZdo.o mtSys.o mtAf.o mtSapi.o dbgPrint.o rpcTransport.o queue.o commands.o zcl.o zcl_ss.o ceconf.o cetimer.o connection.o event.o eventhub.o gateway.o kfifo.o protocol.o rbtree.o reconn.o socket.o toolkit.o parseserver.o znp.o znp_device.o cJSON.o znp_map.o  sqlitedb.o sqlite3.o zcl_down_cmd.o zcl_general.o protocol_identify.o $(LIBS) -o gateway.bin
 
 # rule for file "main.o".
 main.o: ../main.c
@@ -147,6 +147,18 @@ sqlitedb.o: $(PROJ_DIR)../sqlitedb.h $(PROJ_DIR)../sqlitedb.c
 # rule for file "sqlite3.o".
 sqlite3.o: $(PROJ_DIR)../sqlite/include/sqlite3.h $(PROJ_DIR)../sqlite/sqlite3.c
 	$(CC) $(CFLAGS) $(INCLUDE) $(DEFS) $(PROJ_DIR)../sqlite/sqlite3.c
+
+# rule for file "zcl_down_cmd.o".
+zcl_down_cmd.o: $(PROJ_DIR)../znp/zcl/zcl_down_cmd.h $(PROJ_DIR)../znp/zcl/zcl_down_cmd.c
+	$(CC) $(CFLAGS) $(INCLUDE) $(DEFS) $(PROJ_DIR)../znp/zcl/zcl_down_cmd.c
+
+# rule for file "protocol_identify.o".
+protocol_identify.o: $(PROJ_DIR)../protocol/protocol_down_header.h $(PROJ_DIR)../protocol/protocol_identify.c
+	$(CC) $(CFLAGS) $(INCLUDE) $(DEFS) $(PROJ_DIR)../protocol/protocol_identify.c
+
+# rule for file "zcl_general.o".
+zcl_general.o: $(PROJ_DIR)../znp/zcl/zcl_general.h $(PROJ_DIR)../znp/zcl/zcl_general.c
+	$(CC) $(CFLAGS) $(INCLUDE) $(DEFS) $(PROJ_DIR)../znp/zcl/zcl_general.c
 
 # rule for cleaning files generated during compilations.
 clean:

@@ -69,5 +69,4 @@ struct zclzonechangenotification{
 	}zonechangenotification;
 };
 
-
 #endif

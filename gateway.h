@@ -49,12 +49,21 @@ struct device{
 	struct list_head list;
 };
 
+struct gateway_endpoint_inout_clusterlist{
+	unsigned char endpoint;
+	unsigned char inclustercount;
+	unsigned short inclusterlist[16];
+	unsigned char outclustercount;
+	unsigned short outclusterlist[16];
+};
+
 struct gateway{
 	unsigned long long gatewayid;
 	char gatewayname[MAXNAMELEN];
 	unsigned short devicecount;
 	unsigned char boxversion;
 	unsigned char protocolversion;
+	struct gateway_endpoint_inout_clusterlist endpoint_inout_clusterlist[3];
 	struct list_head head;
 };
 
@@ -96,5 +105,10 @@ void gateway_init(struct gateway * gw,unsigned long long gatewayid, char * gatew
 void gateway_adddevice(struct gateway * gw, struct device * d);
 void gateway_deldevice(struct gateway * gw, struct device *d);
 struct device * gateway_getdevice(struct gateway * gw, unsigned long long ieee);
+
+
+unsigned char gateway_get_outcluster_endpoint(unsigned short clusterid);
+int gateway_update_device_networkaddr(unsigned long long ieee, unsigned short shortaddr);
+struct endpoint * gateway_get_endpoint_incluster(unsigned long long ieee, unsigned short clusterid);
 
 #endif

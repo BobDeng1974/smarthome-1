@@ -17,6 +17,8 @@
 #include "innercmd.h"
 #include "parseserver.h"
 #include "bytebuffer.h" 
+#include "protocol_down_header.h"
+#include "zcl_down_cmd.h"
 
 extern struct connection * g_serverconn;
 
@@ -81,16 +83,25 @@ void event_recvmsg(struct eventhub * hub, int fd, unsigned char * buf, int bufle
 			case REQDELDEVICE:
 				break;
 			case DEVICEPROPERTIES:{
-//						      unsigned int serialid;
-//						      unsigned long long IEEE;
-//						      unsigned char *p = buffer;
-//
-//						      serialid = bytebuffer_getdword(p+5);
-//						      IEEE = bytebuffer_getquadword(p+9);
-//						      unsigned char devicebuf[2048] = {0};
-//						      unsigned int buflen = encode_deviceattr(devicebuf, IEEE, serialid);
-//						      sendnonblocking(connlist_getserverfd(), devicebuf, buflen);
+						      //						      unsigned int serialid;
+						      //						      unsigned long long IEEE;
+						      //						      unsigned char *p = buffer;
+						      //
+						      //						      serialid = bytebuffer_getdword(p+5);
+						      //						      IEEE = bytebuffer_getquadword(p+9);
+						      //						      unsigned char devicebuf[2048] = {0};
+						      //						      unsigned int buflen = encode_deviceattr(devicebuf, IEEE, serialid);
+						      //						      sendnonblocking(connlist_getserverfd(), devicebuf, buflen);
 					      }
+					      break;
+			case DEVICE_IDENTIFY:
+					      {
+						      struct zcl_down_cmd_identify_t cmd;
+						      protocol_parse_identify(buffer, messagelen,&cmd); 
+						      zcl_down_cmd_identify(&cmd);
+					      }
+					      break;
+
 			case ILLEGAL:
 					      break;
 		}
@@ -98,6 +109,7 @@ void event_recvmsg(struct eventhub * hub, int fd, unsigned char * buf, int bufle
 }
 
 void event_recvznp(struct eventhub * hub, int fd){ 
+	fprintf(stdout, "********event recv znp %d\n", fd);
 	int znpdatatype = 0;
 	readnonblocking(fd, &znpdatatype, sizeof(int));
 	switch(znpdatatype){
@@ -106,9 +118,7 @@ void event_recvznp(struct eventhub * hub, int fd){
 				struct zclzoneenrollreq req;
 				readnonblocking(fd, &req, sizeof(struct zclzoneenrollreq));
 				struct device *d = gateway_getdevice(getgateway(),req.ieeeaddr);
-				if(d){ 
-					device_set_status(d, DEVICE_ACTIVE);
-				}
+				assert(d);
 				unsigned char buf[128] = {0};
 				unsigned int buflen = encode_adddeldevice(buf, req.ieeeaddr, 1);
 				broadcast(buf, buflen);

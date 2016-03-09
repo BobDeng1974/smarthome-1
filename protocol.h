@@ -1,3 +1,5 @@
+#ifndef __PROTOCOL_H_H_H
+#define __PROTOCOL_H_H_H
 
 #define ILLEGAL          0
 #define HALFPACK         255
@@ -9,6 +11,7 @@
 #define REQSETDEVICENAME 0x8008
 #define REQDELDEVICE     0x800A
 #define DEVICEPROPERTIES 0x800B
+#define DEVICE_IDENTIFY  0x800C
 
 #define AFINCOMINGDATA   0x4481
 #define ZDOSTATECHANGE   0x45C0
@@ -23,3 +26,5 @@
 struct connection;
 int protocol_check(struct connection * c, unsigned short * messageid);
 int znpframe_check(struct connection  *c, unsigned short * messageid);
+
+#endif

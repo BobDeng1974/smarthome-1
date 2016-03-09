@@ -63,6 +63,7 @@ int main(){
 	// create pipe for znp to main
 	int mainrfd, znpwfd;
 	mainrfd = createpipe2(&znpwfd);
+	make_socket_non_blocking(mainrfd);
 	struct connection * znpconnection = freeconnlist_getconn();
 	connection_init(znpconnection, mainrfd, CONNZNP);
 
