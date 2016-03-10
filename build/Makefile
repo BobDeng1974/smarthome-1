@@ -13,8 +13,8 @@ PROJ_DIR=
 
 all: gateway.bin
 
-gateway.bin: main.o rpc.o mtParser.o mtZdo.o mtSys.o mtAf.o mtSapi.o dbgPrint.o rpcTransport.o queue.o appinit.o commands.o zcl.o zcl_ss.o ceconf.o cetimer.o connection.o event.o eventhub.o gateway.o kfifo.o protocol.o rbtree.o reconn.o socket.o toolkit.o parseserver.o znp.o znp_device.o cJSON.o znp_map.o sqlitedb.o sqlite3.o zcl_down_cmd.o zcl_general.o protocol_identify.o
-	$(CC) main.o appinit.o rpc.o mtParser.o mtZdo.o mtSys.o mtAf.o mtSapi.o dbgPrint.o rpcTransport.o queue.o commands.o zcl.o zcl_ss.o ceconf.o cetimer.o connection.o event.o eventhub.o gateway.o kfifo.o protocol.o rbtree.o reconn.o socket.o toolkit.o parseserver.o znp.o znp_device.o cJSON.o znp_map.o  sqlitedb.o sqlite3.o zcl_down_cmd.o zcl_general.o protocol_identify.o $(LIBS) -o gateway.bin
+gateway.bin: main.o rpc.o mtParser.o mtZdo.o mtSys.o mtAf.o mtSapi.o dbgPrint.o rpcTransport.o queue.o appinit.o commands.o zcl.o zcl_ss.o ceconf.o cetimer.o connection.o event.o eventhub.o gateway.o kfifo.o protocol.o rbtree.o reconn.o socket.o toolkit.o parseserver.o znp.o znp_device.o cJSON.o znp_map.o sqlitedb.o sqlite3.o zcl_down_cmd.o zcl_general.o protocol_identify.o zcl_register_cluster.o
+	$(CC) main.o appinit.o rpc.o mtParser.o mtZdo.o mtSys.o mtAf.o mtSapi.o dbgPrint.o rpcTransport.o queue.o commands.o zcl.o zcl_ss.o ceconf.o cetimer.o connection.o event.o eventhub.o gateway.o kfifo.o protocol.o rbtree.o reconn.o socket.o toolkit.o parseserver.o znp.o znp_device.o cJSON.o znp_map.o  sqlitedb.o sqlite3.o zcl_down_cmd.o zcl_general.o protocol_identify.o zcl_register_cluster.o $(LIBS) -o gateway.bin
 
 # rule for file "main.o".
 main.o: ../main.c
@@ -159,6 +159,10 @@ protocol_identify.o: $(PROJ_DIR)../protocol/protocol_down_header.h $(PROJ_DIR)..
 # rule for file "zcl_general.o".
 zcl_general.o: $(PROJ_DIR)../znp/zcl/zcl_general.h $(PROJ_DIR)../znp/zcl/zcl_general.c
 	$(CC) $(CFLAGS) $(INCLUDE) $(DEFS) $(PROJ_DIR)../znp/zcl/zcl_general.c
+
+# rule for file "zcl_register_cluster.o".
+zcl_register_cluster.o: $(PROJ_DIR)../znp/zcl/zcl_register_cluster.h $(PROJ_DIR)../znp/zcl/zcl_register_cluster.c
+	$(CC) $(CFLAGS) $(INCLUDE) $(DEFS) $(PROJ_DIR)../znp/zcl/zcl_register_cluster.c
 
 # rule for cleaning files generated during compilations.
 clean:

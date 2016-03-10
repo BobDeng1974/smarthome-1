@@ -109,7 +109,9 @@ void event_recvmsg(struct eventhub * hub, int fd, unsigned char * buf, int bufle
 }
 
 void event_recvznp(struct eventhub * hub, int fd){ 
-	fprintf(stdout, "********event recv znp %d\n", fd);
+	unsigned char buf[128] = {0};
+	unsigned int buflen = 0;
+
 	int znpdatatype = 0;
 	readnonblocking(fd, &znpdatatype, sizeof(int));
 	switch(znpdatatype){
@@ -117,10 +119,8 @@ void event_recvznp(struct eventhub * hub, int fd){
 			{ 
 				struct zclzoneenrollreq req;
 				readnonblocking(fd, &req, sizeof(struct zclzoneenrollreq));
-				struct device *d = gateway_getdevice(getgateway(),req.ieeeaddr);
-				assert(d);
-				unsigned char buf[128] = {0};
-				unsigned int buflen = encode_adddeldevice(buf, req.ieeeaddr, 1);
+				fprintf(stdout, "********event recv znp enroll ieee %llX \n", req.ieeeaddr);
+				buflen = encode_adddeldevice(buf, req.ieeeaddr, 1);
 				broadcast(buf, buflen);
 			}
 			break;
@@ -128,8 +128,8 @@ void event_recvznp(struct eventhub * hub, int fd){
 			{
 				struct zclzonechangenotification req;
 				readnonblocking(fd, &req, sizeof(struct zclzonechangenotification));
-				unsigned char buf[128] = {0};
-				unsigned int buflen = encode_alarm(buf, &req);
+				fprintf(stdout, "********event recv znp notification %llX \n", req.ieeeaddr);
+				buflen = encode_alarm(buf, &req);
 				broadcast(buf, buflen);
 			}
 			break;

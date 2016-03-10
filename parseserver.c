@@ -37,6 +37,7 @@ unsigned int encode_login(struct gateway *gw, unsigned char *buf) {
 			struct endpoint *e;
 			list_for_each_safe(pos1, n1,&d->eplisthead) {
 				e=list_entry(pos1, struct endpoint, list);
+				bytebuffer_writebyte(&p, e->simpledesc.simpledesc.Endpoint);
 				bytebuffer_writeword(&p,e->simpledesc.simpledesc.DeviceID);
 				if(e->simpledesc.simpledesc.DeviceID == ZCL_HA_DEVICEID_IAS_ZONE){
 					bytebuffer_writeword(&p,e->simpledesc.zonetype);
@@ -186,6 +187,7 @@ unsigned int encode_adddeldevice(unsigned char * buf, unsigned long long ieeeadd
 	struct endpoint *e;
 	list_for_each_safe(pos, n,&d->eplisthead) {
 		e=list_entry(pos, struct endpoint, list);
+		bytebuffer_writebyte(&p, e->simpledesc.simpledesc.Endpoint);
 		bytebuffer_writeword(&p,e->simpledesc.simpledesc.DeviceID);
 		if(e->simpledesc.simpledesc.DeviceID == ZCL_HA_DEVICEID_IAS_ZONE){
 			bytebuffer_writeword(&p, e->simpledesc.zonetype);

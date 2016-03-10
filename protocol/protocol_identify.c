@@ -17,5 +17,8 @@ void protocol_parse_identify(unsigned char * buf, unsigned short len, struct zcl
 	bytebuffer_skipbytes(&p, 9);
 	unsigned long long ieee;
 	bytebuffer_readquadword(&p, &ieee);
+	unsigned char endpoint;
+	bytebuffer_readbyte(&p, &endpoint);
 	command->ieee = ieee;
+	command->endpoint = endpoint;
 }

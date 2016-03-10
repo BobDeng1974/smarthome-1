@@ -309,6 +309,7 @@ void sqlitedb_load_device(){
 			memset(devicename, 0, MAXNAMELEN);
 			_sqlite3_gettext(stmt, 1, devicename);
 			status = sqlite3_column_int(stmt,2);
+			status &= ~DEVICE_ACTIVE;
 			zclversion = sqlite3_column_int(stmt,3);
 			applicationversion = sqlite3_column_int(stmt,4);
 			stackversion = sqlite3_column_int(stmt,5);

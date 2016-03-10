@@ -107,8 +107,8 @@ void gateway_deldevice(struct gateway * gw, struct device *d);
 struct device * gateway_getdevice(struct gateway * gw, unsigned long long ieee);
 
 
-unsigned char gateway_get_outcluster_endpoint(unsigned short clusterid);
+//unsigned char gateway_get_outcluster_endpoint(unsigned short clusterid);
 int gateway_update_device_networkaddr(unsigned long long ieee, unsigned short shortaddr);
-struct endpoint * gateway_get_endpoint_incluster(unsigned long long ieee, unsigned short clusterid);
+//struct endpoint * gateway_get_endpoint_incluster(unsigned long long ieee, unsigned short clusterid);
 
 #endif

@@ -285,17 +285,18 @@ int zclss_processincmd_zonestatus_enrollrequest(struct zclincomingmsg * pInMsg){
 		device_set_zonetype(d, pInMsg->message->SrcEndpoint, zoneType); 
 		if(!device_check_status(d, DEVICE_ACTIVE)){
 			device_set_status(d, DEVICE_ACTIVE);
-			struct zclzoneenrollreq req;
-			req.ieeeaddr = map->ieee; 
-			req.zonetype = zoneType;
-			req.zoneid = zoneID;
-			req.clusterid = pInMsg->message->ClusterId;
-			req.groupid = pInMsg->message->GroupId;
-			req.endpoint = pInMsg->message->SrcEndpoint;
-			fprintf(stdout, "********send add new device %d\n", g_znpwfd);
-			int tmp = ZCLZONEENROLLREQ;
-			write(g_znpwfd, &tmp, sizeof(int));
-			write(g_znpwfd, &req, sizeof(struct zclzoneenrollreq));
+			struct zcl_zone_enroll_req_cmd enroll_cmd;
+			memset(&enroll_cmd, 0, sizeof(struct zcl_zone_enroll_req_cmd));
+			enroll_cmd.cmdid = ZCLZONEENROLLREQ;
+			enroll_cmd.req.ieeeaddr = map->ieee; 
+			enroll_cmd.req.groupid = pInMsg->message->GroupId;
+			enroll_cmd.req.clusterid = pInMsg->message->ClusterId;
+			enroll_cmd.req.zonetype = zoneType;
+			enroll_cmd.req.zoneid = zoneID;
+			enroll_cmd.req.endpoint = pInMsg->message->SrcEndpoint;
+			int n = write(g_znpwfd, &enroll_cmd, sizeof(struct zcl_zone_enroll_req_cmd));
+			fprintf(stdout, "********send add new device %llX %d %d\n", enroll_cmd.req.ieeeaddr, n, sizeof(struct zcl_zone_enroll_req_cmd));
+			assert(n == sizeof(struct zcl_zone_enroll_req_cmd));
 		}
 	}else{
 		assert(0);
@@ -315,20 +316,19 @@ int zclss_processincmd_zonestatus_enrollrequest(struct zclincomingmsg * pInMsg){
 }
 
 int zclss_processincmd_zonestatus_changenotification(struct zclincomingmsg * msg){
-	fprintf(stdout, "---------------------------------------datalen %d\n", msg->datalen); 
-	struct zclzonechangenotification req;
-	memset(&req, 0, sizeof(struct zclzonechangenotification));
-	req.zonechangenotification.uszonestatus = BUILD_UINT16(msg->data[0],msg->data[1]);
+
+	struct zcl_zone_change_notification_cmd cmd;
+	memset(&cmd, 0, sizeof(struct zcl_zone_change_notification_cmd));
+	cmd.cmdid = ZCLZONECHANGENOTIFICATION;
+	cmd.req.zonechangenotification.uszonestatus = BUILD_UINT16(msg->data[0],msg->data[1]);
 	struct znp_map * map = znp_map_get_ieee(msg->message->SrcAddr);
 	if(map){ 
-		req.ieeeaddr = map->ieee;
+		cmd.req.ieeeaddr = map->ieee;
 	}
-	req.clusterid = msg->message->ClusterId;
-	req.endpoint = msg->message->SrcEndpoint;
+	cmd.req.clusterid = msg->message->ClusterId;
+	cmd.req.endpoint = msg->message->SrcEndpoint;
 
-	int tmp = ZCLZONECHANGENOTIFICATION;
-	write(g_znpwfd, &tmp, sizeof(int));
-	write(g_znpwfd, &req, sizeof(struct zclzonechangenotification));
+	write(g_znpwfd, &cmd, sizeof(struct zcl_zone_change_notification_cmd));
 	
 	return 0;
 }

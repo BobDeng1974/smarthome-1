@@ -5,6 +5,7 @@
 
 struct zcl_down_cmd_identify_t{
 	unsigned long long ieee;
+	unsigned char endpoint;
 };
 
 void zcl_down_cmd_identify(struct zcl_down_cmd_identify_t * identify);

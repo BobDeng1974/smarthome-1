@@ -13,6 +13,11 @@ struct zclzoneenrollreq{
 	unsigned char zoneid;
 };
 
+struct zcl_zone_enroll_req_cmd{
+	unsigned int cmdid;
+	struct zclzoneenrollreq req;
+};
+
 //ZoneStatusAttribute
 //The ZoneStatusattribute is a bit map. The meaning of each bit is summarized in
 //Table 8.6.
@@ -69,4 +74,8 @@ struct zclzonechangenotification{
 	}zonechangenotification;
 };
 
+struct zcl_zone_change_notification_cmd{
+	unsigned int cmdid;
+	struct zclzonechangenotification req;
+};
 #endif

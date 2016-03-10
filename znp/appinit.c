@@ -62,6 +62,7 @@
 #include "znp_map.h"
 #include "gateway.h"
 #include "zcl_down_cmd.h"
+#include "zcl_register_cluster.h"
 
 #define consolePrint printf
 #define consoleClearLn(); printf("%c[2K", 27);
@@ -1620,69 +1621,11 @@ static int32_t startNetwork(void)
 
 static int32_t registerAf(void)
 {
-	struct gateway * gw = getgateway();
 	// register the in and out clusterid. step one
-	RegisterFormat_t req;
-	memset(&req, 0, sizeof(RegisterFormat_t));
-	req.EndPoint = 1;
-	req.AppProfId = 0x0104;
-	req.AppDeviceId = 1;
-	req.AppNumInClusters = 16;
-	int i;
-	for (i = 0; i < 16; i++){
-		req.AppInClusterList[i] = g_clusters[i];
-	}
-	req.AppNumOutClusters = 16;
-	for (i = 0; i < 16; i++){
-		req.AppOutClusterList[i] = g_clusters[i];
-	}
-	sendcmd((unsigned char *)&req, AF_REGISTER);
-
-	gw->endpoint_inout_clusterlist[0].endpoint = 1;
-	memcpy(gw->endpoint_inout_clusterlist[0].inclusterlist,req.AppInClusterList, sizeof(unsigned short) * 16);
-	memcpy(gw->endpoint_inout_clusterlist[0].outclusterlist,req.AppOutClusterList, sizeof(unsigned short) * 16);
-
 //	StartupFromAppFormat_t startupfromapp;
 //	startupfromapp.StartDelay = 0;
-//	sendcmd((unsigned char *)&startupfromapp, ZDO_STARTUP_FROM_APP);
-
-	// register step two.
-	memset(&req, 0, sizeof(RegisterFormat_t));
-	req.EndPoint = 10;
-	req.AppProfId = 0x0104;
-	req.AppDeviceId = 2;
-	req.AppNumInClusters = 16;
-	for (i = 0; i < 16; i++){
-		req.AppInClusterList[i] = g_clusters[16+i];
-	}
-	req.AppNumOutClusters = 16;
-	for (i = 0; i < 16; i++){
-		req.AppOutClusterList[i] = g_clusters[16+i];
-	}
-	sendcmd((unsigned char *)&req, AF_REGISTER);
-	gw->endpoint_inout_clusterlist[1].endpoint = 10;
-	memcpy(gw->endpoint_inout_clusterlist[1].inclusterlist,req.AppInClusterList, sizeof(unsigned short) * 16);
-	memcpy(gw->endpoint_inout_clusterlist[1].outclusterlist,req.AppOutClusterList, sizeof(unsigned short) * 16);
-	//sendcmd((unsigned char *)&startupfromapp, ZDO_STARTUP_FROM_APP);
-
-	// register step three
-	memset(&req, 0, sizeof(RegisterFormat_t));
-	req.EndPoint = 3;
-	req.AppProfId = 0x0104;
-	req.AppDeviceId = 3;
-	req.AppNumInClusters = CLUSTERCOUNT - 32;
-	for (i = 0; i < CLUSTERCOUNT - 32; i++){
-		req.AppInClusterList[i] = g_clusters[32+i];
-	}
-	req.AppNumOutClusters = CLUSTERCOUNT - 32;
-	for (i = 0; i < CLUSTERCOUNT - 32; i++){
-		req.AppOutClusterList[i] = g_clusters[16+i];
-	}
-	sendcmd((unsigned char *)&req, AF_REGISTER);
-	gw->endpoint_inout_clusterlist[2].endpoint = 3;
-	memcpy(gw->endpoint_inout_clusterlist[2].inclusterlist,req.AppInClusterList, sizeof(unsigned short) * (CLUSTERCOUNT - 32));
-	memcpy(gw->endpoint_inout_clusterlist[2].outclusterlist,req.AppOutClusterList, sizeof(unsigned short) * (CLUSTERCOUNT - 32));
-	//sendcmd((unsigned char *)&startupfromapp, ZDO_STARTUP_FROM_APP);
+//	sendcmd((unsigned char *)&startupfromapp, ZDO_STARTUP_FROM_APP); 
+	zcl_register_cluster_ss();
 
 	return 1;
 }
