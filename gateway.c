@@ -253,4 +253,15 @@ struct endpoint * gateway_get_endpoint_incluster(unsigned long long ieee, unsign
 	return NULL;
 }
 
+struct endpoint * gateway_get_endpoint(unsigned long long ieee, unsigned char endpoint){
+	struct device * d = gateway_getdevice(&gatewayinstance, ieee);
+	struct endpoint * dstep = NULL;
+	if(d){
+		dstep = device_get_endpoint(d, endpoint);
+	}
+	assert(dstep);
+
+	return dstep;
+}
+
 // ---------------gateway---------------

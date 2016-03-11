@@ -420,3 +420,18 @@ int zclss_handleincoming( struct zclincomingmsg * zclincomingmsg){
 
 	return result;
 }
+
+int zclss_send_ias_wd_start_warning_cmd(unsigned char srcep, unsigned char dstep, unsigned short dstaddr, zclWDStartWarning_t *pWarning, unsigned char disabledefaultrsp, unsigned char seqnum){ 
+	unsigned char buf[5];
+
+	buf[0] = pWarning->warningmessage.warningbyte;
+	buf[1] = LO_UINT16( pWarning->warningDuration );
+	buf[2] = HI_UINT16( pWarning->warningDuration );
+	buf[3] = pWarning->strobeDutyCycle;
+	buf[4] = pWarning->strobeLevel;
+
+	return zcl_sendcommand(srcep, dstep, dstaddr, ZCL_CLUSTER_ID_SS_IAS_WD, 
+			COMMAND_SS_IAS_WD_START_WARNING,TRUE,
+		       	ZCL_FRAME_CLIENT_SERVER_DIR,disabledefaultrsp, 0,
+		       	seqnum, 5, buf);
+}

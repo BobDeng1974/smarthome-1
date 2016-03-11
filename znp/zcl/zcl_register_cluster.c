@@ -3,7 +3,6 @@
 #include "zcl.h"
 #include "zcl_register_cluster.h"
 
-
 int zcl_register_cluster(unsigned char in_cluster_count, unsigned short * in_cluster,unsigned char out_cluster_count, unsigned short * out_cluster, unsigned char endpoint, unsigned short appdevicetypeid);
 
 int zcl_register_cluster_ss(){
@@ -12,7 +11,7 @@ int zcl_register_cluster_ss(){
 	memset(in_cluster, 0, MAX_CLUSTER_COUNT * sizeof(unsigned short));
 	in_cluster[0] = ZCL_CLUSTER_ID_GEN_ON_OFF;
 
-	unsigned char out_cluster_count = 8;
+	unsigned char out_cluster_count = 9;
 	unsigned short out_cluster[MAX_CLUSTER_COUNT];
 	memset(out_cluster, 0, MAX_CLUSTER_COUNT * sizeof(unsigned short));
 	out_cluster[0] = ZCL_CLUSTER_ID_GEN_BASIC;
@@ -23,6 +22,8 @@ int zcl_register_cluster_ss(){
 	out_cluster[5] = ZCL_CLUSTER_ID_GEN_POLL_CONTROL;
 	out_cluster[6] = ZCL_CLUSTER_ID_HA_DIAGNOSTIC;
 	out_cluster[7] = ZCL_CLUSTER_ID_SS_IAS_ZONE;
+	out_cluster[8] = ZCL_CLUSTER_ID_SS_IAS_WD;
+
 
 	zcl_register_cluster(in_cluster_count, in_cluster, out_cluster_count, out_cluster, APP_DEVICETYPEID_SS_ENDPOINT, APP_DEVICETYPEID_SS_ENDPOINT);
 

@@ -229,4 +229,49 @@ typedef struct
 struct zclincomingmsg;
 int zclss_handleincoming( struct zclincomingmsg *);
 
+// IAS_WD
+typedef struct
+{
+  unsigned int warnMode:4;        // Warning Mode
+  unsigned int warnStrobe:2;      // Strobe
+  unsigned int warnSirenLevel:2;  // Siren Level
+} warningbits_t;
+
+typedef union
+{
+  warningbits_t  warningbits;
+  uint8          warningbyte;
+} warning_t;
+
+typedef struct
+{
+  warning_t   warningmessage;
+  uint16      warningDuration;
+  uint8       strobeDutyCycle;
+  uint8       strobeLevel;
+} zclWDStartWarning_t;
+
+//typedef struct
+//{
+//  warning_t warnings; // bitfiels ( one byte )
+//  uint16 duration;    // warning duration in seconds
+//} zclWDStartWarning_t;
+
+/***  ZCL WD Cluster: COMMAND_WD_SQUAWK Cmd payload ***/
+typedef struct
+{
+  unsigned int squawkMode:4;
+  unsigned int strobe:1;
+  unsigned int reserved:1;
+  unsigned int squawkLevel:2;
+} squawkbits_t;
+
+typedef union
+{
+  squawkbits_t  squawkbits;
+  uint8         squawkbyte;
+} zclWDSquawk_t;
+
+int zclss_send_ias_wd_start_warning_cmd(unsigned char srcep, unsigned char dstep, unsigned short dstaddr, zclWDStartWarning_t *pWarning, unsigned char disabledefaultrsp, unsigned char seqnum);
 #endif
+

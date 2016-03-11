@@ -26,10 +26,6 @@ void event_accept(int fd){
 	struct connection * c = freeconnlist_getconn();
 	connection_init(c, fd, CONNSOCKETCLIENT);
 	connrbtree_insert(c);
-
-	unsigned char buf[2048] = {0}; 
-	unsigned int buflen = encode_login(getgateway(), buf); 
-	sendnonblocking(fd, buf, buflen);
 }
 
 
@@ -100,6 +96,22 @@ void event_recvmsg(struct eventhub * hub, int fd, unsigned char * buf, int bufle
 						      protocol_parse_identify(buffer, messagelen,&cmd); 
 						      zcl_down_cmd_identify(&cmd);
 					      }
+					      break;
+			case DEVICE_WARNING:
+					      {
+						      struct zcl_down_cmd_warning_t cmd;
+						      protocol_parse_warning(buffer, messagelen, &cmd);
+						      
+						      zcl_down_cmd_warning(&cmd);
+					      }
+					      break;
+			case APP_LOGIN:
+					      {
+							unsigned char buf[2048] = {0}; 
+							unsigned int buflen = encode_login(getgateway(), buf); 
+							sendnonblocking(fd, buf, buflen);
+					      }
+
 					      break;
 
 			case ILLEGAL:
