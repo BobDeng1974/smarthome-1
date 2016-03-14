@@ -142,7 +142,6 @@ unsigned int encode_alarm(unsigned char *buf, struct zclzonechangenotification *
 	ctime = time(NULL);
 	bytebuffer_writequadword(&p,ctime);
 	struct device * d = gateway_getdevice(getgateway(), notification->ieeeaddr);
-	assert(d);
 	if(d){ 
 		struct endpoint * ep = device_get_endpoint(d, notification->endpoint);
 		assert(ep);

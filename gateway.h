@@ -18,9 +18,16 @@
 #define DEVICE_GET_SIMPLEDESC 64
 #define DEVICE_ACTIVE 128
 
+#define ARM 0
+#define DISARM 1
+#define ARMTIME 2
+#define ARMTIMECOUNT 4
+
 struct simpledesc{
 	SimpleDescRspFormat_t simpledesc; 
 	unsigned short zonetype; // used for ss device
+	unsigned char armmodel;
+	unsigned char armtime[ARMTIMECOUNT]; // 4 bytes, the first two for from the last fro to  eg. 00:00~12:00
 };
 
 struct endpoint{
