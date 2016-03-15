@@ -1,5 +1,6 @@
+#include <stdio.h>
 #include "bytebuffer.h"
-#include "zcl_down_cmd.h"
+#include "protocol_cmdtype.h"
 //设备报警(仅针对DeviceID=0x0403的设备
 //-------
 //标识位 1 byte "0xCE"
@@ -9,6 +10,7 @@
 //SerialID 4 bytes 序列号
 //DeviceID 8 bytes 设备ID(IEEE)
 //EndPoint 1 byte
+//WarningDuration 2 bytes 报警时间
 //WarningMode 1 byte(value 0~6 解释在下面)
 //Strobe 1 byte(value 0~1解释见下面)
 //SirenLevel 1 byte(value 0~3 explain below)
@@ -44,7 +46,7 @@
 //SS_IAS_STROBE_LEVEL_VERY_HIGH_LEVEL_STROBE                       3
 //-------
 
-void protocol_parse_warning(unsigned char * buf, unsigned short len, struct zcl_down_cmd_warning_t * warning){ 
+unsigned long long protocol_parse_warning(unsigned char * buf, unsigned short len, struct protocol_cmdtype_warning * warning){ 
 	unsigned char * p = buf;
 	bytebuffer_skipbytes(&p, 9);
 	unsigned long long ieee;
@@ -53,6 +55,7 @@ void protocol_parse_warning(unsigned char * buf, unsigned short len, struct zcl_
 	bytebuffer_readbyte(&p, &endpoint);
 	unsigned short warningduration;
 	bytebuffer_readword(&p, &warningduration);
+	fprintf(stdout, "***** %d\n", warningduration);
 	unsigned char warnmode;
 	bytebuffer_readbyte(&p, &warnmode);
 	unsigned char strobe;
@@ -63,7 +66,6 @@ void protocol_parse_warning(unsigned char * buf, unsigned short len, struct zcl_
 	bytebuffer_readbyte(&p, &strobelevel);
 	unsigned char strobedutycycle;
 	bytebuffer_readbyte(&p, &strobedutycycle);
-	warning->ieee = ieee;
 	warning->endpoint = endpoint;
 	warning->start_warning.warningDuration = warningduration;
 	warning->start_warning.warningmessage.warningbits.warnMode = warnmode;
@@ -71,4 +73,6 @@ void protocol_parse_warning(unsigned char * buf, unsigned short len, struct zcl_
 	warning->start_warning.warningmessage.warningbits.warnSirenLevel = sirenlevel;
 	warning->start_warning.strobeLevel = strobelevel;
 	warning->start_warning.strobeDutyCycle = strobedutycycle;
+
+	return ieee;
 }

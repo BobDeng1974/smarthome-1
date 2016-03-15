@@ -14,19 +14,19 @@
 #define DEVICE_IDENTIFY  0x800C
 #define DEVICE_WARNING   0x800D
 #define APP_LOGIN        0x800E
+#define DEVICE_SETARM    0x800F
 
-#define AFINCOMINGDATA   0x4481
-#define ZDOSTATECHANGE   0x45C0
-#define SYSRESETIND      0x4180
-#define ZBWRITERSP       0x6605
-#define AFREGISTERRSP    0x6400
-#define ZDOSTARTUPRSP    0x6540
-#define AFDATAREQRSP     0x6401
+#define LOGIN 0x0001
+#define HEART     0x0002
+#define ADDDELDEVICE 0x0005
+#define ALARM  0X0006
+#define DEVICE_ARM_FEEDBACK 0x000F 
 
-#define BUSSINESSDATA    0x4444
+#define PROTOCOL_START_FLAG 0xCE
+#define PROTOCOL_END_FLAG 0xCE
 
+unsigned char protocol_checksum(unsigned char * buf, unsigned int buflen);
 struct connection;
 int protocol_check(struct connection * c, unsigned short * messageid);
-int znpframe_check(struct connection  *c, unsigned short * messageid);
 
 #endif

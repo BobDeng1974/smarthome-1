@@ -1,6 +1,6 @@
 
 #include "bytebuffer.h"
-#include "zcl_down_cmd.h"
+#include "protocol_cmdtype.h"
 
 //设备点名
 //-------
@@ -12,13 +12,14 @@
 //DeviceID 8 bytes 设备ID(IEEE)
 //	校验码 (从开头到校验位前一位的^)
 //	标识位 1 byte
-void protocol_parse_identify(unsigned char * buf, unsigned short len, struct zcl_down_cmd_identify_t * command){ 
+unsigned long long protocol_parse_identify(unsigned char * buf, unsigned short len, struct protocol_cmdtype_identify * identify){ 
 	unsigned char * p = buf;
 	bytebuffer_skipbytes(&p, 9);
 	unsigned long long ieee;
 	bytebuffer_readquadword(&p, &ieee);
 	unsigned char endpoint;
 	bytebuffer_readbyte(&p, &endpoint);
-	command->ieee = ieee;
-	command->endpoint = endpoint;
+	identify->endpoint = endpoint;
+
+	return ieee;
 }
