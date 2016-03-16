@@ -52,7 +52,6 @@
 #include "mtSapi.h"
 #include "rpcTransport.h"
 #include "dbgPrint.h"
-#include "cluster.h"
 #include "commands.h"
 #include "sqlitedb.h"
 
@@ -63,6 +62,7 @@
 #include "gateway.h"
 #include "zcl_down_cmd.h"
 #include "zcl_register_cluster.h"
+#include "protocol_cmdtype.h"
 
 #define consolePrint printf
 #define consoleClearLn(); printf("%c[2K", 27);
@@ -1649,8 +1649,10 @@ void* appMsgProcess(void *argument)
 void appProcess(void * args)
 {
 	int znprfd = *((int *)args);
+	free(args);
 	int32_t status;
 
+	fprintf(stdout, "znp znp read %d\n", znprfd);
 	//Flush all messages from the que
 	do
 	{
@@ -1686,11 +1688,18 @@ void appProcess(void * args)
 	for(;;){ 
 		read(znprfd, &commandtype, sizeof(int));
 		switch(commandtype){
-			case ZCL_DOWN_IDENTIFY:
+			case PROTOCOL_IDENTIFY:
 				{
-					struct zcl_down_cmd_identify_t cmd_identify;
-					read(znprfd, &cmd_identify, sizeof(struct zcl_down_cmd_identify_t));
-					zcl_down_cmd_identify(&cmd_identify);
+					struct protocol_cmdtype_identify_ieee identify_ieee;
+					read(znprfd, &identify_ieee, sizeof(struct protocol_cmdtype_identify_ieee));
+					zcl_down_cmd_identify(identify_ieee.ieee,&identify_ieee.identify);
+				}
+			case PROTOCOL_WARNING:
+				{
+					struct protocol_cmdtype_warning_ieee warning_ieee;
+					int n = read(znprfd, &warning_ieee, sizeof(struct protocol_cmdtype_warning_ieee));
+					fprintf(stdout, "znp recv %d %d -------\n", n, sizeof(struct protocol_cmdtype_warning_ieee));
+					zcl_down_cmd_warning(warning_ieee.ieee, &warning_ieee.warning);
 				}
 				break;
 		}

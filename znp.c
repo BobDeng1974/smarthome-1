@@ -57,7 +57,10 @@ int znp_start(int wfd, int znprfd, char * serialport){
 	pthread_create(&rpcthread, NULL, rpctask, (void *) &serialportfd);
 
 	//dbg_print(PRINT_LEVEL_INFO, "creating  thread\n");
-	pthread_create(&appthread, NULL, apptask, (void *)&znprfd);
+	int * _znprfd = (int *)malloc(sizeof(int));
+	*_znprfd = znprfd;
+	fprintf(stdout, "znp_start fd %d \n", *_znprfd);
+	pthread_create(&appthread, NULL, apptask, (void *)_znprfd);
 	pthread_create(&inmthread, NULL, appinmessagetask, NULL);
 
 	return 0;

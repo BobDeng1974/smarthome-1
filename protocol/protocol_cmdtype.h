@@ -29,22 +29,22 @@ struct protocol_cmdtype_identify_ieee{
 };
 
 struct protocol_cmdtype_identify_ieee_cmd{
-	unsigned long long cmdid;
+	int cmdid;
 	struct protocol_cmdtype_identify_ieee identify_ieee;
 };
 
-struct protocol_cmdtype_warning{
+struct __attribute__((packed))protocol_cmdtype_warning{
 	unsigned char endpoint;
 	zclWDStartWarning_t start_warning;
 };
 
-struct protocol_cmdtype_warning_ieee{
+struct __attribute__((packed))protocol_cmdtype_warning_ieee{
 	unsigned long long ieee;
 	struct protocol_cmdtype_warning warning;
 };
 
-struct protocol_cmdtype_warning_ieee_cmd{
-	unsigned long long cmdid;
+struct __attribute__((packed))protocol_cmdtype_warning_ieee_cmd{
+	int cmdid;
 	struct protocol_cmdtype_warning_ieee warning_ieee;
 };
 #endif

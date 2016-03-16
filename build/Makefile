@@ -13,8 +13,8 @@ PROJ_DIR=
 
 all: gateway.bin
 
-gateway.bin: main.o rpc.o mtParser.o mtZdo.o mtSys.o mtAf.o mtSapi.o dbgPrint.o rpcTransport.o queue.o appinit.o commands.o zcl.o zcl_ss.o ceconf.o cetimer.o connection.o event.o eventhub.o gateway.o kfifo.o protocol.o rbtree.o reconn.o socket.o toolkit.o parseserver.o znp.o znp_device.o cJSON.o znp_map.o sqlitedb.o sqlite3.o zcl_down_cmd.o zcl_general.o protocol_identify.o zcl_register_cluster.o protocol_warning.o
-	$(CC) main.o appinit.o rpc.o mtParser.o mtZdo.o mtSys.o mtAf.o mtSapi.o dbgPrint.o rpcTransport.o queue.o commands.o zcl.o zcl_ss.o ceconf.o cetimer.o connection.o event.o eventhub.o gateway.o kfifo.o protocol.o rbtree.o reconn.o socket.o toolkit.o parseserver.o znp.o znp_device.o cJSON.o znp_map.o  sqlitedb.o sqlite3.o zcl_down_cmd.o zcl_general.o protocol_identify.o zcl_register_cluster.o protocol_warning.o $(LIBS) -o gateway.bin
+gateway.bin: main.o rpc.o mtParser.o mtZdo.o mtSys.o mtAf.o mtSapi.o dbgPrint.o rpcTransport.o queue.o appinit.o commands.o zcl.o zcl_ss.o ceconf.o cetimer.o connection.o event.o eventhub.o gateway.o kfifo.o  rbtree.o reconn.o socket.o toolkit.o znp.o znp_device.o cJSON.o znp_map.o sqlitedb.o sqlite3.o zcl_down_cmd.o zcl_general.o zcl_register_cluster.o protocol.o protocol_encode_add_del_device.o protocol_encode_alarm.o protocol_encode_arm_feedback.o protocol_encode_heartbeat.o protocol_encode_login.o protocol_parse_arm.o protocol_parse_identify.o protocol_parse_warning.o 
+	$(CC) main.o appinit.o rpc.o mtParser.o mtZdo.o mtSys.o mtAf.o mtSapi.o dbgPrint.o rpcTransport.o queue.o commands.o zcl.o zcl_ss.o ceconf.o cetimer.o connection.o event.o eventhub.o gateway.o kfifo.o rbtree.o reconn.o socket.o toolkit.o znp.o znp_device.o cJSON.o znp_map.o  sqlitedb.o sqlite3.o zcl_down_cmd.o zcl_general.o zcl_register_cluster.o protocol.o protocol_encode_add_del_device.o protocol_encode_alarm.o protocol_encode_arm_feedback.o protocol_encode_heartbeat.o protocol_encode_login.o protocol_parse_arm.o protocol_parse_identify.o protocol_parse_warning.o $(LIBS) -o gateway.bin
 
 # rule for file "main.o".
 main.o: ../main.c
@@ -100,10 +100,6 @@ gateway.o: $(PROJ_DIR)../gateway.h $(PROJ_DIR)../gateway.c
 kfifo.o: $(PROJ_DIR)../kfifo.h $(PROJ_DIR)../kfifo.c
 	$(CC) $(CFLAGS) $(INCLUDE) $(DEFS) $(PROJ_DIR)../kfifo.c
 
-# rule for file "protocol.o".
-protocol.o: $(PROJ_DIR)../protocol.h $(PROJ_DIR)../protocol.c
-	$(CC) $(CFLAGS) $(INCLUDE) $(DEFS) $(PROJ_DIR)../protocol.c
-
 # rule for file "rbtree.o".
 rbtree.o: $(PROJ_DIR)../rbtree.h $(PROJ_DIR)../rbtree.c
 	$(CC) $(CFLAGS) $(INCLUDE) $(DEFS) $(PROJ_DIR)../rbtree.c
@@ -152,10 +148,6 @@ sqlite3.o: $(PROJ_DIR)../sqlite/include/sqlite3.h $(PROJ_DIR)../sqlite/sqlite3.c
 zcl_down_cmd.o: $(PROJ_DIR)../znp/zcl/zcl_down_cmd.h $(PROJ_DIR)../znp/zcl/zcl_down_cmd.c
 	$(CC) $(CFLAGS) $(INCLUDE) $(DEFS) $(PROJ_DIR)../znp/zcl/zcl_down_cmd.c
 
-# rule for file "protocol_identify.o".
-protocol_identify.o: $(PROJ_DIR)../protocol/protocol_down_header.h $(PROJ_DIR)../protocol/protocol_identify.c
-	$(CC) $(CFLAGS) $(INCLUDE) $(DEFS) $(PROJ_DIR)../protocol/protocol_identify.c
-
 # rule for file "zcl_general.o".
 zcl_general.o: $(PROJ_DIR)../znp/zcl/zcl_general.h $(PROJ_DIR)../znp/zcl/zcl_general.c
 	$(CC) $(CFLAGS) $(INCLUDE) $(DEFS) $(PROJ_DIR)../znp/zcl/zcl_general.c
@@ -164,9 +156,41 @@ zcl_general.o: $(PROJ_DIR)../znp/zcl/zcl_general.h $(PROJ_DIR)../znp/zcl/zcl_gen
 zcl_register_cluster.o: $(PROJ_DIR)../znp/zcl/zcl_register_cluster.h $(PROJ_DIR)../znp/zcl/zcl_register_cluster.c
 	$(CC) $(CFLAGS) $(INCLUDE) $(DEFS) $(PROJ_DIR)../znp/zcl/zcl_register_cluster.c
 
-# rule for file "protocl_warning.o".
-protocol_warning.o: $(PROJ_DIR)../protocol/protocol_down_header.h $(PROJ_DIR)../protocol/protocol_warning.c
-	$(CC) $(CFLAGS) $(INCLUDE) $(DEFS) $(PROJ_DIR)../protocol/protocol_warning.c
+# rule for file "protocl.o".
+protocol.o: $(PROJ_DIR)../protocol/protocol.h $(PROJ_DIR)../protocol/protocol.c
+	$(CC) $(CFLAGS) $(INCLUDE) $(DEFS) $(PROJ_DIR)../protocol/protocol.c
+
+# rule for file "protocol_encode_add_del_device.o".
+protocol_encode_add_del_device.o: $(PROJ_DIR)../protocol/protocol_encode_add_del_device.c
+	$(CC) $(CFLAGS) $(INCLUDE) $(DEFS) $(PROJ_DIR)../protocol/protocol_encode_add_del_device.c
+
+# rule for file "protocol_encode_alarm.o".
+protocol_encode_alarm.o: $(PROJ_DIR)../protocol/protocol_encode_alarm.c
+	$(CC) $(CFLAGS) $(INCLUDE) $(DEFS) $(PROJ_DIR)../protocol/protocol_encode_alarm.c
+
+# rule for file "protocol_encode_arm_feedback.o".
+protocol_encode_arm_feedback.o: $(PROJ_DIR)../protocol/protocol_encode_arm_feedback.c
+	$(CC) $(CFLAGS) $(INCLUDE) $(DEFS) $(PROJ_DIR)../protocol/protocol_encode_arm_feedback.c
+
+# rule for file "protocol_encode_heartbeat.o".
+protocol_encode_heartbeat.o: $(PROJ_DIR)../protocol/protocol_encode_heartbeat.c
+	$(CC) $(CFLAGS) $(INCLUDE) $(DEFS) $(PROJ_DIR)../protocol/protocol_encode_heartbeat.c
+
+# rule for file "protocol_encode_login.o".
+protocol_encode_login.o: $(PROJ_DIR)../protocol/protocol_encode_login.c
+	$(CC) $(CFLAGS) $(INCLUDE) $(DEFS) $(PROJ_DIR)../protocol/protocol_encode_login.c
+
+# rule for file "protocol_parse_arm.o".
+protocol_parse_arm.o: $(PROJ_DIR)../protocol/protocol_parse_arm.c
+	$(CC) $(CFLAGS) $(INCLUDE) $(DEFS) $(PROJ_DIR)../protocol/protocol_parse_arm.c
+
+# rule for file "protocol_parse_identify.o".
+protocol_parse_identify.o: $(PROJ_DIR)../protocol/protocol_parse_identify.c
+	$(CC) $(CFLAGS) $(INCLUDE) $(DEFS) $(PROJ_DIR)../protocol/protocol_parse_identify.c
+
+# rule for file "protocol_parse_warning.o".
+protocol_parse_warning.o: $(PROJ_DIR)../protocol/protocol_parse_warning.c
+	$(CC) $(CFLAGS) $(INCLUDE) $(DEFS) $(PROJ_DIR)../protocol/protocol_parse_warning.c
 
 # rule for cleaning files generated during compilations.
 clean:

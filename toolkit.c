@@ -82,3 +82,25 @@ unsigned long long toolkit_getmac(){
 	
 	return bytebuffer_getquadword(mac_address);
 }
+
+unsigned char toolkit_in_period(unsigned char starthour, unsigned char startminute, unsigned char endhour, unsigned char endminute, unsigned char targethour, unsigned char targetminute){ 
+	short start_minutes = starthour * 60 + startminute; 
+	short end_minutes = endhour * 60 + endminute;
+	short target_minutes = targethour * 60 + targetminute; 
+
+	short start_minutes_ = 0;
+	short end_minutes_ = end_minutes - start_minutes;
+	if(end_minutes_ < 0){
+		end_minutes_ += 24 * 60;
+	}
+	short target_minutes_ = target_minutes - start_minutes;
+	if(target_minutes_ < 0 ){
+		target_minutes_ += 24 * 60;
+	}
+
+	if(target_minutes_ > end_minutes_){
+		return 0;
+	}
+
+	return 1;
+}

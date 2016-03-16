@@ -3,6 +3,8 @@
 #include <assert.h>
 #include "gateway.h"
 #include "sqlitedb.h"
+#include "toolkit.h"
+#include "zcl_ha.h" 
 
 #define min(a,b) a>b?b:a
 
@@ -20,6 +22,24 @@ struct endpoint * endpoint_create(struct simpledesc * simpledesc){
 void endpoint_destroy(struct endpoint * ep){
 	list_del(&ep->list);
 	free(ep);
+}
+
+unsigned char endpoint_check_arm(struct endpoint * ep, unsigned char hour, unsigned char minute){
+	if(ep->simpledesc.arm.armmodel == ARM){
+		return 1;
+	}
+	if(ep->simpledesc.arm.armmodel == ARMTIME){ 
+		if(toolkit_in_period(ep->simpledesc.arm.starthour, ep->simpledesc.arm.startminute, ep->simpledesc.arm.endhour, ep->simpledesc.arm.endminute, hour, minute)){ 
+			return 1;
+		}else{
+			return 0;
+		}
+	}
+	if(ep->simpledesc.arm.armmodel == DISARM){
+		return 0;
+	}
+
+	return 0;
 }
 // ---------------endpoint---------------
 //
@@ -213,19 +233,6 @@ struct device * gateway_getdevice(struct gateway * gw, unsigned long long ieee){
 	return NULL;
 }
 
-unsigned char gateway_get_outcluster_endpoint(unsigned short clusterid){ 
-	unsigned char i, j;
-	for(i = 0; i < 3; i++){
-		for(j = 0; j < gatewayinstance.endpoint_inout_clusterlist[i].outclustercount; j++){ 
-			if(clusterid == gatewayinstance.endpoint_inout_clusterlist[i].outclusterlist[j]){
-				return gatewayinstance.endpoint_inout_clusterlist[i].endpoint;
-			}
-		}
-	}
-
-	return 0;
-}
-
 int gateway_update_device_networkaddr(unsigned long long ieee, unsigned short shortaddr){
 	struct device * d = gateway_getdevice(&gatewayinstance, ieee);
 	if(d){
@@ -246,7 +253,7 @@ struct endpoint * gateway_get_endpoint_incluster(unsigned long long ieee, unsign
 					return ep;
 				}
 			}
-			
+
 		}
 	}
 
@@ -264,4 +271,21 @@ struct endpoint * gateway_get_endpoint(unsigned long long ieee, unsigned char en
 	return dstep;
 }
 
+struct endpoint * gateway_get_warning_device(){ 
+	struct endpoint * ep;
+	struct list_head *eppos, *epn;
+	struct device * d;
+	struct list_head *pos, *n;
+	list_for_each_safe(pos, n, &gatewayinstance.head){
+		d = list_entry(pos, struct device, list); 
+		list_for_each_safe(eppos, epn, &d->eplisthead){
+			ep = list_entry(eppos, struct endpoint, list);
+			if(ep->simpledesc.simpledesc.DeviceID == ZCL_HA_DEVICEID_IAS_WARNING_DEVICE){
+				return ep;
+			}
+		}
+	}
+
+	return NULL;
+}
 // ---------------gateway---------------

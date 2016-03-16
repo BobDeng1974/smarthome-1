@@ -4,6 +4,7 @@
 #include "list.h"
 #include "cluster.h"
 #include "mtZdo.h"
+#include "protocol_cmdtype.h"
 
 #define MAXNAMELEN 256
 #define MAXEPCOUNT 64
@@ -17,17 +18,14 @@
 #define DEVICE_GET_ACTIVEEP 32
 #define DEVICE_GET_SIMPLEDESC 64
 #define DEVICE_ACTIVE 128
+#define DEVICE_SS_SEND_ALARM_NOTIFICATION 256
+#define DEVICE_SS_SEND_NO_ALARM_NOTIFICATION 512
 
-#define ARM 0
-#define DISARM 1
-#define ARMTIME 2
-#define ARMTIMECOUNT 4
 
 struct simpledesc{
 	SimpleDescRspFormat_t simpledesc; 
 	unsigned short zonetype; // used for ss device
-	unsigned char armmodel;
-	unsigned char armtime[ARMTIMECOUNT]; // 4 bytes, the first two for from the last fro to  eg. 00:00~12:00
+	struct protocol_cmdtype_arm arm; // used for ss device
 };
 
 struct endpoint{
@@ -70,13 +68,13 @@ struct gateway{
 	unsigned short devicecount;
 	unsigned char boxversion;
 	unsigned char protocolversion;
-	struct gateway_endpoint_inout_clusterlist endpoint_inout_clusterlist[3];
 	struct list_head head;
 };
 
 // endpoint 
 struct endpoint * endpoint_create(struct simpledesc * simpledesc);
 void endpoint_destroy(struct endpoint * ep);
+unsigned char endpoint_check_arm(struct endpoint * ep, unsigned char hour, unsigned char minute);
 
 // device
 struct device * device_create(unsigned long long deviceieee);
@@ -114,9 +112,9 @@ void gateway_deldevice(struct gateway * gw, struct device *d);
 struct device * gateway_getdevice(struct gateway * gw, unsigned long long ieee);
 
 
-//unsigned char gateway_get_outcluster_endpoint(unsigned short clusterid);
 int gateway_update_device_networkaddr(unsigned long long ieee, unsigned short shortaddr);
 //struct endpoint * gateway_get_endpoint_incluster(unsigned long long ieee, unsigned short clusterid);
 struct endpoint * gateway_get_endpoint(unsigned long long ieee, unsigned char endpoint);
 
+struct endpoint * gateway_get_warning_device();
 #endif

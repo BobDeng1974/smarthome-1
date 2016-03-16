@@ -13,6 +13,7 @@
 #include "znp.h"
 #include "sqlitedb.h"
 
+int g_main_to_znp_write_fd = -1;
 int main(){
         ceconf_load();	
 
@@ -71,6 +72,8 @@ int main(){
 	int mainwfd, znprfd;
 	znprfd = createpipe2(&mainwfd);
 	make_socket_non_blocking(mainwfd);
+	g_main_to_znp_write_fd = mainwfd;
+	fprintf(stdout, "znp main write %d znp read %d\n", g_main_to_znp_write_fd, znprfd);
 
 	// open serial port
 	if(znp_start(znpwfd, znprfd, ceconf_getserialport()) == -1){

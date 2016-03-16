@@ -6,6 +6,7 @@
 #include "sqlitedb.h"
 #include "gateway.h"
 #include "mtZdo.h"
+#include "protocol_cmdtype.h"
 //static int sn = 0;
 #define GATEWAYTABLENAME "gateway"
 #define DEVICETABLENAME "device"
@@ -181,7 +182,7 @@ static const char sql_create_device_table[] = "create table device(ieee integer 
 
 void sqlitedb_table_build(char * filepath){
 	struct sqlitedb * db = sqlitedb_create(filepath);
-	
+
 	if(db){ 
 		if(!_sqlitedb_table_exist(db, GATEWAYTABLENAME)){
 			sqlite3_exec(db->db,sql_create_gateway_table,NULL,NULL,NULL);
@@ -212,9 +213,9 @@ int sqlitedb_load_gateway_name(char * filepath, unsigned long long mac){
 		}else if(r == SQLITE_ROW){
 			char gatewayname[256] = {0};
 			int bytes;
-		        const unsigned char * text;
+			const unsigned char * text;
 			bytes = sqlite3_column_bytes(stmt, 0);
-		        text  = sqlite3_column_text (stmt, 0);
+			text  = sqlite3_column_text (stmt, 0);
 			memcpy(gatewayname, text, bytes);
 
 			gateway_init(getgateway(), mac, gatewayname, 1, 1);
@@ -419,6 +420,46 @@ int sqlitedb_update_device_endpoint_zonetype(struct device * d, unsigned char en
 
 	}
 	sqlitedb_destroy(db);
+}
+
+int sqlitedb_update_device_arm(unsigned long long ieee, unsigned char endpoint, struct protocol_cmdtype_arm * arm){
+	struct device * d = gateway_getdevice(getgateway(), ieee);
+	int epindex = device_get_index(d, endpoint);
+	if(epindex == -1){
+		return 1;
+	}
+	struct sqlitedb * db = sqlitedb_create(DBPATH);
+	if(!db){
+		return 2;
+	}
+	sqlite3_blob * blob = NULL;
+	int ret = sqlite3_blob_open(db->db, 
+			"main",
+			"device",
+			"endpoint",
+			d->ieeeaddr,
+			1,
+			&blob);
+	if(ret != SQLITE_OK){
+		sqlitedb_destroy(db);
+		return 3;
+	}
+	int cursor = 0;
+	cursor+=sizeof(ActiveEpRspFormat_t) + sizeof(struct simpledesc)*epindex + sizeof(SimpleDescRspFormat_t) + sizeof(unsigned short);
+	ret = sqlite3_blob_write(blob, arm, sizeof(struct protocol_cmdtype_arm),cursor);
+	if( ret != SQLITE_OK){
+		const char* result = sqlite3_errmsg(db->db);
+		fprintf(stdout, "------------------ %s \n", result);
+		sqlite3_blob_close(blob);
+		sqlitedb_destroy(db);
+
+		return 4;
+	}
+
+	sqlite3_blob_close(blob);
+	sqlitedb_destroy(db);
+
+	return 0;
 }
 
 static const char sql_update_device_attr[] = "update device set status = %d, zclversion = %d, applicationversion = %d, stackversion = %d, hwversion = %d, manufacturername = '%s', modelidentifier = '%s', datecode = '%s' where ieee = %lld";
