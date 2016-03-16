@@ -116,5 +116,6 @@ int gateway_update_device_networkaddr(unsigned long long ieee, unsigned short sh
 //struct endpoint * gateway_get_endpoint_incluster(unsigned long long ieee, unsigned short clusterid);
 struct endpoint * gateway_get_endpoint(unsigned long long ieee, unsigned char endpoint);
 
-struct endpoint * gateway_get_warning_device();
+struct device * gateway_get_warning_device();
+struct endpoint * gateway_get_warning_device_endpoint();
 #endif

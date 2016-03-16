@@ -271,7 +271,7 @@ struct endpoint * gateway_get_endpoint(unsigned long long ieee, unsigned char en
 	return dstep;
 }
 
-struct endpoint * gateway_get_warning_device(){ 
+struct endpoint * gateway_get_warning_device_endpoint(){ 
 	struct endpoint * ep;
 	struct list_head *eppos, *epn;
 	struct device * d;
@@ -288,4 +288,23 @@ struct endpoint * gateway_get_warning_device(){
 
 	return NULL;
 }
+
+struct device * gateway_get_warning_device(){
+	struct endpoint * ep;
+	struct list_head *eppos, *epn;
+	struct device * d;
+	struct list_head *pos, *n;
+	list_for_each_safe(pos, n, &gatewayinstance.head){
+		d = list_entry(pos, struct device, list); 
+		list_for_each_safe(eppos, epn, &d->eplisthead){
+			ep = list_entry(eppos, struct endpoint, list);
+			if(ep->simpledesc.simpledesc.DeviceID == ZCL_HA_DEVICEID_IAS_WARNING_DEVICE){
+				return d;
+			}
+		}
+	}
+
+	return NULL;
+}
+
 // ---------------gateway---------------
