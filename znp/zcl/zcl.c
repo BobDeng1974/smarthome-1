@@ -836,11 +836,7 @@ int zcl_proccessincomingmessage(IncomingMsgFormat_t * message){
 	zclmessage.datalen -= zclmessage.data - message->Data;
 
 	// to get attribute 
-	struct znp_map * map = znp_map_get_ieee(message->SrcAddr); 
-	struct device * d = NULL; 
-	if(map){
-		d = gateway_getdevice(getgateway(), map->ieee);
-	}
+	struct device * d = gateway_getdevice_shortaddr(message->SrcAddr);
 	if(d && !device_check_status(d, DEVICE_SEND_ATTR)){ 
 		zclReadCmd_t readcmd; 
 		readcmd.numAttr = 8;

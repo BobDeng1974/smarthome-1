@@ -35,6 +35,7 @@ struct endpoint{
 
 struct device{
 	unsigned long long ieeeaddr;
+	unsigned short shortaddr;
 	char devicename[MAXNAMELEN];
 	unsigned int status;
 	unsigned char zclversion;
@@ -77,8 +78,8 @@ void endpoint_destroy(struct endpoint * ep);
 unsigned char endpoint_check_arm(struct endpoint * ep, unsigned char hour, unsigned char minute);
 
 // device
-struct device * device_create(unsigned long long deviceieee);
-struct device * device_create2(unsigned long long ieee, char * name, unsigned char status,
+struct device * device_create(unsigned long long deviceieee, unsigned short shortaddr);
+struct device * device_create2(unsigned long long ieee, unsigned short shortaddr,char * name, unsigned char status,
 		unsigned char zclversion, unsigned char applicationversion, 
 		unsigned char stackversion, unsigned char hwversion,
 		char * manufacturername, char * modelidentifier, char * datecode);
@@ -110,6 +111,7 @@ void gateway_init(struct gateway * gw,unsigned long long gatewayid, char * gatew
 void gateway_adddevice(struct gateway * gw, struct device * d);
 void gateway_deldevice(struct gateway * gw, struct device *d);
 struct device * gateway_getdevice(struct gateway * gw, unsigned long long ieee);
+struct device * gateway_getdevice_shortaddr(unsigned short shortaddr);
 
 
 int gateway_update_device_networkaddr(unsigned long long ieee, unsigned short shortaddr);
@@ -118,4 +120,5 @@ struct endpoint * gateway_get_endpoint(unsigned long long ieee, unsigned char en
 
 struct device * gateway_get_warning_device();
 struct endpoint * gateway_get_warning_device_endpoint();
+unsigned short gateway_get_active_device_count();
 #endif

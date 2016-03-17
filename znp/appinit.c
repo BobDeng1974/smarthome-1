@@ -592,7 +592,8 @@ static uint8_t mtZdoSimpleDescRspCb(SimpleDescRspFormat_t *msg)
 			        msg->OutClusterList[i]);
 		}
 
-		struct device * d = _get_device(msg->SrcAddr);
+	//	struct device * d = _get_device(msg->SrcAddr);
+		struct device * d = gateway_getdevice_shortaddr(msg->SrcAddr);
 		if(d && !device_has_enpoint(d, msg->Endpoint)){ 
 			device_increase(d);
 		}
@@ -648,7 +649,7 @@ static uint8_t mtZdoActiveEpRspCb(ActiveEpRspFormat_t *msg)
 			consolePrint("ActiveEPList[%d]: 0x%02X\n", i, msg->ActiveEPList[i]); 
 		}
 
-		struct device * d = _get_device(msg->SrcAddr);
+		struct device * d = gateway_getdevice_shortaddr(msg->SrcAddr);//_get_device(msg->SrcAddr);
 
 		if(d && !device_check_status(d, DEVICE_SEND_SIMPLEDESC)){
 
@@ -1004,20 +1005,29 @@ static uint8_t mtZdoEndDeviceAnnceIndCb(EndDeviceAnnceIndFormat_t *msg)
 	        (long long unsigned int) msg->IEEEAddr);
 	consolePrint("Capabilities: 0x%02X\n", msg->Capabilities);
 
-	znp_map_insert(msg->NwkAddr, msg->IEEEAddr);
+	//znp_map_insert(msg->NwkAddr, msg->IEEEAddr);
 	struct device * d = gateway_getdevice(getgateway(), msg->IEEEAddr);
 	if(!d){
-		d = device_create(msg->IEEEAddr);
+		d = device_create(msg->IEEEAddr, msg->NwkAddr);
 		gateway_adddevice(getgateway(), d);
-		sqlitedb_insert_device_ieee(msg->IEEEAddr);
+		sqlitedb_insert_device_ieee(msg->IEEEAddr, msg->NwkAddr);
+	}else{
+		if(d->shortaddr != msg->NwkAddr){ 
+			sqlitedb_update_device_shortaddr(msg->IEEEAddr, msg->NwkAddr);
+			d->shortaddr = msg->NwkAddr;
+		}
 	}
-	if(!device_check_status(d, DEVICE_SEND_ACTIVEEP)){
+	d->status |= DEVICE_ACTIVE;
+	
+	if((d->status & DEVICE_SEND_ACTIVEEP) == 0){
+		consolePrint("send request active_ep_req\n");
+	//	d->status |= DEVICE_SEND_ACTIVEEP;
+		device_set_status(d, DEVICE_SEND_ACTIVEEP);
 		ActiveEpReqFormat_t queryep;
 		memset(&queryep, 0, sizeof(ActiveEpReqFormat_t));
 		queryep.NwkAddrOfInterest = msg->NwkAddr;
 		queryep.DstAddr = msg->SrcAddr;
 		sendcmd((unsigned char *)&queryep, ZDO_ACTIVE_EP_REQ);
-		device_set_status(d, DEVICE_SEND_ACTIVEEP);
 	}
 
 	return 0;
@@ -1135,8 +1145,12 @@ static uint8_t mtZdoLeaveIndCb(LeaveIndFormat_t *msg)
 	consolePrint("Remove: 0x%02X\n", msg->Remove);
 	consolePrint("Rejoin: 0x%02X\n", msg->Rejoin);
 
-	znp_map_del_ieee(msg->ExtAddr);
-	znp_map_del_shortaddr(msg->SrcAddr);
+	//znp_map_del_ieee(msg->ExtAddr);
+	//znp_map_del_shortaddr(msg->SrcAddr);
+	struct device * d = gateway_getdevice(getgateway(), msg->ExtAddr);
+	if(d){
+		d->status &= ~DEVICE_ACTIVE;
+	}
 
 	return 0;
 }
@@ -1200,10 +1214,10 @@ static uint8_t mtAfIncomingMsgCb(IncomingMsgFormat_t *msg)
 	{
 		consolePrint("Data[%d]: 0x%02X\n", i, msg->Data[i]);
 	}
-	struct znp_map * map = znp_map_get_ieee(msg->SrcAddr);
-	if(map){ 
+	struct device * d = gateway_getdevice_shortaddr(msg->SrcAddr);
+	if(d){ 
+		d->status |= DEVICE_ACTIVE;
 		zcl_proccessincomingmessage(msg);
-		gateway_update_device_networkaddr(map->ieee, msg->SrcAddr);
 	}
 
 	return 0;
@@ -1524,8 +1538,9 @@ static int32_t startNetwork(void)
 
 	do
 	{
-		status = setNVStartup(
-		ZCD_STARTOPT_CLEAR_STATE | ZCD_STARTOPT_CLEAR_CONFIG);
+//		status = setNVStartup(
+//		ZCD_STARTOPT_CLEAR_STATE | ZCD_STARTOPT_CLEAR_CONFIG);
+		status = setNVStartup(0);
 		newNwk = 1;
 
 	} while (0);
@@ -1580,16 +1595,19 @@ static int32_t startNetwork(void)
 	if (status == NEW_NETWORK)
 	{
 		dbg_print(PRINT_LEVEL_INFO, "zdoInit NEW_NETWORK\n");
+		consolePrint("new network\n");
 		status = MT_RPC_SUCCESS;
 	}
 	else if (status == RESTORED_NETWORK)
 	{
 		dbg_print(PRINT_LEVEL_INFO, "zdoInit RESTORED_NETWORK\n");
+		consolePrint("restored network\n");
 		status = MT_RPC_SUCCESS;
 	}
 	else
 	{
 		dbg_print(PRINT_LEVEL_INFO, "zdoInit failed\n");
+		consolePrint("zdoinit fail\n");
 		status = -1;
 	}
 
@@ -1682,6 +1700,7 @@ void appProcess(void * args)
 	nvWrite.Len = 1;
 	nvWrite.Value[0] = 1;
 	status = sysOsalNvWrite(&nvWrite);
+
 	initDone = 1;
 	
 	int commandtype = 0;

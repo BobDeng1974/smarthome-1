@@ -277,29 +277,24 @@ int zclss_processincmd_zonestatus_enrollrequest(struct zclincomingmsg * pInMsg){
 		responseCode = SS_IAS_ZONE_STATUS_ENROLL_RESPONSE_CODE_NOT_SUPPORTED;
 	}
 
-	
-	struct znp_map * map = znp_map_get_ieee(pInMsg->message->SrcAddr);
-	if(map){
-		struct device * d = gateway_getdevice(getgateway(), map->ieee);
-		assert(d);
-		device_set_zonetype(d, pInMsg->message->SrcEndpoint, zoneType); 
-		if(!device_check_status(d, DEVICE_ACTIVE)){
-			device_set_status(d, DEVICE_ACTIVE);
-			struct zcl_zone_enroll_req_cmd enroll_cmd;
-			memset(&enroll_cmd, 0, sizeof(struct zcl_zone_enroll_req_cmd));
-			enroll_cmd.cmdid = ZCLZONEENROLLREQ;
-			enroll_cmd.req.ieeeaddr = map->ieee; 
-			enroll_cmd.req.groupid = pInMsg->message->GroupId;
-			enroll_cmd.req.clusterid = pInMsg->message->ClusterId;
-			enroll_cmd.req.zonetype = zoneType;
-			enroll_cmd.req.zoneid = zoneID;
-			enroll_cmd.req.endpoint = pInMsg->message->SrcEndpoint;
-			int n = write(g_znpwfd, &enroll_cmd, sizeof(struct zcl_zone_enroll_req_cmd));
-			fprintf(stdout, "********send add new device %llX %d %d\n", enroll_cmd.req.ieeeaddr, n, sizeof(struct zcl_zone_enroll_req_cmd));
-			assert(n == sizeof(struct zcl_zone_enroll_req_cmd));
-		}
-	}else{
-		assert(0);
+
+	struct device * d = gateway_getdevice_shortaddr(pInMsg->message->SrcAddr);
+	assert(d);
+	device_set_zonetype(d, pInMsg->message->SrcEndpoint, zoneType); 
+	if(!device_check_status(d, DEVICE_ACTIVE)){
+		device_set_status(d, DEVICE_ACTIVE);
+		struct zcl_zone_enroll_req_cmd enroll_cmd;
+		memset(&enroll_cmd, 0, sizeof(struct zcl_zone_enroll_req_cmd));
+		enroll_cmd.cmdid = ZCLZONEENROLLREQ;
+		enroll_cmd.req.ieeeaddr = d->ieeeaddr;
+		enroll_cmd.req.groupid = pInMsg->message->GroupId;
+		enroll_cmd.req.clusterid = pInMsg->message->ClusterId;
+		enroll_cmd.req.zonetype = zoneType;
+		enroll_cmd.req.zoneid = zoneID;
+		enroll_cmd.req.endpoint = pInMsg->message->SrcEndpoint;
+		int n = write(g_znpwfd, &enroll_cmd, sizeof(struct zcl_zone_enroll_req_cmd));
+		fprintf(stdout, "********send add new device %llX %d %d\n", enroll_cmd.req.ieeeaddr, n, sizeof(struct zcl_zone_enroll_req_cmd));
+		assert(n == sizeof(struct zcl_zone_enroll_req_cmd));
 	}
 
 	// if ( stat == ZSuccess )
@@ -321,15 +316,15 @@ int zclss_processincmd_zonestatus_changenotification(struct zclincomingmsg * msg
 	memset(&cmd, 0, sizeof(struct zcl_zone_change_notification_cmd));
 	cmd.cmdid = ZCLZONECHANGENOTIFICATION;
 	cmd.req.zonechangenotification.uszonestatus = BUILD_UINT16(msg->data[0],msg->data[1]);
-	struct znp_map * map = znp_map_get_ieee(msg->message->SrcAddr);
-	if(map){ 
-		cmd.req.ieeeaddr = map->ieee;
+	struct device * d = gateway_getdevice_shortaddr(msg->message->SrcAddr);
+	if(d){
+		cmd.req.ieeeaddr = d->ieeeaddr;
+		cmd.req.clusterid = msg->message->ClusterId;
+		cmd.req.endpoint = msg->message->SrcEndpoint;
 	}
-	cmd.req.clusterid = msg->message->ClusterId;
-	cmd.req.endpoint = msg->message->SrcEndpoint;
 
 	write(g_znpwfd, &cmd, sizeof(struct zcl_zone_change_notification_cmd));
-	
+
 	return 0;
 }
 
@@ -353,13 +348,13 @@ int zclss_processinzonestatuscmdsserver(struct zclincomingmsg * msg){
 //for test
 int zclgeneral_send_identify_query(struct zclincomingmsg *msg)
 {
-  int result = -1;
-  IncomingMsgFormat_t *message = (IncomingMsgFormat_t *)msg->message;
-  uint8 srcEP = message->DstEndpoint;
-  uint8 dstEP = message->SrcEndpoint;
-  uint16 dstAddr = message->SrcAddr;
-  zclGeneral_SendIdentifyQuery(srcEP, dstEP, dstAddr,0, 0);
-  return result;
+	int result = -1;
+	IncomingMsgFormat_t *message = (IncomingMsgFormat_t *)msg->message;
+	uint8 srcEP = message->DstEndpoint;
+	uint8 dstEP = message->SrcEndpoint;
+	uint16 dstAddr = message->SrcAddr;
+	zclGeneral_SendIdentifyQuery(srcEP, dstEP, dstAddr,0, 0);
+	return result;
 }
 
 int zclss_processinzonestatuscmdsclient(struct zclincomingmsg * msg){
@@ -372,15 +367,15 @@ int zclss_processinzonestatuscmdsclient(struct zclincomingmsg * msg){
 		case COMMAND_SS_IAS_ZONE_STATUS_ENROLL_REQUEST:
 			result = zclss_processincmd_zonestatus_enrollrequest(msg);
 			//IncomingMsgFormat_t *message = (IncomingMsgFormat_t *)msg->message;
-            //            uint8 srcEP = message->DstEndpoint;
-            //            uint8 dstEP = message->SrcEndpoint;
-            //            uint16 dstAddr = message->SrcAddr;
-            //            uint16 identifyTime = 0x0014;
-//                        zclGeneral_SendIdentify(srcEP, dstEP, dstAddr, identifyTime, 0, 0); 
-            //            zclReadCmd_t cmd;
-            //            cmd.numAttr = 1;
-            //            cmd.attrID[0] = 0x0005;
-            //            zcl_SendRead(srcEP,dstEP,dstAddr,ZCL_CLUSTER_ID_GEN_BASIC, &cmd, ZCL_FRAME_CLIENT_SERVER_DIR, 0,0 );
+			//            uint8 srcEP = message->DstEndpoint;
+			//            uint8 dstEP = message->SrcEndpoint;
+			//            uint16 dstAddr = message->SrcAddr;
+			//            uint16 identifyTime = 0x0014;
+			//                        zclGeneral_SendIdentify(srcEP, dstEP, dstAddr, identifyTime, 0, 0); 
+			//            zclReadCmd_t cmd;
+			//            cmd.numAttr = 1;
+			//            cmd.attrID[0] = 0x0005;
+			//            zcl_SendRead(srcEP,dstEP,dstAddr,ZCL_CLUSTER_ID_GEN_BASIC, &cmd, ZCL_FRAME_CLIENT_SERVER_DIR, 0,0 );
 			break; 
 		default:
 			result = -1;
@@ -432,6 +427,6 @@ int zclss_send_ias_wd_start_warning_cmd(unsigned char srcep, unsigned char dstep
 
 	return zcl_sendcommand(srcep, dstep, dstaddr, ZCL_CLUSTER_ID_SS_IAS_WD, 
 			COMMAND_SS_IAS_WD_START_WARNING,TRUE,
-		       	ZCL_FRAME_CLIENT_SERVER_DIR,disabledefaultrsp, 0,
-		       	seqnum, 5, buf);
+			ZCL_FRAME_CLIENT_SERVER_DIR,disabledefaultrsp, 0,
+			seqnum, 5, buf);
 }

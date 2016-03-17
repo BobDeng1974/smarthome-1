@@ -44,12 +44,13 @@ unsigned char endpoint_check_arm(struct endpoint * ep, unsigned char hour, unsig
 // ---------------endpoint---------------
 //
 // ---------------device---------------
-struct device * device_create(unsigned long long deviceieee){
+struct device * device_create(unsigned long long deviceieee, unsigned short shortaddr){
 	struct device * device = (struct device *)malloc(sizeof(struct device)); 
 	memset(device, 0, sizeof(struct device));
 	INIT_LIST_HEAD(&device->list);
 	INIT_LIST_HEAD(&device->eplisthead);
 	device->ieeeaddr = deviceieee;
+	device->shortaddr = shortaddr;
 
 	return device; 
 }
@@ -83,11 +84,11 @@ void device_destroy(struct device * d){
 	free(d);
 }
 
-struct device * device_create2(unsigned long long ieee, char * name, unsigned char status,
+struct device * device_create2(unsigned long long ieee,unsigned short shortaddr, char * name, unsigned char status,
 		unsigned char zclversion, unsigned char applicationversion, 
 		unsigned char stackversion, unsigned char hwversion,
 		char * manufacturername, char * modelidentifier, char * datecode){
-	struct device * d = device_create(ieee);
+	struct device * d = device_create(ieee, shortaddr);
 	d->status = status;
 	d->zclversion = zclversion;
 	d->applicationversion = applicationversion;
@@ -233,6 +234,19 @@ struct device * gateway_getdevice(struct gateway * gw, unsigned long long ieee){
 	return NULL;
 }
 
+struct device * gateway_getdevice_shortaddr(unsigned short shortaddr){
+	struct device * d;
+	struct list_head * pos, *n;
+	list_for_each_safe(pos, n, &gatewayinstance.head){ 
+		d = list_entry(pos, struct device, list); 
+		if(d->shortaddr == shortaddr){
+			return d;
+		}
+	}
+
+	return NULL;
+}
+
 int gateway_update_device_networkaddr(unsigned long long ieee, unsigned short shortaddr){
 	struct device * d = gateway_getdevice(&gatewayinstance, ieee);
 	if(d){
@@ -266,7 +280,6 @@ struct endpoint * gateway_get_endpoint(unsigned long long ieee, unsigned char en
 	if(d){
 		dstep = device_get_endpoint(d, endpoint);
 	}
-	assert(dstep);
 
 	return dstep;
 }
@@ -305,6 +318,20 @@ struct device * gateway_get_warning_device(){
 	}
 
 	return NULL;
+}
+
+unsigned short gateway_get_active_device_count(){
+	unsigned short active_device_count = 0;
+	struct device * d;
+	struct list_head *pos, *n;
+	list_for_each_safe(pos, n, &gatewayinstance.head){
+		d = list_entry(pos, struct device, list); 
+		if(d->status & DEVICE_ACTIVE){
+			active_device_count++;
+		}
+	}
+
+	return active_device_count;
 }
 
 // ---------------gateway---------------

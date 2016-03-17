@@ -21,7 +21,7 @@ void sqlitedb_table_build(char * filepath);
 int sqlitedb_add_gateway(unsigned long long ieee, char * name);
 int sqlitedb_load_gateway_name(char * filepath, unsigned long long mac);
 void sqlitedb_load_device();
-int sqlitedb_insert_device_ieee(unsigned long long ieee);
+int sqlitedb_insert_device_ieee(unsigned long long ieee, unsigned short shortaddr);
 struct device;
 int sqlitedb_update_device_endpoint(struct device * d);
 int sqlitedb_update_device_attr(struct device * d);
@@ -30,5 +30,5 @@ int sqlitedb_update_device_endpoint_zonetype(struct device * d, unsigned char en
 
 struct protocol_cmdtype_arm;
 int sqlitedb_update_device_arm(unsigned long long ieee, unsigned char endpoint, struct protocol_cmdtype_arm * arm);
-
+int sqlitedb_update_device_shortaddr(unsigned long long ieee, unsigned short shortaddr);
 #endif

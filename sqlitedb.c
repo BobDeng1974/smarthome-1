@@ -178,7 +178,7 @@ int _sqlitedb_table_exist(struct sqlitedb * db, char * tablename){
 }
 
 static const char sql_create_gateway_table[] = "create table gateway(mac integer primary key, name text);";
-static const char sql_create_device_table[] = "create table device(ieee integer primary key,name text, status integer,zclversion integer, applicationversion integer, stackversion integer, hwversion integer, manufacturername text,modelidentifier text,datecode text,endpoint blob);";
+static const char sql_create_device_table[] = "create table device(ieee integer primary key,shortaddr integer, name text, status integer,zclversion integer, applicationversion integer, stackversion integer, hwversion integer, manufacturername text,modelidentifier text,datecode text,endpoint blob);";
 
 void sqlitedb_table_build(char * filepath){
 	struct sqlitedb * db = sqlitedb_create(filepath);
@@ -285,7 +285,7 @@ void _sqlite3_load_device(sqlite3_stmt *stmt, int col, struct device *d){
 
 }
 
-static const char sql_select_device[] = "select ieee ,name , status ,zclversion , applicationversion , stackversion , hwversion , manufacturername ,modelidentifier ,datecode ,endpoint from device;";
+static const char sql_select_device[] = "select ieee, shortaddr, name , status ,zclversion , applicationversion , stackversion , hwversion , manufacturername ,modelidentifier ,datecode ,endpoint from device;";
 void sqlitedb_load_device(){ 
 	struct sqlitedb * db = sqlitedb_create(DBPATH);
 
@@ -294,6 +294,7 @@ void sqlitedb_load_device(){
 	int ret = sqlite3_prepare_v2(db->db, sql_select_device, sizeof(sql_select_device), &stmt, &pztile);
 
 	unsigned long long ieee;
+	unsigned short shortaddr;
 	char devicename[MAXNAMELEN]; 
 	unsigned char status;
 	unsigned char zclversion;
@@ -307,22 +308,23 @@ void sqlitedb_load_device(){
 	if (ret==SQLITE_OK){
 		while(sqlite3_step(stmt) == SQLITE_ROW){
 			ieee = sqlite3_column_int64(stmt,0);
+			shortaddr = sqlite3_column_int(stmt, 1);
 			memset(devicename, 0, MAXNAMELEN);
-			_sqlite3_gettext(stmt, 1, devicename);
-			status = sqlite3_column_int(stmt,2);
+			_sqlite3_gettext(stmt, 2, devicename);
+			status = sqlite3_column_int(stmt,3);
 			status &= ~DEVICE_ACTIVE;
-			zclversion = sqlite3_column_int(stmt,3);
-			applicationversion = sqlite3_column_int(stmt,4);
-			stackversion = sqlite3_column_int(stmt,5);
-			hwversion = sqlite3_column_int(stmt,6);
+			zclversion = sqlite3_column_int(stmt,4);
+			applicationversion = sqlite3_column_int(stmt,5);
+			stackversion = sqlite3_column_int(stmt,6);
+			hwversion = sqlite3_column_int(stmt,7);
 			memset(manufacturername, 0, 33);
-			_sqlite3_gettext(stmt,7,manufacturername);
+			_sqlite3_gettext(stmt,8,manufacturername);
 			memset(modelidentifier, 0, 33);
-			_sqlite3_gettext(stmt,8,modelidentifier);
+			_sqlite3_gettext(stmt,9,modelidentifier);
 			memset(datecode, 0, 17);
-			_sqlite3_gettext(stmt,9,datecode);
-			struct device * d = device_create2(ieee, devicename, status, zclversion, applicationversion, stackversion, hwversion, manufacturername, modelidentifier, datecode);
-			_sqlite3_load_device(stmt,10,d);
+			_sqlite3_gettext(stmt,10,datecode);
+			struct device * d = device_create2(ieee,shortaddr, devicename, status, zclversion, applicationversion, stackversion, hwversion, manufacturername, modelidentifier, datecode);
+			_sqlite3_load_device(stmt,11,d);
 			gateway_adddevice(getgateway(),d);
 
 		}
@@ -333,20 +335,22 @@ void sqlitedb_load_device(){
 	sqlitedb_destroy(db);
 }
 
-static const char sql_insert_device_ieee[] = "insert into device(ieee, endpoint) values(?,?);";
-int sqlitedb_insert_device_ieee(unsigned long long ieee){
+static const char sql_insert_device_ieee[] = "insert into device(ieee,shortaddr, endpoint) values(?,?,?);";
+int sqlitedb_insert_device_ieee(unsigned long long ieee, unsigned short shortaddr){
 	struct sqlitedb * db = sqlitedb_create(DBPATH);
 
 	char insert_device[128] = {0};
-	sprintf(insert_device, sql_insert_device_ieee, ieee);
+	sprintf(insert_device, sql_insert_device_ieee, ieee, shortaddr);
 
 	sqlite3_stmt * stmt;
 	int ret = sqlite3_prepare_v2(db->db, sql_insert_device_ieee, -1, &stmt, 0);
 
 	sqlite3_bind_int64(stmt,1, ieee);
+	sqlite3_bind_int(stmt,2,shortaddr);
+	
 	unsigned int blob_size = sizeof(ActiveEpRspFormat_t) + 77*sizeof(struct simpledesc); // 77 magic number is from the ActiveEpRspFormt_t
 	unsigned char blob[sizeof(ActiveEpRspFormat_t) + 77 * sizeof(struct simpledesc)] = {0};
-	sqlite3_bind_blob(stmt, 2, blob, blob_size, SQLITE_STATIC);
+	sqlite3_bind_blob(stmt, 3, blob, blob_size, SQLITE_STATIC);
 	ret = sqlite3_step(stmt);
 	sqlite3_finalize(stmt);
 
@@ -484,7 +488,28 @@ int sqlitedb_update_device_status(struct device * d){
 		char update_device_status[128] = {0};
 		sprintf(update_device_status, sql_update_device_status, d->status, d->ieeeaddr);
 		sqlite3_exec(db->db, update_device_status, NULL, NULL, NULL);
+		
+	}else{
+		return 1;
 	}
 
 	sqlitedb_destroy(db);
+
+	return 0;
+}
+
+static const char sql_update_device_shortaddr[] = "update device set shortaddr = %d where ieee = %lld";
+int sqlitedb_update_device_shortaddr(unsigned long long ieee, unsigned short shortaddr){
+	struct sqlitedb * db = sqlitedb_create(DBPATH);
+	if(db){ 
+		char update_device_shortaddr[128] = {0};
+		sprintf(update_device_shortaddr, sql_update_device_shortaddr, shortaddr, ieee);
+		sqlite3_exec(db->db, update_device_shortaddr, NULL, NULL, NULL);
+	}else{
+		return 1;
+	}
+
+	sqlitedb_destroy(db);
+
+	return 0;
 }

@@ -26,6 +26,8 @@
 extern int g_main_to_znp_write_fd;
 extern struct connection * g_serverconn;
 
+void event_send_warning(struct endpoint * wd_ep, unsigned long long warning_device_ieee, unsigned char cmdid,unsigned char warning_mode);
+
 void event_accept(int fd){
 	struct connection * c = freeconnlist_getconn();
 	connection_init(c, fd, CONNSOCKETCLIENT);
@@ -177,57 +179,73 @@ void event_recvznp(struct eventhub * hub, int fd){
 				struct tm * tm = localtime(&curtime);
 				unsigned char hour = (unsigned char )tm->tm_hour;
 				unsigned char minute = (unsigned char )tm->tm_min; 
+				struct endpoint * wd_ep = gateway_get_warning_device_endpoint();
+				struct device * wd_device = gateway_get_warning_device();
+				struct device * sensor = gateway_getdevice(getgateway(), req.ieeeaddr);
 				struct endpoint * ep = gateway_get_endpoint(req.ieeeaddr, req.endpoint); 
-				if(endpoint_check_arm(ep, hour, minute)){
-					switch(ep->simpledesc.zonetype){
-						case SS_IAS_ZONE_TYPE_CONTACT_SWITCH:
-							{
-								struct protocol_cmdtype_warning cmd;
-								memset(&cmd, 0, sizeof(struct protocol_cmdtype_warning));
-								struct endpoint * wd_ep = gateway_get_warning_device_endpoint();
-								cmd.endpoint = wd_ep->simpledesc.simpledesc.Endpoint;
-								cmd.start_warning.warningmessage.warningbits.warnStrobe = SS_IAS_START_WARNING_STROBE_USE_STPOBE_IN_PARALLEL_TO_WARNING;
-								cmd.start_warning.warningmessage.warningbits.warnSirenLevel = SS_IAS_SIREN_LEVEL_MEDIUM_LEVEL_SOUND;
-								cmd.start_warning.warningDuration = 100;
-								cmd.start_warning.strobeDutyCycle = 1; // magic number
-								cmd.start_warning.strobeLevel = SS_IAS_STROBE_LEVEL_MEDIUM_LEVEL_STROBE;
-								fprintf(stdout, "alarm1 %d alarm2 %d\n", req.zonechangenotification.zonestatus.alarm1, req.zonechangenotification.zonestatus.alarm2);
+				if(ep){
+					if(endpoint_check_arm(ep, hour, minute)){
+						switch(ep->simpledesc.zonetype){
+							case SS_IAS_ZONE_TYPE_CONTACT_SWITCH:
+								{
 
-								struct device * wd_device = gateway_get_warning_device();
-								struct device * contact_switch = gateway_getdevice(getgateway(), req.ieeeaddr);
-								struct protocol_cmdtype_warning_ieee_cmd warning_ieee_cmd;
-								warning_ieee_cmd.cmdid = PROTOCOL_WARNING;
-								warning_ieee_cmd.warning_ieee.ieee = wd_device->ieeeaddr;
+									if(req.zonechangenotification.zonestatus.alarm1 || req.zonechangenotification.zonestatus.alarm2){
+										fprintf(stdout, "------start alarm\n");
+										if((sensor->status & DEVICE_SS_SEND_ALARM_NOTIFICATION) == 0){
+											sensor->status |= DEVICE_SS_SEND_ALARM_NOTIFICATION;
+											sensor->status &= ~DEVICE_SS_SEND_NO_ALARM_NOTIFICATION;
+											if(wd_device){
+												event_send_warning(wd_ep, wd_device->ieeeaddr,PROTOCOL_WARNING, SS_IAS_START_WARNING_WARNING_MODE_BURGLAR);
+											}
+											buflen = protocol_encode_alarm(buf, &req);
+											broadcast(buf, buflen);
+										}
 
-								if(req.zonechangenotification.zonestatus.alarm1 || req.zonechangenotification.zonestatus.alarm2){
-									fprintf(stdout, "------start alarm\n");
-									if((contact_switch->status & DEVICE_SS_SEND_ALARM_NOTIFICATION) == 0){
-										contact_switch->status |= DEVICE_SS_SEND_ALARM_NOTIFICATION;
-										contact_switch->status &= ~DEVICE_SS_SEND_NO_ALARM_NOTIFICATION;
-										cmd.start_warning.warningmessage.warningbits.warnMode = SS_IAS_START_WARNING_WARNING_MODE_BURGLAR;
+									}else{
+										if((sensor->status & DEVICE_SS_SEND_NO_ALARM_NOTIFICATION)==0){ 
+											fprintf(stdout, "------stop alarm\n");
+											sensor->status |= DEVICE_SS_SEND_NO_ALARM_NOTIFICATION;
+											sensor->status &= ~DEVICE_SS_SEND_ALARM_NOTIFICATION;
 
-										memcpy(&warning_ieee_cmd.warning_ieee.warning, &cmd, sizeof(struct protocol_cmdtype_warning));
-										sendnonblocking(g_main_to_znp_write_fd, &warning_ieee_cmd, sizeof(struct protocol_cmdtype_warning_ieee_cmd)); 
-										buflen = protocol_encode_alarm(buf, &req);
-										broadcast(buf, buflen);
-									}
-
-								}else{
-									if((contact_switch->status & DEVICE_SS_SEND_NO_ALARM_NOTIFICATION)==0){ 
-										fprintf(stdout, "------stop alarm\n");
-										contact_switch->status |= DEVICE_SS_SEND_NO_ALARM_NOTIFICATION;
-										contact_switch->status &= ~DEVICE_SS_SEND_ALARM_NOTIFICATION;
-
-										cmd.start_warning.warningmessage.warningbits.warnMode = SS_IAS_START_WARNING_WARNING_MODE_STOP;
-										memcpy(&warning_ieee_cmd.warning_ieee.warning, &cmd, sizeof(struct protocol_cmdtype_warning));
-
-										sendnonblocking(g_main_to_znp_write_fd, &warning_ieee_cmd, sizeof(struct protocol_cmdtype_warning_ieee_cmd)); 
-										buflen = protocol_encode_alarm(buf, &req);
-										broadcast(buf, buflen);
+											if(wd_device){ 
+												event_send_warning(wd_ep, wd_device->ieeeaddr,PROTOCOL_WARNING, SS_IAS_START_WARNING_WARNING_MODE_STOP);
+											}
+											buflen = protocol_encode_alarm(buf, &req);
+											broadcast(buf, buflen);
+										}
 									}
 								}
-							}
-							break;
+								break;
+							case SS_IAS_ZONE_TYPE_GAS_SENSOR:
+								{
+									if(req.zonechangenotification.zonestatus.alarm1 || req.zonechangenotification.zonestatus.alarm2){
+										fprintf(stdout, "------start alarm\n");
+										if(sensor && ((sensor->status & DEVICE_SS_SEND_ALARM_NOTIFICATION) == 0)){
+											sensor->status |= DEVICE_SS_SEND_ALARM_NOTIFICATION;
+											sensor->status &= ~DEVICE_SS_SEND_NO_ALARM_NOTIFICATION;
+											if(wd_device){
+												event_send_warning(wd_ep, wd_device->ieeeaddr,PROTOCOL_WARNING, SS_IAS_START_WARNING_WARNING_MODE_FIRE);
+											}
+											buflen = protocol_encode_alarm(buf, &req);
+											broadcast(buf, buflen);
+										}
+
+									}else{
+										if(sensor && ((sensor->status & DEVICE_SS_SEND_NO_ALARM_NOTIFICATION)==0)){ 
+											fprintf(stdout, "------stop alarm\n");
+											sensor->status |= DEVICE_SS_SEND_NO_ALARM_NOTIFICATION;
+											sensor->status &= ~DEVICE_SS_SEND_ALARM_NOTIFICATION;
+
+											if(wd_device){
+												event_send_warning(wd_ep, wd_device->ieeeaddr,PROTOCOL_WARNING, SS_IAS_START_WARNING_WARNING_MODE_STOP);
+											}
+											buflen = protocol_encode_alarm(buf, &req);
+											broadcast(buf, buflen);
+										}
+									}
+								}
+								break;
+						}
 					}
 				}
 
@@ -242,3 +260,20 @@ void event_close(int fd){
 		connrbtree_del(c);
 	}
 }
+
+
+void event_send_warning(struct endpoint * wd_ep, unsigned long long warning_device_ieee, unsigned char cmdid,unsigned char warning_mode){
+	struct protocol_cmdtype_warning_ieee_cmd warning_ieee_cmd;
+	warning_ieee_cmd.cmdid = cmdid;
+	warning_ieee_cmd.warning_ieee.ieee = warning_device_ieee;
+	warning_ieee_cmd.warning_ieee.warning.endpoint = wd_ep->simpledesc.simpledesc.Endpoint;
+	warning_ieee_cmd.warning_ieee.warning.start_warning.warningmessage.warningbits.warnStrobe = SS_IAS_START_WARNING_STROBE_USE_STPOBE_IN_PARALLEL_TO_WARNING;
+	warning_ieee_cmd.warning_ieee.warning.start_warning.warningmessage.warningbits.warnSirenLevel = SS_IAS_SIREN_LEVEL_MEDIUM_LEVEL_SOUND;
+	warning_ieee_cmd.warning_ieee.warning.start_warning.warningDuration = 0xffff;
+	warning_ieee_cmd.warning_ieee.warning.start_warning.strobeDutyCycle = 1; // magic number
+	warning_ieee_cmd.warning_ieee.warning.start_warning.strobeLevel = SS_IAS_STROBE_LEVEL_MEDIUM_LEVEL_STROBE;
+	warning_ieee_cmd.warning_ieee.warning.start_warning.warningmessage.warningbits.warnMode = warning_mode;
+
+	sendnonblocking(g_main_to_znp_write_fd, &warning_ieee_cmd, sizeof(struct protocol_cmdtype_warning_ieee_cmd)); 
+}
+

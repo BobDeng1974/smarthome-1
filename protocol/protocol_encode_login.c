@@ -34,7 +34,10 @@ unsigned int protocol_encode_login(unsigned char *buf) {
 	bytebuffer_writeword(&p,0x0000);
 	bytebuffer_writeword(&p,LOGIN);
 	bytebuffer_writemac(&p,gw->gatewayid);
-	bytebuffer_writeword(&p,gw->devicecount);
+	bytebuffer_writebyte(&p, gw->boxversion);
+	bytebuffer_writebyte(&p, gw->protocolversion);
+	unsigned short active_device_count = gateway_get_active_device_count();
+	bytebuffer_writeword(&p,active_device_count);
 
 	struct list_head *pos, *n;
 	struct device *d;
