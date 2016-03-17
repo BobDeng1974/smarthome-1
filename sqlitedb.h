@@ -31,4 +31,5 @@ int sqlitedb_update_device_endpoint_zonetype(struct device * d, unsigned char en
 struct protocol_cmdtype_arm;
 int sqlitedb_update_device_arm(unsigned long long ieee, unsigned char endpoint, struct protocol_cmdtype_arm * arm);
 int sqlitedb_update_device_shortaddr(unsigned long long ieee, unsigned short shortaddr);
+int sqlitedb_delete_device(unsigned long long ieee);
 #endif
