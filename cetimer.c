@@ -9,7 +9,6 @@
 #include "connection.h"
 #include "cetimer.h"
 #include "socket.h"
-#include "parseserver.h"
 #include "innercmd.h"
 
 typedef void (*sighandler_t)(int);

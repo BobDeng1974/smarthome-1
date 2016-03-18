@@ -63,11 +63,13 @@
 #include "zcl_down_cmd.h"
 #include "zcl_register_cluster.h"
 #include "protocol_cmdtype.h"
+#include "zcl_datatype.h"
 
 #define consolePrint printf
 #define consoleClearLn(); printf("%c[2K", 27);
 #define consoleFlush(); fflush(stdout);
 
+extern int g_znpwfd;
 
 static struct device * _get_device(unsigned short shortaddr){
 	struct znp_map * map = znp_map_get_ieee(shortaddr);
@@ -182,65 +184,65 @@ static int32_t registerAf(void);
 
 // SYS callbacks
 static mtSysCb_t mtSysCb =
-	{ mtSysPingSrspCb, mtSysGetExtAddrSrspCb, mtSysRamReadSrspCb,
-	        mtSysResetIndCb, mtSysVersionSrspCb, mtSysOsalNvReadSrspCb,
-	        mtSysOsalNvLengthSrspCb, mtSysOsalTimerExpiredCb,
-	        mtSysStackTuneSrspCb, mtSysAdcReadSrspCb, mtSysGpioSrspCb,
-	        mtSysRandomSrspCb, mtSysGetTimeSrspCb, mtSysSetTxPowerSrspCb };
+{ mtSysPingSrspCb, mtSysGetExtAddrSrspCb, mtSysRamReadSrspCb,
+	mtSysResetIndCb, mtSysVersionSrspCb, mtSysOsalNvReadSrspCb,
+	mtSysOsalNvLengthSrspCb, mtSysOsalTimerExpiredCb,
+	mtSysStackTuneSrspCb, mtSysAdcReadSrspCb, mtSysGpioSrspCb,
+	mtSysRandomSrspCb, mtSysGetTimeSrspCb, mtSysSetTxPowerSrspCb };
 
 static mtZdoCb_t mtZdoCb =
-	{ mtZdoNwkAddrRspCb,       // MT_ZDO_NWK_ADDR_RSP
-	        mtZdoIeeeAddrRspCb,      // MT_ZDO_IEEE_ADDR_RSP
-	        mtZdoNodeDescRspCb,      // MT_ZDO_NODE_DESC_RSP
-	        mtZdoPowerDescRspCb,     // MT_ZDO_POWER_DESC_RSP
-	        mtZdoSimpleDescRspCb,    // MT_ZDO_SIMPLE_DESC_RSP
-	        mtZdoActiveEpRspCb,      // MT_ZDO_ACTIVE_EP_RSP
-	        mtZdoMatchDescRspCb,     // MT_ZDO_MATCH_DESC_RSP
-	        mtZdoComplexDescRspCb,   // MT_ZDO_COMPLEX_DESC_RSP
-	        mtZdoUserDescRspCb,      // MT_ZDO_USER_DESC_RSP
-	        mtZdoUserDescConfCb,     // MT_ZDO_USER_DESC_CONF
-	        mtZdoServerDiscRspCb,    // MT_ZDO_SERVER_DISC_RSP
-	        mtZdoEndDeviceBindRspCb, // MT_ZDO_END_DEVICE_BIND_RSP
-	        mtZdoBindRspCb,          // MT_ZDO_BIND_RSP
-	        mtZdoUnbindRspCb,        // MT_ZDO_UNBIND_RSP
-	        mtZdoMgmtNwkDiscRspCb,   // MT_ZDO_MGMT_NWK_DISC_RSP
-	        mtZdoMgmtLqiRspCb,       // MT_ZDO_MGMT_LQI_RSP
-	        mtZdoMgmtRtgRspCb,       // MT_ZDO_MGMT_RTG_RSP
-	        mtZdoMgmtBindRspCb,      // MT_ZDO_MGMT_BIND_RSP
-	        mtZdoMgmtLeaveRspCb,     // MT_ZDO_MGMT_LEAVE_RSP
-	        mtZdoMgmtDirectJoinRspCb,     // MT_ZDO_MGMT_DIRECT_JOIN_RSP
-	        mtZdoMgmtPermitJoinRspCb,     // MT_ZDO_MGMT_PERMIT_JOIN_RSP
-	        mtZdoStateChangeIndCb,   // MT_ZDO_STATE_CHANGE_IND
-	        mtZdoEndDeviceAnnceIndCb,   // MT_ZDO_END_DEVICE_ANNCE_IND
-	        mtZdoSrcRtgIndCb,        // MT_ZDO_SRC_RTG_IND
-	        mtZdoBeaconNotifyIndCb,	 //MT_ZDO_BEACON_NOTIFY_IND
-	        mtZdoJoinCnfCb,			 //MT_ZDO_JOIN_CNF
-	        mtZdoNwkDiscoveryCnfCb,	 //MT_ZDO_NWK_DISCOVERY_CNF
-	        NULL,                    // MT_ZDO_CONCENTRATOR_IND_CB
-	        mtZdoLeaveIndCb,         // MT_ZDO_LEAVE_IND
-	        mtZdoStatusErrorRspCb,   //MT_ZDO_STATUS_ERROR_RSP
-	        mtZdoMatchDescRspSentCb,  //MT_ZDO_MATCH_DESC_RSP_SENT
-	        mtZdoMsgCbIncomingCb, mtZdoGetLinkKeyCb };
+{ mtZdoNwkAddrRspCb,       // MT_ZDO_NWK_ADDR_RSP
+	mtZdoIeeeAddrRspCb,      // MT_ZDO_IEEE_ADDR_RSP
+	mtZdoNodeDescRspCb,      // MT_ZDO_NODE_DESC_RSP
+	mtZdoPowerDescRspCb,     // MT_ZDO_POWER_DESC_RSP
+	mtZdoSimpleDescRspCb,    // MT_ZDO_SIMPLE_DESC_RSP
+	mtZdoActiveEpRspCb,      // MT_ZDO_ACTIVE_EP_RSP
+	mtZdoMatchDescRspCb,     // MT_ZDO_MATCH_DESC_RSP
+	mtZdoComplexDescRspCb,   // MT_ZDO_COMPLEX_DESC_RSP
+	mtZdoUserDescRspCb,      // MT_ZDO_USER_DESC_RSP
+	mtZdoUserDescConfCb,     // MT_ZDO_USER_DESC_CONF
+	mtZdoServerDiscRspCb,    // MT_ZDO_SERVER_DISC_RSP
+	mtZdoEndDeviceBindRspCb, // MT_ZDO_END_DEVICE_BIND_RSP
+	mtZdoBindRspCb,          // MT_ZDO_BIND_RSP
+	mtZdoUnbindRspCb,        // MT_ZDO_UNBIND_RSP
+	mtZdoMgmtNwkDiscRspCb,   // MT_ZDO_MGMT_NWK_DISC_RSP
+	mtZdoMgmtLqiRspCb,       // MT_ZDO_MGMT_LQI_RSP
+	mtZdoMgmtRtgRspCb,       // MT_ZDO_MGMT_RTG_RSP
+	mtZdoMgmtBindRspCb,      // MT_ZDO_MGMT_BIND_RSP
+	mtZdoMgmtLeaveRspCb,     // MT_ZDO_MGMT_LEAVE_RSP
+	mtZdoMgmtDirectJoinRspCb,     // MT_ZDO_MGMT_DIRECT_JOIN_RSP
+	mtZdoMgmtPermitJoinRspCb,     // MT_ZDO_MGMT_PERMIT_JOIN_RSP
+	mtZdoStateChangeIndCb,   // MT_ZDO_STATE_CHANGE_IND
+	mtZdoEndDeviceAnnceIndCb,   // MT_ZDO_END_DEVICE_ANNCE_IND
+	mtZdoSrcRtgIndCb,        // MT_ZDO_SRC_RTG_IND
+	mtZdoBeaconNotifyIndCb,	 //MT_ZDO_BEACON_NOTIFY_IND
+	mtZdoJoinCnfCb,			 //MT_ZDO_JOIN_CNF
+	mtZdoNwkDiscoveryCnfCb,	 //MT_ZDO_NWK_DISCOVERY_CNF
+	NULL,                    // MT_ZDO_CONCENTRATOR_IND_CB
+	mtZdoLeaveIndCb,         // MT_ZDO_LEAVE_IND
+	mtZdoStatusErrorRspCb,   //MT_ZDO_STATUS_ERROR_RSP
+	mtZdoMatchDescRspSentCb,  //MT_ZDO_MATCH_DESC_RSP_SENT
+	mtZdoMsgCbIncomingCb, mtZdoGetLinkKeyCb };
 
 static mtAfCb_t mtAfCb =
-	{ mtAfDataConfirmCb,				//MT_AF_DATA_CONFIRM
-	        mtAfIncomingMsgCb,				//MT_AF_INCOMING_MSG
-	        mtAfIncomingMsgExt,				//MT_AF_INCOMING_MSG_EXT
-	        mtAfDataRetrieveSrspCb,			//MT_AF_DATA_RETRIEVE
-	        mtAfReflectErrorCb,			    //MT_AF_REFLECT_ERROR
-	    };
+{ mtAfDataConfirmCb,				//MT_AF_DATA_CONFIRM
+	mtAfIncomingMsgCb,				//MT_AF_INCOMING_MSG
+	mtAfIncomingMsgExt,				//MT_AF_INCOMING_MSG_EXT
+	mtAfDataRetrieveSrspCb,			//MT_AF_DATA_RETRIEVE
+	mtAfReflectErrorCb,			    //MT_AF_REFLECT_ERROR
+};
 
 // SAPI callbacks
 static mtSapiCb_t mtSapiCb =
-	{ mtSapiReadConfigurationSrspCb,				//MT_SAPI_READ_CONFIGURATION
-	        mtSapiGetDeviceInfoSrspCb,				//MT_SAPI_GET_DEVICE_INFO
-	        mtSapiFindDeviceCnfCb,				//MT_SAPI_FIND_DEVICE_CNF
-	        mtSapiSendDataCnfCb,				//MT_SAPI_SEND_DATA_CNF
-	        mtSapiReceiveDataIndCb,				//MT_SAPI_RECEIVE_DATA_IND
-	        mtSapiAllowBindCnfCb,				//MT_SAPI_ALLOW_BIND_CNF
-	        mtSapiBindCnfCb,				//MT_SAPI_BIND_CNF
-	        mtSapiStartCnfCb,				//MT_SAPI_START_CNF
-	    };
+{ mtSapiReadConfigurationSrspCb,				//MT_SAPI_READ_CONFIGURATION
+	mtSapiGetDeviceInfoSrspCb,				//MT_SAPI_GET_DEVICE_INFO
+	mtSapiFindDeviceCnfCb,				//MT_SAPI_FIND_DEVICE_CNF
+	mtSapiSendDataCnfCb,				//MT_SAPI_SEND_DATA_CNF
+	mtSapiReceiveDataIndCb,				//MT_SAPI_RECEIVE_DATA_IND
+	mtSapiAllowBindCnfCb,				//MT_SAPI_ALLOW_BIND_CNF
+	mtSapiBindCnfCb,				//MT_SAPI_BIND_CNF
+	mtSapiStartCnfCb,				//MT_SAPI_START_CNF
+};
 
 /********************************************************************
  * START OF SYS CALL BACK FUNCTIONS
@@ -280,7 +282,7 @@ static uint8_t mtSysRamReadSrspCb(RamReadSrspFormat_t *msg)
 static uint8_t mtSysResetIndCb(ResetIndFormat_t *msg)
 {
 	consolePrint("ZNP Version: %d.%d.%d\n", msg->MajorRel, msg->MinorRel,
-	        msg->HwRev);
+			msg->HwRev);
 	return 0;
 }
 static uint8_t mtSysVersionSrspCb(VersionSrspFormat_t *msg)
@@ -388,61 +390,61 @@ static uint8_t mtZdoStateChangeIndCb(uint8_t newDevState)
 
 	switch ((devStates_t) newDevState)
 	{
-	case DEV_HOLD:
-		dbg_print(PRINT_LEVEL_INFO,
-		        "mtZdoStateChangeIndCb: Initialized - not started automatically\n");
-		break;
-	case DEV_INIT:
-		dbg_print(PRINT_LEVEL_INFO,
-		        "mtZdoStateChangeIndCb: Initialized - not connected to anything\n");
-		break;
-	case DEV_NWK_DISC:
-		dbg_print(PRINT_LEVEL_INFO,
-		        "mtZdoStateChangeIndCb: Discovering PAN's to join\n");
-		consolePrint("Network Discovering\n");
-		break;
-	case DEV_NWK_JOINING:
-		dbg_print(PRINT_LEVEL_INFO, "mtZdoStateChangeIndCb: Joining a PAN\n");
-		consolePrint("Network Joining\n");
-		break;
-	case DEV_NWK_REJOIN:
-		dbg_print(PRINT_LEVEL_INFO,
-		        "mtZdoStateChangeIndCb: ReJoining a PAN, only for end devices\n");
-		consolePrint("Network Rejoining\n");
-		break;
-	case DEV_END_DEVICE_UNAUTH:
-		consolePrint("Network Authenticating\n");
-		dbg_print(PRINT_LEVEL_INFO,
-		        "mtZdoStateChangeIndCb: Joined but not yet authenticated by trust center\n");
-		break;
-	case DEV_END_DEVICE:
-		consolePrint("Network Joined\n");
-		dbg_print(PRINT_LEVEL_INFO,
-		        "mtZdoStateChangeIndCb: Started as device after authentication\n");
-		break;
-	case DEV_ROUTER:
-		consolePrint("Network Joined\n");
-		dbg_print(PRINT_LEVEL_INFO,
-		        "mtZdoStateChangeIndCb: Device joined, authenticated and is a router\n");
-		break;
-	case DEV_COORD_STARTING:
-		consolePrint("Network Starting\n");
-		dbg_print(PRINT_LEVEL_INFO,
-		        "mtZdoStateChangeIndCb: Started as Zigbee Coordinator\n");
-		break;
-	case DEV_ZB_COORD:
-		consolePrint("Network Started\n");
-		dbg_print(PRINT_LEVEL_INFO,
-		        "mtZdoStateChangeIndCb: Started as Zigbee Coordinator\n");
-		break;
-	case DEV_NWK_ORPHAN:
-		consolePrint("Network Orphaned\n");
-		dbg_print(PRINT_LEVEL_INFO,
-		        "mtZdoStateChangeIndCb: Device has lost information about its parent\n");
-		break;
-	default:
-		dbg_print(PRINT_LEVEL_INFO, "mtZdoStateChangeIndCb: unknown state");
-		break;
+		case DEV_HOLD:
+			dbg_print(PRINT_LEVEL_INFO,
+					"mtZdoStateChangeIndCb: Initialized - not started automatically\n");
+			break;
+		case DEV_INIT:
+			dbg_print(PRINT_LEVEL_INFO,
+					"mtZdoStateChangeIndCb: Initialized - not connected to anything\n");
+			break;
+		case DEV_NWK_DISC:
+			dbg_print(PRINT_LEVEL_INFO,
+					"mtZdoStateChangeIndCb: Discovering PAN's to join\n");
+			consolePrint("Network Discovering\n");
+			break;
+		case DEV_NWK_JOINING:
+			dbg_print(PRINT_LEVEL_INFO, "mtZdoStateChangeIndCb: Joining a PAN\n");
+			consolePrint("Network Joining\n");
+			break;
+		case DEV_NWK_REJOIN:
+			dbg_print(PRINT_LEVEL_INFO,
+					"mtZdoStateChangeIndCb: ReJoining a PAN, only for end devices\n");
+			consolePrint("Network Rejoining\n");
+			break;
+		case DEV_END_DEVICE_UNAUTH:
+			consolePrint("Network Authenticating\n");
+			dbg_print(PRINT_LEVEL_INFO,
+					"mtZdoStateChangeIndCb: Joined but not yet authenticated by trust center\n");
+			break;
+		case DEV_END_DEVICE:
+			consolePrint("Network Joined\n");
+			dbg_print(PRINT_LEVEL_INFO,
+					"mtZdoStateChangeIndCb: Started as device after authentication\n");
+			break;
+		case DEV_ROUTER:
+			consolePrint("Network Joined\n");
+			dbg_print(PRINT_LEVEL_INFO,
+					"mtZdoStateChangeIndCb: Device joined, authenticated and is a router\n");
+			break;
+		case DEV_COORD_STARTING:
+			consolePrint("Network Starting\n");
+			dbg_print(PRINT_LEVEL_INFO,
+					"mtZdoStateChangeIndCb: Started as Zigbee Coordinator\n");
+			break;
+		case DEV_ZB_COORD:
+			consolePrint("Network Started\n");
+			dbg_print(PRINT_LEVEL_INFO,
+					"mtZdoStateChangeIndCb: Started as Zigbee Coordinator\n");
+			break;
+		case DEV_NWK_ORPHAN:
+			consolePrint("Network Orphaned\n");
+			dbg_print(PRINT_LEVEL_INFO,
+					"mtZdoStateChangeIndCb: Device has lost information about its parent\n");
+			break;
+		default:
+			dbg_print(PRINT_LEVEL_INFO, "mtZdoStateChangeIndCb: unknown state");
+			break;
 	}
 
 	devState = (devStates_t) newDevState;
@@ -459,7 +461,7 @@ static uint8_t mtZdoGetLinkKeyCb(GetLinkKeySrspFormat_t *msg)
 	{
 		consolePrint("Status: 0x%02X\n", msg->Status);
 		consolePrint("IEEEAddr: 0x%016llX\n",
-		        (long long unsigned int) msg->IEEEAddr);
+				(long long unsigned int) msg->IEEEAddr);
 	}
 	else
 	{
@@ -475,7 +477,7 @@ static uint8_t mtZdoNwkAddrRspCb(NwkAddrRspFormat_t *msg)
 	{
 		consolePrint("Status: 0x%02X\n", msg->Status);
 		consolePrint("IEEEAddr: 0x%016llX\n",
-		        (long long unsigned int) msg->IEEEAddr);
+				(long long unsigned int) msg->IEEEAddr);
 		consolePrint("NwkAddr: 0x%04X\n", msg->NwkAddr);
 		consolePrint("StartIndex: 0x%02X\n", msg->StartIndex);
 		consolePrint("NumAssocDev: 0x%02X\n", msg->NumAssocDev);
@@ -499,7 +501,7 @@ static uint8_t mtZdoIeeeAddrRspCb(IeeeAddrRspFormat_t *msg)
 	{
 		consolePrint("Status: 0x%02X\n", msg->Status);
 		consolePrint("IEEEAddr: 0x%016llX\n",
-		        (long long unsigned int) msg->IEEEAddr);
+				(long long unsigned int) msg->IEEEAddr);
 		//consolePrint("%08X\n", msg -> IEEEAddr);
 		consolePrint("NwkAddr: 0x%04X\n", msg->NwkAddr);
 		consolePrint("StartIndex: 0x%02X\n", msg->StartIndex);
@@ -526,7 +528,7 @@ static uint8_t mtZdoNodeDescRspCb(NodeDescRspFormat_t *msg)
 		consolePrint("Status: 0x%02X\n", msg->Status);
 		consolePrint("NwkAddr: 0x%04X\n", msg->NwkAddr);
 		consolePrint("LoTy_ComDescAv_UsrDesAv: 0x%02X\n",
-		        msg->LoTy_ComDescAv_UsrDesAv);
+				msg->LoTy_ComDescAv_UsrDesAv);
 		consolePrint("APSFlg_FrqBnd: 0x%02X\n", msg->APSFlg_FrqBnd);
 		consolePrint("MACCapFlg: 0x%02X\n", msg->MACCapFlg);
 		consolePrint("ManufacturerCode: 0x%04X\n", msg->ManufacturerCode);
@@ -535,7 +537,7 @@ static uint8_t mtZdoNodeDescRspCb(NodeDescRspFormat_t *msg)
 		consolePrint("ServerMask: 0x%04X\n", msg->ServerMask);
 		consolePrint("MaxOutTransferSize: 0x%04X\n", msg->MaxOutTransferSize);
 		consolePrint("DescriptorCapabilities: 0x%02X\n",
-		        msg->DescriptorCapabilities);
+				msg->DescriptorCapabilities);
 	}
 	else
 	{
@@ -553,9 +555,9 @@ static uint8_t mtZdoPowerDescRspCb(PowerDescRspFormat_t *msg)
 		consolePrint("Status: 0x%02X\n", msg->Status);
 		consolePrint("NwkAddr: 0x%04X\n", msg->NwkAddr);
 		consolePrint("CurrntPwrMode_AvalPwrSrcs: 0x%02X\n",
-		        msg->CurrntPwrMode_AvalPwrSrcs);
+				msg->CurrntPwrMode_AvalPwrSrcs);
 		consolePrint("CurrntPwrSrc_CurrntPwrSrcLvl: 0x%02X\n",
-		        msg->CurrntPwrSrc_CurrntPwrSrcLvl);
+				msg->CurrntPwrSrc_CurrntPwrSrcLvl);
 	}
 	else
 	{
@@ -583,21 +585,21 @@ static uint8_t mtZdoSimpleDescRspCb(SimpleDescRspFormat_t *msg)
 		for (i = 0; i < msg->NumInClusters; i++)
 		{
 			consolePrint("InClusterList[%d]: 0x%04X\n", i,
-			        msg->InClusterList[i]);
+					msg->InClusterList[i]);
 		}
 		consolePrint("NumOutClusters: 0x%02X\n", msg->NumOutClusters);
 		for (i = 0; i < msg->NumOutClusters; i++)
 		{
 			consolePrint("OutClusterList[%d]: 0x%04X\n", i,
-			        msg->OutClusterList[i]);
+					msg->OutClusterList[i]);
 		}
 
-	//	struct device * d = _get_device(msg->SrcAddr);
+		//	struct device * d = _get_device(msg->SrcAddr);
 		struct device * d = gateway_getdevice_shortaddr(msg->SrcAddr);
 		if(d && !device_has_enpoint(d, msg->Endpoint)){ 
 			device_increase(d);
 		}
-				
+
 		if(d && (d->epcursor < d->activeep.ActiveEPCount)){
 			struct simpledesc sc;
 			memset(&sc, 0, sizeof(struct simpledesc));
@@ -663,7 +665,7 @@ static uint8_t mtZdoActiveEpRspCb(ActiveEpRspFormat_t *msg)
 			req.Endpoint = msg->ActiveEPList[0];
 			sendcmd((unsigned char *)&req,ZDO_SIMPLE_DESC_REQ);
 
-//			device_increase(d);
+			//			device_increase(d);
 		}
 
 	}
@@ -725,7 +727,7 @@ static uint8_t mtZdoUserDescRspCb(UserDescRspFormat_t *msg)
 		for (i = 0; i < msg->Len; i++)
 		{
 			consolePrint("CUserDescriptor[%d]: 0x%02X\n", i,
-			        msg->CUserDescriptor[i]);
+					msg->CUserDescriptor[i]);
 		}
 	}
 	else
@@ -828,15 +830,15 @@ static uint8_t mtZdoMgmtNwkDiscRspCb(MgmtNwkDiscRspFormat_t *msg)
 		{
 			consolePrint("mtZdoNetworkListItems[%d]:\n", i);
 			consolePrint("\tPanID: 0x%016llX\n",
-			        (long long unsigned int) msg->NetworkList[i].PanID);
+					(long long unsigned int) msg->NetworkList[i].PanID);
 			consolePrint("\tLogicalChannel: 0x%02X\n",
-			        msg->NetworkList[i].LogicalChannel);
+					msg->NetworkList[i].LogicalChannel);
 			consolePrint("\tStackProf_ZigVer: 0x%02X\n",
-			        msg->NetworkList[i].StackProf_ZigVer);
+					msg->NetworkList[i].StackProf_ZigVer);
 			consolePrint("\tBeacOrd_SupFramOrd: 0x%02X\n",
-			        msg->NetworkList[i].BeacOrd_SupFramOrd);
+					msg->NetworkList[i].BeacOrd_SupFramOrd);
 			consolePrint("\tPermitJoin: 0x%02X\n\n",
-			        msg->NetworkList[i].PermitJoin);
+					msg->NetworkList[i].PermitJoin);
 		}
 	}
 	else
@@ -854,10 +856,10 @@ static uint8_t mtZdoMgmtLqiRspCb(MgmtLqiRspFormat_t *msg)
 		consolePrint("SrcAddr: 0x%04X\n", msg->SrcAddr);
 		consolePrint("Status: 0x%02X\n", msg->Status);
 		consolePrint("NeighborTableEntries: 0x%02X\n",
-		        msg->NeighborTableEntries);
+				msg->NeighborTableEntries);
 		consolePrint("StartIndex: 0x%02X\n", msg->StartIndex);
 		consolePrint("NeighborLqiListCount: 0x%02X\n",
-		        msg->NeighborLqiListCount);
+				msg->NeighborLqiListCount);
 		uint32_t i;
 		for (i = 0; i < msg->NeighborLqiListCount; i++)
 		{
@@ -865,15 +867,15 @@ static uint8_t mtZdoMgmtLqiRspCb(MgmtLqiRspFormat_t *msg)
 			consolePrint("mtZdoNeighborLqiListItem[%d]:\n", i);
 
 			consolePrint("\tExtendedPanID: 0x%016llX\n",
-			        (long long unsigned int) msg->NeighborLqiList[i].ExtendedPanID);
+					(long long unsigned int) msg->NeighborLqiList[i].ExtendedPanID);
 			consolePrint("\tExtendedAddress: 0x%016llX\n",
-			        (long long unsigned int) msg->NeighborLqiList[i].ExtendedAddress);
+					(long long unsigned int) msg->NeighborLqiList[i].ExtendedAddress);
 			consolePrint("\tNetworkAddress: 0x%04X\n",
-			        msg->NeighborLqiList[i].NetworkAddress);
+					msg->NeighborLqiList[i].NetworkAddress);
 			consolePrint("\tDevTyp_RxOnWhenIdle_Relat: 0x%02X\n",
-			        msg->NeighborLqiList[i].DevTyp_RxOnWhenIdle_Relat);
+					msg->NeighborLqiList[i].DevTyp_RxOnWhenIdle_Relat);
 			consolePrint("\tPermitJoining: 0x%02X\n",
-			        msg->NeighborLqiList[i].PermitJoining);
+					msg->NeighborLqiList[i].PermitJoining);
 			consolePrint("\tDepth: 0x%02X\n", msg->NeighborLqiList[i].Depth);
 			consolePrint("\tLQI: 0x%02X\n", msg->NeighborLqiList[i].LQI);
 		}
@@ -895,16 +897,16 @@ static uint8_t mtZdoMgmtRtgRspCb(MgmtRtgRspFormat_t *msg)
 		consolePrint("RoutingTableEntries: 0x%02X\n", msg->RoutingTableEntries);
 		consolePrint("StartIndex: 0x%02X\n", msg->StartIndex);
 		consolePrint("RoutingTableListCount: 0x%02X\n",
-		        msg->RoutingTableListCount);
+				msg->RoutingTableListCount);
 		uint32_t i;
 		for (i = 0; i < msg->RoutingTableListCount; i++)
 		{
 			consolePrint("RoutingTableListItem[%d]:\n", i);
 			consolePrint("\tDstAddr: 0x%04X\n",
-			        msg->RoutingTableList[i].DstAddr);
+					msg->RoutingTableList[i].DstAddr);
 			consolePrint("\tStatus: 0x%02X\n", msg->RoutingTableList[i].Status);
 			consolePrint("\tNextHop: 0x%04X\n",
-			        msg->RoutingTableList[i].NextHop);
+					msg->RoutingTableList[i].NextHop);
 		}
 	}
 	else
@@ -924,23 +926,23 @@ static uint8_t mtZdoMgmtBindRspCb(MgmtBindRspFormat_t *msg)
 		consolePrint("BindingTableEntries: 0x%02X\n", msg->BindingTableEntries);
 		consolePrint("StartIndex: 0x%02X\n", msg->StartIndex);
 		consolePrint("BindingTableListCount: 0x%02X\n",
-		        msg->BindingTableListCount);
+				msg->BindingTableListCount);
 		uint32_t i;
 		for (i = 0; i < msg->BindingTableListCount; i++)
 		{
 			consolePrint("BindingTableList[%d]:\n", i);
 			consolePrint("SrcIEEEAddr: 0x%016llX\n",
-			        (long long unsigned int) msg->BindingTableList[i].SrcIEEEAddr);
+					(long long unsigned int) msg->BindingTableList[i].SrcIEEEAddr);
 			consolePrint("\tSrcEndpoint: 0x%02X\n",
-			        msg->BindingTableList[i].SrcEndpoint);
+					msg->BindingTableList[i].SrcEndpoint);
 			consolePrint("\tClusterID: 0x%02X\n",
-			        msg->BindingTableList[i].ClusterID);
+					msg->BindingTableList[i].ClusterID);
 			consolePrint("\tDstAddrMode: 0x%02X\n",
-			        msg->BindingTableList[i].DstAddrMode);
+					msg->BindingTableList[i].DstAddrMode);
 			consolePrint("DstIEEEAddr: 0x%016llX\n",
-			        (long long unsigned int) msg->BindingTableList[i].DstIEEEAddr);
+					(long long unsigned int) msg->BindingTableList[i].DstIEEEAddr);
 			consolePrint("\tDstEndpoint: 0x%02X\n",
-			        msg->BindingTableList[i].DstEndpoint);
+					msg->BindingTableList[i].DstEndpoint);
 		}
 	}
 	else
@@ -1002,7 +1004,7 @@ static uint8_t mtZdoEndDeviceAnnceIndCb(EndDeviceAnnceIndFormat_t *msg)
 	consolePrint("SrcAddr: 0x%04X\n", msg->SrcAddr);
 	consolePrint("NwkAddr: 0x%04X\n", msg->NwkAddr);
 	consolePrint("IEEEAddr: 0x%016llX\n",
-	        (long long unsigned int) msg->IEEEAddr);
+			(long long unsigned int) msg->IEEEAddr);
 	consolePrint("Capabilities: 0x%02X\n", msg->Capabilities);
 
 	//znp_map_insert(msg->NwkAddr, msg->IEEEAddr);
@@ -1012,16 +1014,25 @@ static uint8_t mtZdoEndDeviceAnnceIndCb(EndDeviceAnnceIndFormat_t *msg)
 		gateway_adddevice(getgateway(), d);
 		sqlitedb_insert_device_ieee(msg->IEEEAddr, msg->NwkAddr);
 	}else{
+		d->status &= ~DEVICE_APP_DEL;
+		sqlitedb_update_device_status(d);
+
 		if(d->shortaddr != msg->NwkAddr){ 
 			sqlitedb_update_device_shortaddr(msg->IEEEAddr, msg->NwkAddr);
 			d->shortaddr = msg->NwkAddr;
 		}
+		struct zcl_zone_enroll_req_cmd enroll_cmd;
+		memset(&enroll_cmd, 0, sizeof(struct zcl_zone_enroll_req_cmd));
+		enroll_cmd.cmdid = ZCLZONEENROLLREQ;
+		enroll_cmd.req.ieeeaddr = d->ieeeaddr;
+		int n = write(g_znpwfd, &enroll_cmd, sizeof(struct zcl_zone_enroll_req_cmd));
+		fprintf(stdout, "********send add new device %llX %d %d\n", enroll_cmd.req.ieeeaddr, n, sizeof(struct zcl_zone_enroll_req_cmd));
 	}
 	d->status |= DEVICE_ACTIVE;
-	
+
 	if((d->status & DEVICE_SEND_ACTIVEEP) == 0){
 		consolePrint("send request active_ep_req\n");
-	//	d->status |= DEVICE_SEND_ACTIVEEP;
+		//	d->status |= DEVICE_SEND_ACTIVEEP;
 		device_set_status(d, DEVICE_SEND_ACTIVEEP);
 		ActiveEpReqFormat_t queryep;
 		memset(&queryep, 0, sizeof(ActiveEpReqFormat_t));
@@ -1090,9 +1101,9 @@ static uint8_t mtZdoBeaconNotifyIndCb(BeaconNotifyIndFormat_t *msg)
 		consolePrint("\tSrcAddr: 0x%04X\n", msg->BeaconList[i].SrcAddr);
 		consolePrint("\tPanId: 0x%04X\n", msg->BeaconList[i].PanId);
 		consolePrint("\tLogicalChannel: 0x%02X\n",
-		        msg->BeaconList[i].LogicalChannel);
+				msg->BeaconList[i].LogicalChannel);
 		consolePrint("\tPermitJoining: 0x%02X\n",
-		        msg->BeaconList[i].PermitJoining);
+				msg->BeaconList[i].PermitJoining);
 		consolePrint("\tRouterCap: 0x%02X\n", msg->BeaconList[i].RouterCap);
 		consolePrint("\tPDevCap: 0x%02X\n", msg->BeaconList[i].DevCap);
 		consolePrint("\tProtocolVer: 0x%02X\n", msg->BeaconList[i].ProtocolVer);
@@ -1101,7 +1112,7 @@ static uint8_t mtZdoBeaconNotifyIndCb(BeaconNotifyIndFormat_t *msg)
 		consolePrint("\tDepth: 0x%02X\n", msg->BeaconList[i].Depth);
 		consolePrint("\tUpdateId: 0x%02X\n", msg->BeaconList[i].UpdateId);
 		consolePrint("ExtendedPanID: 0x%016llX\n",
-		        (long long unsigned int) msg->BeaconList[i].ExtendedPanId);
+				(long long unsigned int) msg->BeaconList[i].ExtendedPanId);
 	}
 
 	return 0;
@@ -1150,6 +1161,7 @@ static uint8_t mtZdoLeaveIndCb(LeaveIndFormat_t *msg)
 	struct device * d = gateway_getdevice(getgateway(), msg->ExtAddr);
 	if(d){
 		d->status &= ~DEVICE_ACTIVE;
+		d->status |= DEVICE_LEAVE_NET;
 	}
 
 	return 0;
@@ -1310,7 +1322,7 @@ static uint8_t mtSapiReadConfigurationSrspCb(ReadConfigurationSrspFormat_t *msg)
 	else
 	{
 		consolePrint("ReadConfigurationSrsp Status: FAIL 0x%02X\n",
-		        msg->Status);
+				msg->Status);
 	}
 	return msg->Status;
 }
@@ -1320,56 +1332,56 @@ static uint8_t mtSapiGetDeviceInfoSrspCb(GetDeviceInfoSrspFormat_t *msg)
 
 	switch (msg->Param)
 	{
-	case 0:
-		consolePrint("Param: (0x%02X) State\n", msg->Param);
-		consolePrint("Value: 0x%01X\n", msg->Value[0]);
-		break;
-	case 1:
-		consolePrint("Param: (0x%02X) IEEE Address\n", msg->Param);
-		consolePrint(
-		        "Value: 0x%02X:0x%02X:0x%02X:0x%02X:0x%02X:0x%02X:0x%02X:0x%02X\n",
-		        (unsigned char) msg->Value[0], (unsigned char) msg->Value[1],
-		        (unsigned char) msg->Value[2], (unsigned char) msg->Value[3],
-		        (unsigned char) msg->Value[4], (unsigned char) msg->Value[5],
-		        (unsigned char) msg->Value[6], (unsigned char) msg->Value[7]);
-		break;
-	case 2:
-		consolePrint("Param: (0x%02X) Short Address\n", msg->Param);
-		consolePrint("Value: 0x%04X\n",
-		        BUILD_UINT16(msg->Value[0], msg->Value[1]));
-		break;
-	case 3:
-		consolePrint("Param: (0x%02X) Parent Short Address\n", msg->Param);
-		consolePrint("Value: 0x%04X\n",
-		        BUILD_UINT16(msg->Value[0], msg->Value[1]));
-		break;
-	case 4:
-		consolePrint("Param: (0x%02X) Parent IEEE Address\n", msg->Param);
-		consolePrint(
-		        "Value: 0x%02X:0x%02X:0x%02X:0x%02X:0x%02X:0x%02X:0x%02X:0x%02X\n",
-		        (unsigned char) msg->Value[0], (unsigned char) msg->Value[1],
-		        (unsigned char) msg->Value[2], (unsigned char) msg->Value[3],
-		        (unsigned char) msg->Value[4], (unsigned char) msg->Value[5],
-		        (unsigned char) msg->Value[6], (unsigned char) msg->Value[7]);
-		break;
-	case 5:
-		consolePrint("Param: (0x%02X) Channel\n", msg->Param);
-		consolePrint("Value: 0x%01X\n", msg->Value[0]);
-		break;
-	case 6:
-		consolePrint("Param: (0x%02X) PAN ID\n", msg->Param);
-		consolePrint("Value: 0x%04X\n",
-		        BUILD_UINT16(msg->Value[0], msg->Value[1]));
-		break;
-	case 7:
-		consolePrint("Param: (0x%02X) Extended PAN ID\n", msg->Param);
-		consolePrint(
-		        "Value: 0x%02X:0x%02X:0x%02X:0x%02X:0x%02X:0x%02X:0x%02X:0x%02X\n",
-		        (unsigned char) msg->Value[0], (unsigned char) msg->Value[1],
-		        (unsigned char) msg->Value[2], (unsigned char) msg->Value[3],
-		        (unsigned char) msg->Value[4], (unsigned char) msg->Value[5],
-		        (unsigned char) msg->Value[6], (unsigned char) msg->Value[7]);
-		break;
+		case 0:
+			consolePrint("Param: (0x%02X) State\n", msg->Param);
+			consolePrint("Value: 0x%01X\n", msg->Value[0]);
+			break;
+		case 1:
+			consolePrint("Param: (0x%02X) IEEE Address\n", msg->Param);
+			consolePrint(
+					"Value: 0x%02X:0x%02X:0x%02X:0x%02X:0x%02X:0x%02X:0x%02X:0x%02X\n",
+					(unsigned char) msg->Value[0], (unsigned char) msg->Value[1],
+					(unsigned char) msg->Value[2], (unsigned char) msg->Value[3],
+					(unsigned char) msg->Value[4], (unsigned char) msg->Value[5],
+					(unsigned char) msg->Value[6], (unsigned char) msg->Value[7]);
+			break;
+		case 2:
+			consolePrint("Param: (0x%02X) Short Address\n", msg->Param);
+			consolePrint("Value: 0x%04X\n",
+					BUILD_UINT16(msg->Value[0], msg->Value[1]));
+			break;
+		case 3:
+			consolePrint("Param: (0x%02X) Parent Short Address\n", msg->Param);
+			consolePrint("Value: 0x%04X\n",
+					BUILD_UINT16(msg->Value[0], msg->Value[1]));
+			break;
+		case 4:
+			consolePrint("Param: (0x%02X) Parent IEEE Address\n", msg->Param);
+			consolePrint(
+					"Value: 0x%02X:0x%02X:0x%02X:0x%02X:0x%02X:0x%02X:0x%02X:0x%02X\n",
+					(unsigned char) msg->Value[0], (unsigned char) msg->Value[1],
+					(unsigned char) msg->Value[2], (unsigned char) msg->Value[3],
+					(unsigned char) msg->Value[4], (unsigned char) msg->Value[5],
+					(unsigned char) msg->Value[6], (unsigned char) msg->Value[7]);
+			break;
+		case 5:
+			consolePrint("Param: (0x%02X) Channel\n", msg->Param);
+			consolePrint("Value: 0x%01X\n", msg->Value[0]);
+			break;
+		case 6:
+			consolePrint("Param: (0x%02X) PAN ID\n", msg->Param);
+			consolePrint("Value: 0x%04X\n",
+					BUILD_UINT16(msg->Value[0], msg->Value[1]));
+			break;
+		case 7:
+			consolePrint("Param: (0x%02X) Extended PAN ID\n", msg->Param);
+			consolePrint(
+					"Value: 0x%02X:0x%02X:0x%02X:0x%02X:0x%02X:0x%02X:0x%02X:0x%02X\n",
+					(unsigned char) msg->Value[0], (unsigned char) msg->Value[1],
+					(unsigned char) msg->Value[2], (unsigned char) msg->Value[3],
+					(unsigned char) msg->Value[4], (unsigned char) msg->Value[5],
+					(unsigned char) msg->Value[6], (unsigned char) msg->Value[7]);
+			break;
 
 	}
 
@@ -1464,7 +1476,7 @@ static uint8_t setNVStartup(uint8_t startupOption)
 	dbg_print(PRINT_LEVEL_INFO, "\n");
 
 	dbg_print(PRINT_LEVEL_INFO, "NV Write Startup Option cmd sent[%d]...\n",
-	        status);
+			status);
 
 	return status;
 }
@@ -1482,7 +1494,7 @@ static uint8_t setNVDevType(uint8_t devType)
 
 	dbg_print(PRINT_LEVEL_INFO, "\n");
 	dbg_print(PRINT_LEVEL_INFO, "NV Write Device Type cmd sent... [%d]\n",
-	        status);
+			status);
 
 	return status;
 }
@@ -1525,7 +1537,7 @@ static uint8_t setNVChanList(uint32_t chanList)
 
 	dbg_print(PRINT_LEVEL_INFO, "\n");
 	dbg_print(PRINT_LEVEL_INFO, "NV Write Channel List cmd sent...[%d]\n",
-	        status);
+			status);
 
 	return status;
 }
@@ -1538,8 +1550,8 @@ static int32_t startNetwork(void)
 
 	do
 	{
-//		status = setNVStartup(
-//		ZCD_STARTOPT_CLEAR_STATE | ZCD_STARTOPT_CLEAR_CONFIG);
+		//		status = setNVStartup(
+		//		ZCD_STARTOPT_CLEAR_STATE | ZCD_STARTOPT_CLEAR_CONFIG);
 		status = setNVStartup(0);
 		newNwk = 1;
 
@@ -1619,9 +1631,9 @@ static int32_t startNetwork(void)
 		status = rpcWaitMqClientMsg(5000);
 
 		if (((devType == DEVICETYPE_COORDINATOR) && (devState == DEV_ZB_COORD))
-		        || ((devType == DEVICETYPE_ROUTER) && (devState == DEV_ROUTER))
-		        || ((devType == DEVICETYPE_ENDDEVICE)
-		                && (devState == DEV_END_DEVICE)))
+				|| ((devType == DEVICETYPE_ROUTER) && (devState == DEV_ROUTER))
+				|| ((devType == DEVICETYPE_ENDDEVICE)
+					&& (devState == DEV_END_DEVICE)))
 		{
 			break;
 		}
@@ -1640,9 +1652,9 @@ static int32_t startNetwork(void)
 static int32_t registerAf(void)
 {
 	// register the in and out clusterid. step one
-//	StartupFromAppFormat_t startupfromapp;
-//	startupfromapp.StartDelay = 0;
-//	sendcmd((unsigned char *)&startupfromapp, ZDO_STARTUP_FROM_APP); 
+	//	StartupFromAppFormat_t startupfromapp;
+	//	startupfromapp.StartDelay = 0;
+	//	sendcmd((unsigned char *)&startupfromapp, ZDO_STARTUP_FROM_APP); 
 	zcl_register_cluster_ss();
 
 	return 1;
@@ -1702,7 +1714,7 @@ void appProcess(void * args)
 	status = sysOsalNvWrite(&nvWrite);
 
 	initDone = 1;
-	
+
 	int commandtype = 0;
 	for(;;){ 
 		read(znprfd, &commandtype, sizeof(int));
@@ -1710,14 +1722,15 @@ void appProcess(void * args)
 			case PROTOCOL_IDENTIFY:
 				{
 					struct protocol_cmdtype_identify_ieee identify_ieee;
-					read(znprfd, &identify_ieee, sizeof(struct protocol_cmdtype_identify_ieee));
+					int n = read(znprfd, &identify_ieee, sizeof(struct protocol_cmdtype_identify_ieee));
+					fprintf(stdout, "identify znp recv %d %d -------\n", n, sizeof(struct protocol_cmdtype_identify_ieee));
 					zcl_down_cmd_identify(identify_ieee.ieee,&identify_ieee.identify);
 				}
 			case PROTOCOL_WARNING:
 				{
 					struct protocol_cmdtype_warning_ieee warning_ieee;
 					int n = read(znprfd, &warning_ieee, sizeof(struct protocol_cmdtype_warning_ieee));
-					fprintf(stdout, "znp recv %d %d -------\n", n, sizeof(struct protocol_cmdtype_warning_ieee));
+					fprintf(stdout, "warning znp recv %d %d -------\n", n, sizeof(struct protocol_cmdtype_warning_ieee));
 					zcl_down_cmd_warning(warning_ieee.ieee, &warning_ieee.warning);
 				}
 				break;

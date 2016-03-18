@@ -19,16 +19,16 @@ struct protocol_cmdtype_arm{
 	unsigned char endminute; 
 };
 
-struct protocol_cmdtype_identify{ 
+struct __attribute__((packed))protocol_cmdtype_identify{ 
 	unsigned char endpoint;
 };
 
-struct protocol_cmdtype_identify_ieee{
+struct __attribute__((packed))protocol_cmdtype_identify_ieee{
 	unsigned long long ieee;
 	struct protocol_cmdtype_identify identify;
 };
 
-struct protocol_cmdtype_identify_ieee_cmd{
+struct __attribute__((packed))protocol_cmdtype_identify_ieee_cmd{
 	int cmdid;
 	struct protocol_cmdtype_identify_ieee identify_ieee;
 };

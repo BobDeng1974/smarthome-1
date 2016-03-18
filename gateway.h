@@ -20,7 +20,7 @@
 #define DEVICE_ACTIVE 128
 #define DEVICE_SS_SEND_ALARM_NOTIFICATION 256
 #define DEVICE_SS_SEND_NO_ALARM_NOTIFICATION 512
-
+#define DEVICE_LEAVE_NET 1024 
 
 struct simpledesc{
 	SimpleDescRspFormat_t simpledesc; 
@@ -53,14 +53,6 @@ struct device{
 	ActiveEpRspFormat_t activeep;
 	struct list_head eplisthead;
 	struct list_head list;
-};
-
-struct gateway_endpoint_inout_clusterlist{
-	unsigned char endpoint;
-	unsigned char inclustercount;
-	unsigned short inclusterlist[16];
-	unsigned char outclustercount;
-	unsigned short outclusterlist[16];
 };
 
 struct gateway{

@@ -15,10 +15,10 @@
 #include "list.h"
 #include "zcl_datatype.h"
 #include "innercmd.h"
-#include "parseserver.h"
 #include "bytebuffer.h" 
 #include "protocol_cmd_header.h"
 #include "protocol_cmdtype.h"
+#include "protocol_datatype.h"
 #include "zcl_down_cmd.h"
 #include "sqlitedb.h"
 #include "zcl_ss.h"
@@ -63,13 +63,17 @@ void event_recvmsg(struct eventhub * hub, int fd, unsigned char * buf, int bufle
 		}
 		if( _check_command(buf, buflen, CESEND[0])){
 			unsigned char buf[2048] = {0}; 
-			unsigned int buflen = protocol_encode_login(buf); 
-			sendnonblocking(connlist_getserverfd(), buf, buflen);
+			int serverfd = connlist_getserverfd();
+			if(serverfd != -1){
+				unsigned int buflen = protocol_encode_login(buf); 
+				sendnonblocking(serverfd, buf, buflen);
+			}
 		}
-	}else if(c && (connection_gettype(c) == CONNSOCKETCLIENT || connection_gettype(c) == CONNSOCKETSERVER)){
+	}else if(c && (connection_gettype(c) == CONNSOCKETCLIENT || connection_gettype(c) == CONNSOCKETSERVER)){ 
+		c->timestamp = time(NULL);
 		connection_put(c, buf, buflen); 
 
-		for(;;){
+		for(;;){ // in case of receive two packets one time.
 			unsigned short messageid = 0;
 			int messagelen = protocol_check(c, &messageid);
 			if(messageid == ILLEGAL || messageid == HALFPACK){
@@ -86,68 +90,108 @@ void event_recvmsg(struct eventhub * hub, int fd, unsigned char * buf, int bufle
 					break;
 				case REQOPERATE:
 					break;
-				case REQSETDEVICENAME:
+				case DEVICE_SET_NAME:
+					{ 
+						struct protocol_datatype_set_device_name set_device_name;
+						protocol_parse_set_device_name(buffer, messagelen, &set_device_name);
+						unsigned char result = 0;
+						if(getgateway()->gatewayid == set_device_name.ieee){ 
+							result = (sqlitedb_update_gatewayname(set_device_name.ieee, set_device_name.name) == 0)?1:0;
+							if(result){
+								struct gateway * gw = getgateway();
+								if(gw){
+									memcpy(gw->gatewayname,set_device_name.name, strlen(set_device_name.name));
+									gw->gatewayname[strlen(set_device_name.name)] = 0;
+								}
+							}
+						}else{
+							result = (sqlitedb_update_devicename(set_device_name.ieee, set_device_name.name) == 0)?1:0;
+							if(result){
+								struct device * d = gateway_getdevice(getgateway(), set_device_name.ieee);
+								if(d){
+									memcpy(d->devicename,set_device_name.name, strlen(set_device_name.name));
+									d->devicename[strlen(set_device_name.name)] = 0;
+								}
+							}
+							
+						}
+						unsigned char buf[512] = {0};
+						unsigned int len = protocol_encode_set_name_feedback(buf, &set_device_name, result);
+
+						sendnonblocking(fd, buf, len);
+					}
 					break;
-				case REQDELDEVICE:
+				case DEVICE_DEL:
+					{ 
+						unsigned char result = 0;
+						struct protocol_datatype_del_device del_device;
+						protocol_parse_del_device(buffer, messagelen, &del_device);
+						struct device * d = gateway_getdevice(getgateway(), del_device.ieee);
+						if(d){
+							device_set_status(d, DEVICE_APP_DEL);
+							result = 1;
+						}
+						unsigned char buf[128] = {0}; 
+						unsigned int len = protocol_encode_del_device_feedback(buf, &del_device, result);
+
+						sendnonblocking(fd, buf,len);
+					}
 					break;
-				case DEVICEPROPERTIES:{
-							      //						      unsigned int serialid;
-							      //						      unsigned long long IEEE;
-							      //						      unsigned char *p = buffer;
-							      //
-							      //						      serialid = bytebuffer_getdword(p+5);
-							      //						      IEEE = bytebuffer_getquadword(p+9);
-							      //						      unsigned char devicebuf[2048] = {0};
-							      //						      unsigned int buflen = encode_deviceattr(devicebuf, IEEE, serialid);
-							      //						      sendnonblocking(connlist_getserverfd(), devicebuf, buflen);
-						      }
-						      break;
+				case DEVICE_ATTR:{
+							     struct protocol_datatype_get_device_attr get_attr;
+							     protocol_parse_get_device_attr(buffer, messagelen, &get_attr); 
+							     unsigned char buf[512] = {0};
+							     unsigned int len = protocol_encode_deviceattr(buf, &get_attr);
+
+							     sendnonblocking(fd, buf, len); 
+						     }
+						     break;
 				case DEVICE_IDENTIFY:
-						      {
-							      struct protocol_cmdtype_identify_ieee_cmd identify_ieee_cmd;
-							      identify_ieee_cmd.cmdid = PROTOCOL_IDENTIFY;
-							      identify_ieee_cmd.identify_ieee.ieee = protocol_parse_identify(buffer, messagelen,&identify_ieee_cmd.identify_ieee.identify); 
-							      sendnonblocking(g_main_to_znp_write_fd, &identify_ieee_cmd, sizeof(struct protocol_cmdtype_identify_ieee_cmd));
-							      //		      zcl_down_cmd_identify(ieee,&identify);
-
-						      }
-						      break;
+						     {
+							     struct protocol_cmdtype_identify_ieee_cmd identify_ieee_cmd;
+							     identify_ieee_cmd.cmdid = PROTOCOL_IDENTIFY;
+							     identify_ieee_cmd.identify_ieee.ieee = protocol_parse_identify(buffer, messagelen,&identify_ieee_cmd.identify_ieee.identify); 
+							     sendnonblocking(g_main_to_znp_write_fd, &identify_ieee_cmd, sizeof(struct protocol_cmdtype_identify_ieee_cmd));
+						     }
+						     break;
 				case DEVICE_WARNING:
-						      {
-							      struct protocol_cmdtype_warning_ieee_cmd warning_ieee_cmd;
-							      warning_ieee_cmd.cmdid = PROTOCOL_WARNING;
-							      warning_ieee_cmd.warning_ieee.ieee = protocol_parse_warning(buffer, messagelen, &warning_ieee_cmd.warning_ieee.warning);
-							      sendnonblocking(g_main_to_znp_write_fd, &warning_ieee_cmd, sizeof(struct protocol_cmdtype_warning_ieee_cmd)); 
+						     {
+							     struct protocol_cmdtype_warning_ieee_cmd warning_ieee_cmd;
+							     warning_ieee_cmd.cmdid = PROTOCOL_WARNING;
+							     warning_ieee_cmd.warning_ieee.ieee = protocol_parse_warning(buffer, messagelen, &warning_ieee_cmd.warning_ieee.warning);
 
-							      //				      zcl_down_cmd_warning(ieee, &cmd);
-						      }
-						      break;
+							     sendnonblocking(g_main_to_znp_write_fd, &warning_ieee_cmd, sizeof(struct protocol_cmdtype_warning_ieee_cmd)); 
+						     }
+						     break;
 				case APP_LOGIN:
-						      {
-							      unsigned char buf[2048] = {0}; 
-							      unsigned int buflen = protocol_encode_login(buf); 
-							      sendnonblocking(fd, buf, buflen);
-						      }
-						      break;
+						     {
+							     unsigned char buf[2048] = {0}; 
+							     unsigned int buflen = protocol_encode_login(buf); 
+
+							     sendnonblocking(fd, buf, buflen);
+						     }
+						     break;
 				case DEVICE_SETARM:
-						      {
-							      struct protocol_cmdtype_arm arm;
-							      unsigned int serialnum = 0;
-							      unsigned char endpoint = 0;
-							      unsigned long long ieee = protocol_parse_arm(buffer, messagelen, &arm, &serialnum, &endpoint);
-							      unsigned char result = (unsigned char)sqlitedb_update_device_arm(ieee, endpoint, &arm);
-							      result = (result == 0)?0:1;
-							      if(result == 0){ 
-								      struct endpoint * ep = gateway_get_endpoint(ieee, endpoint);
-								      memcpy(&ep->simpledesc.arm, &arm, sizeof(struct protocol_cmdtype_arm));
-							      }
-							      unsigned char buf[128] = {0};
-							      unsigned int buflen = protocol_encode_arm_feedback(buf, ieee, result);
-						      }
-						      break;
+						     {
+							     struct protocol_cmdtype_arm arm;
+							     unsigned int serialnum = 0;
+							     unsigned char endpoint = 0;
+							     unsigned long long ieee = protocol_parse_arm(buffer, messagelen, &arm, &serialnum, &endpoint);
+							     unsigned char result = (unsigned char)sqlitedb_update_device_arm(ieee, endpoint, &arm);
+							     result = (result == 0)?1:0;
+							     if(result == 1){ 
+								     struct endpoint * ep = gateway_get_endpoint(ieee, endpoint);
+								     memcpy(&ep->simpledesc.arm, &arm, sizeof(struct protocol_cmdtype_arm));
+							     }
+							     unsigned char buf[128] = {0};
+							     unsigned int buflen = protocol_encode_arm_feedback(buf, ieee, result);
+
+							     sendnonblocking(fd, buf, buflen);
+						     }
+						     break;
 
 				case ILLEGAL:
-						      break;
+						     break;
 			}
 		}
 	}
@@ -165,6 +209,10 @@ void event_recvznp(struct eventhub * hub, int fd){
 				struct zclzoneenrollreq req;
 				readnonblocking(fd, &req, sizeof(struct zclzoneenrollreq));
 				fprintf(stdout, "********event recv znp enroll ieee %llX \n", req.ieeeaddr);
+				struct device * d = gateway_getdevice(getgateway(), req.ieeeaddr);
+				if(d->status & DEVICE_APP_DEL){
+					return;
+				}
 				buflen = protocol_encode_add_del_device(buf, req.ieeeaddr, 1);
 
 				broadcast(buf, buflen);
@@ -174,6 +222,10 @@ void event_recvznp(struct eventhub * hub, int fd){
 			{
 				struct zclzonechangenotification req;
 				readnonblocking(fd, &req, sizeof(struct zclzonechangenotification));
+				struct device * d = gateway_getdevice(getgateway(), req.ieeeaddr);
+				if(d->status & DEVICE_APP_DEL){
+					return;
+				}
 				fprintf(stdout, "********event recv znp notification %llX \n", req.ieeeaddr);
 				time_t curtime = time(NULL);
 				struct tm * tm = localtime(&curtime);

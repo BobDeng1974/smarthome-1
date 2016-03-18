@@ -93,7 +93,7 @@ int openclient(char *addr, char *port) {
 	servaddr.sin_addr.s_addr = inet_addr(addr);
 
 	if (connect(sockfd, (SA *)&servaddr, sizeof(servaddr)) < 0) {
-		fprintf(stdout, "fail to connect\n");
+	//	fprintf(stdout, "fail to connect\n");
 		close(sockfd);
 
 		return -1;

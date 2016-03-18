@@ -33,7 +33,10 @@ unsigned int protocol_encode_login(unsigned char *buf) {
 	bytebuffer_writebyte(&p,PROTOCOL_START_FLAG);
 	bytebuffer_writeword(&p,0x0000);
 	bytebuffer_writeword(&p,LOGIN);
-	bytebuffer_writemac(&p,gw->gatewayid);
+	bytebuffer_writemac(&p, gw->gatewayid); 
+	unsigned char gateway_name_len = strlen(gw->gatewayname);
+	bytebuffer_writebyte(&p, gateway_name_len);
+	bytebuffer_writebytes(&p, gw->gatewayname, gateway_name_len);
 	bytebuffer_writebyte(&p, gw->boxversion);
 	bytebuffer_writebyte(&p, gw->protocolversion);
 	unsigned short active_device_count = gateway_get_active_device_count();
@@ -45,13 +48,13 @@ unsigned int protocol_encode_login(unsigned char *buf) {
 	list_for_each_safe(pos, n,&gw->head)
 	{
 		d=list_entry(pos, struct device, list);
-		if(device_check_status(d, DEVICE_ACTIVE)){
+		if((!device_check_status(d, DEVICE_APP_DEL)) && (!device_check_status(d, DEVICE_LEAVE_NET))){
 			bytebuffer_writequadword(&p, d->ieeeaddr);
 			unsigned char devicenamelen = strlen(d->devicename);
 			bytebuffer_writebyte(&p, devicenamelen);
 			bytebuffer_writebytes(&p, (unsigned char *)d->devicename,devicenamelen);
-			unsigned char devicetypeidcounte = device_getepcount(d);
-			bytebuffer_writebyte(&p, devicetypeidcounte);
+			unsigned char devicetypeidcount = device_getepcount(d);
+			bytebuffer_writebyte(&p, devicetypeidcount);
 
 			struct list_head *pos1, *n1;
 			struct endpoint *e;

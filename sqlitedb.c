@@ -259,15 +259,13 @@ void _sqlite3_gettext(sqlite3_stmt *stmt, int col, char * value){
 }
 
 static const char sql_update_devicename[256] = "update device set name='%s' where ieee='%lld'";
-
 int sqlitedb_update_devicename(unsigned long long ieee, char * name){
 
 	struct sqlitedb * db = sqlitedb_create(DBPATH);
 
 	char update_table_gateway[512] = {0};
 	sprintf(update_table_gateway, sql_update_devicename, name, ieee);
-	char errmsg[128] = {0};
-	int ret = sqlite3_exec(db->db,update_table_gateway,NULL,NULL,&errmsg);
+	sqlite3_exec(db->db,update_table_gateway,NULL,NULL,NULL);
 
 	sqlitedb_destroy(db);
 
@@ -275,35 +273,17 @@ int sqlitedb_update_devicename(unsigned long long ieee, char * name){
 }
 
 static const char sql_update_gatewayname[256] = "update gateway set name='%s' where mac='%lld'";
-
 int sqlitedb_update_gatewayname(unsigned long long mac, char * name){
 
 	struct sqlitedb * db = sqlitedb_create(DBPATH);
 
 	char updateg_table_gateway[512] = {0};
 	sprintf(updateg_table_gateway, sql_update_gatewayname, name, mac);
-	char errmsg[128] = {0};
-	int ret = sqlite3_exec(db->db,updateg_table_gateway,NULL,NULL,&errmsg);
+	sqlite3_exec(db->db,updateg_table_gateway,NULL,NULL,NULL);
 
 	sqlitedb_destroy(db);
 
 	return 0;
-}
-
-static const char sql_del_device[256] = "delete from device where ieee= '%lld'";
-
-int sqlitedb_delete_device(unsigned long long ieee){
-
-        struct sqlitedb * db = sqlitedb_create(DBPATH);
-
-        char delete_table_gateway[512] = {0};
-	sprintf(delete_table_gateway, sql_del_device, ieee);
-	char errmsg[128] = {0};
-	int ret = sqlite3_exec(db->db,delete_table_gateway,NULL,NULL,&errmsg);
-
-         sqlitedb_destroy(db);
-
-         return 0;
 }
 
 void _sqlite3_load_device(sqlite3_stmt *stmt, int col, struct device *d){

@@ -10,11 +10,13 @@
 #define IDENTYFYTIME 10
 
 void zcl_down_cmd_identify(unsigned long long ieee, struct protocol_cmdtype_identify * identify){ 
-	struct endpoint * dstep = gateway_get_endpoint(ieee, identify->endpoint);
-	if(dstep){
+	struct device * d = gateway_getdevice(getgateway(), ieee);
+	if(d){
+		fprintf(stdout, " **identify endpoint %d\n", identify->endpoint);
+		fprintf(stdout, " **identify nwkwork %d\n", d->shortaddr);
 		zclGeneral_SendIdentify(APP_DEVICETYPEID_SS_ENDPOINT, 
 				identify->endpoint,
-			       	dstep->simpledesc.simpledesc.NwkAddr, 
+				d->shortaddr,
 				IDENTYFYTIME, 0, 0);
 	}
 }

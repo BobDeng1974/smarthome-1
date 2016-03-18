@@ -75,28 +75,25 @@ unsigned int protocol_encode_alarm(unsigned char *buf, struct zclzonechangenotif
 
 	ctime = time(NULL);
 	bytebuffer_writequadword(&p,ctime);
-	struct device * d = gateway_getdevice(getgateway(), notification->ieeeaddr);
-	if(d){ 
-		struct endpoint * ep = device_get_endpoint(d, notification->endpoint);
-		assert(ep);
-		if(ep){
-			bytebuffer_writebyte(&p, ep->simpledesc.simpledesc.DeviceID);
-			if(ep->simpledesc.simpledesc.DeviceID == ZCL_HA_DEVICEID_IAS_ZONE){
-				bytebuffer_writebyte(&p, ep->simpledesc.zonetype);
-			}
+	bytebuffer_writebyte(&p, notification->endpoint);
+	struct endpoint * ep = gateway_get_endpoint(notification->ieeeaddr, notification->endpoint); 
+	assert(ep);
+	if(ep){
+		bytebuffer_writeword(&p, ep->simpledesc.simpledesc.DeviceID);
+		if(ep->simpledesc.simpledesc.DeviceID == ZCL_HA_DEVICEID_IAS_ZONE){
+			bytebuffer_writeword(&p, ep->simpledesc.zonetype);
 		}
-
 	}
+
 
 	bytebuffer_writebyte(&p,notification->zonechangenotification.zonestatus.alarm1);
 	bytebuffer_writebyte(&p,notification->zonechangenotification.zonestatus.alarm2);
 
-	unsigned int templen = p-buf;
 	unsigned char * len = buf + 1;
-	bytebuffer_writeword(&len, templen + 2);
-	unsigned char checksum = protocol_checksum(buf,templen);
+	bytebuffer_writeword(&len, p - buf + 2);
+	unsigned char checksum = protocol_checksum(buf,p-buf);
 	bytebuffer_writebyte(&p,checksum);
 	bytebuffer_writebyte(&p,PROTOCOL_END_FLAG);
 
-	return templen + 2;
+	return p-buf;
 }

@@ -94,9 +94,21 @@ struct device * device_create2(unsigned long long ieee,unsigned short shortaddr,
 	d->applicationversion = applicationversion;
 	d->stackversion = stackversion;
 	d->hwversion = hwversion;
-	memcpy(d->manufacturername, manufacturername, strlen(manufacturername));
-	memcpy(d->modelidentifier, modelidentifier, strlen(modelidentifier));
-	memcpy(d->datecode, datecode, strlen(datecode));
+	unsigned char len = strlen(manufacturername);
+	memcpy(d->manufacturername, manufacturername, len);
+	d->manufacturername[len] = 0;
+
+	len = strlen(modelidentifier);
+	memcpy(d->modelidentifier, modelidentifier, len);
+	d->modelidentifier[len] = 0;
+
+	len = strlen(datecode);
+	memcpy(d->datecode, datecode, len);
+	d->datecode[len] = 0;
+
+	len = strlen(name);
+	memcpy(d->devicename, name, len);
+	d->devicename[len] = 0;
 
 	return d;
 }
@@ -326,7 +338,7 @@ unsigned short gateway_get_active_device_count(){
 	struct list_head *pos, *n;
 	list_for_each_safe(pos, n, &gatewayinstance.head){
 		d = list_entry(pos, struct device, list); 
-		if(d->status & DEVICE_ACTIVE){
+		if((!device_check_status(d, DEVICE_APP_DEL)) && (!device_check_status(d, DEVICE_LEAVE_NET))){
 			active_device_count++;
 		}
 	}
