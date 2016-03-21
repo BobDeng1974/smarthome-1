@@ -1644,7 +1644,7 @@ typedef struct
 #endif // ZCL_LIGHT_LINK_ENHANCE
 #endif // ZCL_SCENES
 
-#ifdef ZCL_ON_OFF
+//#ifdef ZCL_ON_OFF
 /*
  *  Send an On Off Command - COMMAND_ONOFF_OFF
  *  Use like:
@@ -1681,7 +1681,7 @@ typedef struct
  */
 #define zclGeneral_SendOnOff_CmdOnWithRecallGlobalScene(a,b,c,d) zcl_SendCommand( (a), (b), ZCL_CLUSTER_ID_GEN_ON_OFF, COMMAND_ON_WITH_RECALL_GLOBAL_SCENE, TRUE, ZCL_FRAME_CLIENT_SERVER_DIR, (c), 0, (d), 0, NULL )
 #endif // ZCL_LIGHT_LINK_ENHANCE
-#endif // ZCL_ON_OFF
+//#endif // ZCL_ON_OFF
 
 #ifdef ZCL_LEVEL_CTRL
 /*

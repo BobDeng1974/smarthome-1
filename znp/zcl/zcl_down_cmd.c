@@ -7,7 +7,7 @@
 #include "zcl_ss.h"
 #include "zcl_register_cluster.h"
 
-#define IDENTYFYTIME 10
+#define IDENTYFYTIME 30
 
 void zcl_down_cmd_identify(unsigned long long ieee, struct protocol_cmdtype_identify * identify){ 
 	struct device * d = gateway_getdevice(getgateway(), ieee);
@@ -38,4 +38,22 @@ void zcl_down_cmd_warning(unsigned long long ieee, struct protocol_cmdtype_warni
 				&warning->start_warning,
 				0,0);
 	}
+}
+
+void zcl_down_cmd_onoff(struct protocol_cmdtype_onoff_ieee * onoff){
+	struct device * d = gateway_getdevice(getgateway(), onoff->ieee);
+
+	afAddrType_t addrtype;
+	if(d){
+		fprintf(stdout, "send onoff command\n");
+		addrtype.addr.shortAddr = d->shortaddr;
+		addrtype.endPoint = onoff->endpoint;
+		if(onoff->onoff){
+			zclGeneral_SendOnOff_CmdOn(APP_DEVICETYPEID_SS_ENDPOINT, &addrtype,0,0);
+		}else{
+			zclGeneral_SendOnOff_CmdOff(APP_DEVICETYPEID_SS_ENDPOINT, &addrtype,0,0);
+		}
+
+	}
+
 }

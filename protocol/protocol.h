@@ -15,6 +15,7 @@
 #define DEVICE_SET_NAME  0x8008
 #define DEVICE_DEL       0x800A
 #define DEVICE_ATTR      0x800B
+#define DEVICE_ONOFF     0x8010
 
 #define LOGIN 0x0001
 #define HEART     0x0002

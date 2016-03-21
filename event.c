@@ -151,7 +151,8 @@ void event_recvmsg(struct eventhub * hub, int fd, unsigned char * buf, int bufle
 							     struct protocol_cmdtype_identify_ieee_cmd identify_ieee_cmd;
 							     identify_ieee_cmd.cmdid = PROTOCOL_IDENTIFY;
 							     identify_ieee_cmd.identify_ieee.ieee = protocol_parse_identify(buffer, messagelen,&identify_ieee_cmd.identify_ieee.identify); 
-							     sendnonblocking(g_main_to_znp_write_fd, &identify_ieee_cmd, sizeof(struct protocol_cmdtype_identify_ieee_cmd));
+							     int n = sendnonblocking(g_main_to_znp_write_fd, &identify_ieee_cmd, sizeof(struct protocol_cmdtype_identify_ieee_cmd));
+							     fprintf(stdout, "send identify %d %d\n", n, sizeof(struct protocol_cmdtype_identify_ieee_cmd));
 						     }
 						     break;
 				case DEVICE_WARNING:
@@ -187,6 +188,14 @@ void event_recvmsg(struct eventhub * hub, int fd, unsigned char * buf, int bufle
 							     unsigned int buflen = protocol_encode_arm_feedback(buf, ieee, result);
 
 							     sendnonblocking(fd, buf, buflen);
+						     }
+						     break;
+				case DEVICE_ONOFF:
+						     {
+							     struct protocol_cmdtype_onoff_ieee_cmd onoff;
+							     onoff.cmdid = PROTOCOL_ONOFF;
+							     protocol_parse_onoff(buffer, messagelen, &onoff.onoff_ieee);
+							     sendnonblocking(g_main_to_znp_write_fd, &onoff, sizeof(struct protocol_cmdtype_onoff_ieee_cmd));
 						     }
 						     break;
 

@@ -13,8 +13,8 @@ PROJ_DIR=
 
 all: gateway.bin
 
-gateway.bin: main.o rpc.o mtParser.o mtZdo.o mtSys.o mtAf.o mtSapi.o dbgPrint.o rpcTransport.o queue.o appinit.o commands.o zcl.o zcl_ss.o ceconf.o cetimer.o connection.o event.o eventhub.o gateway.o kfifo.o  rbtree.o reconn.o socket.o toolkit.o znp.o znp_device.o cJSON.o znp_map.o sqlitedb.o sqlite3.o zcl_down_cmd.o zcl_general.o zcl_register_cluster.o protocol.o protocol_encode_add_del_device.o protocol_encode_alarm.o protocol_encode_arm_feedback.o protocol_encode_heartbeat.o protocol_encode_login.o protocol_parse_arm.o protocol_parse_identify.o protocol_parse_warning.o protocol_parse_set_device_name.o protocol_parse_get_device_attr.o protocol_parse_del_device.o protocol_encode_set_name_feedback.o protocol_encode_deviceattr.o protocol_encode_del_device_feedback.o
-	$(CC) main.o appinit.o rpc.o mtParser.o mtZdo.o mtSys.o mtAf.o mtSapi.o dbgPrint.o rpcTransport.o queue.o commands.o zcl.o zcl_ss.o ceconf.o cetimer.o connection.o event.o eventhub.o gateway.o kfifo.o rbtree.o reconn.o socket.o toolkit.o znp.o znp_device.o cJSON.o znp_map.o  sqlitedb.o sqlite3.o zcl_down_cmd.o zcl_general.o zcl_register_cluster.o protocol.o protocol_encode_add_del_device.o protocol_encode_alarm.o protocol_encode_arm_feedback.o protocol_encode_heartbeat.o protocol_encode_login.o protocol_parse_arm.o protocol_parse_identify.o protocol_parse_warning.o protocol_parse_set_device_name.o protocol_parse_get_device_attr.o protocol_parse_del_device.o protocol_encode_set_name_feedback.o protocol_encode_deviceattr.o protocol_encode_del_device_feedback.o $(LIBS) -o gateway.bin
+gateway.bin: main.o rpc.o mtParser.o mtZdo.o mtSys.o mtAf.o mtSapi.o dbgPrint.o rpcTransport.o queue.o appinit.o commands.o zcl.o zcl_ss.o ceconf.o cetimer.o connection.o event.o eventhub.o gateway.o kfifo.o  rbtree.o reconn.o socket.o toolkit.o znp.o znp_device.o cJSON.o znp_map.o sqlitedb.o sqlite3.o zcl_down_cmd.o zcl_general.o zcl_register_cluster.o protocol.o protocol_encode_add_del_device.o protocol_encode_alarm.o protocol_encode_arm_feedback.o protocol_encode_heartbeat.o protocol_encode_login.o protocol_parse_arm.o protocol_parse_identify.o protocol_parse_warning.o protocol_parse_set_device_name.o protocol_parse_get_device_attr.o protocol_parse_del_device.o protocol_encode_set_name_feedback.o protocol_encode_deviceattr.o protocol_encode_del_device_feedback.o protocol_parse_onoff.o
+	$(CC) main.o appinit.o rpc.o mtParser.o mtZdo.o mtSys.o mtAf.o mtSapi.o dbgPrint.o rpcTransport.o queue.o commands.o zcl.o zcl_ss.o ceconf.o cetimer.o connection.o event.o eventhub.o gateway.o kfifo.o rbtree.o reconn.o socket.o toolkit.o znp.o znp_device.o cJSON.o znp_map.o  sqlitedb.o sqlite3.o zcl_down_cmd.o zcl_general.o zcl_register_cluster.o protocol.o protocol_encode_add_del_device.o protocol_encode_alarm.o protocol_encode_arm_feedback.o protocol_encode_heartbeat.o protocol_encode_login.o protocol_parse_arm.o protocol_parse_identify.o protocol_parse_warning.o protocol_parse_set_device_name.o protocol_parse_get_device_attr.o protocol_parse_del_device.o protocol_encode_set_name_feedback.o protocol_encode_deviceattr.o protocol_encode_del_device_feedback.o protocol_parse_onoff.o $(LIBS) -o gateway.bin
 
 # rule for file "main.o".
 main.o: ../main.c
@@ -215,6 +215,10 @@ protocol_parse_set_device_name.o: $(PROJ_DIR)../protocol/protocol_parse_set_devi
 # rule for file "protocol_parse_warning.o".
 protocol_parse_warning.o: $(PROJ_DIR)../protocol/protocol_parse_warning.c
 	$(CC) $(CFLAGS) $(INCLUDE) $(DEFS) $(PROJ_DIR)../protocol/protocol_parse_warning.c
+
+# rule for file "protocol_parse_onoff.o".
+protocol_parse_onoff.o: $(PROJ_DIR)../protocol/protocol_parse_onoff.c
+	$(CC) $(CFLAGS) $(INCLUDE) $(DEFS) $(PROJ_DIR)../protocol/protocol_parse_onoff.c
 
 # rule for cleaning files generated during compilations.
 clean:

@@ -10,6 +10,7 @@
 
 #define PROTOCOL_IDENTIFY 1
 #define PROTOCOL_WARNING 2
+#define PROTOCOL_ONOFF 3
 
 struct protocol_cmdtype_arm{
 	unsigned char armmodel;
@@ -47,4 +48,16 @@ struct __attribute__((packed))protocol_cmdtype_warning_ieee_cmd{
 	int cmdid;
 	struct protocol_cmdtype_warning_ieee warning_ieee;
 };
+
+struct __attribute__((packed))protocol_cmdtype_onoff_ieee{
+	unsigned long long ieee;
+	unsigned char endpoint;
+	unsigned char onoff;
+};
+
+struct __attribute__((packed))protocol_cmdtype_onoff_ieee_cmd{
+	int cmdid; 
+	struct protocol_cmdtype_onoff_ieee onoff_ieee;
+};
+
 #endif

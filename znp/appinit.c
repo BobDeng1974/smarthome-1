@@ -1656,6 +1656,7 @@ static int32_t registerAf(void)
 	//	startupfromapp.StartDelay = 0;
 	//	sendcmd((unsigned char *)&startupfromapp, ZDO_STARTUP_FROM_APP); 
 	zcl_register_cluster_ss();
+	zcl_register_cluster_closures();
 
 	return 1;
 }
@@ -1670,7 +1671,8 @@ void* appMsgProcess(void *argument)
 
 	if (initDone)
 	{
-		rpcWaitMqClientMsg(10000);
+	//	rpcWaitMqClientMsg(10000);
+		rpcWaitMqClientMsg(50);
 	}
 
 	return 0;
@@ -1726,12 +1728,21 @@ void appProcess(void * args)
 					fprintf(stdout, "identify znp recv %d %d -------\n", n, sizeof(struct protocol_cmdtype_identify_ieee));
 					zcl_down_cmd_identify(identify_ieee.ieee,&identify_ieee.identify);
 				}
+				break;
 			case PROTOCOL_WARNING:
 				{
 					struct protocol_cmdtype_warning_ieee warning_ieee;
 					int n = read(znprfd, &warning_ieee, sizeof(struct protocol_cmdtype_warning_ieee));
 					fprintf(stdout, "warning znp recv %d %d -------\n", n, sizeof(struct protocol_cmdtype_warning_ieee));
 					zcl_down_cmd_warning(warning_ieee.ieee, &warning_ieee.warning);
+				}
+				break;
+			case PROTOCOL_ONOFF:
+				{
+					struct protocol_cmdtype_onoff_ieee onoff_ieee;
+					read(znprfd, &onoff_ieee, sizeof(struct protocol_cmdtype_onoff_ieee));
+					zcl_down_cmd_onoff(&onoff_ieee);
+
 				}
 				break;
 		}

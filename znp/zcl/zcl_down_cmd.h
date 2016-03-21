@@ -9,4 +9,6 @@ void zcl_down_cmd_identify(unsigned long long ieee,struct protocol_cmdtype_ident
 
 void zcl_down_cmd_warning(unsigned long long ieee, struct protocol_cmdtype_warning * warning);
 
+void zcl_down_cmd_onoff(struct protocol_cmdtype_onoff_ieee * onoff);
+
 #endif

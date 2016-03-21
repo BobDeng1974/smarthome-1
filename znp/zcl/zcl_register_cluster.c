@@ -25,7 +25,7 @@ int zcl_register_cluster_ss(){
 	out_cluster[8] = ZCL_CLUSTER_ID_SS_IAS_WD;
 
 
-	zcl_register_cluster(in_cluster_count, in_cluster, out_cluster_count, out_cluster, APP_DEVICETYPEID_SS_ENDPOINT, APP_DEVICETYPEID_SS_ENDPOINT);
+	zcl_register_cluster(in_cluster_count, in_cluster, out_cluster_count, out_cluster, APP_DEVICETYPEID_SS_ENDPOINT, APP_DEVICETYPEID_SS);
 
 	return APP_DEVICETYPEID_SS_ENDPOINT;
 }
@@ -47,3 +47,26 @@ int zcl_register_cluster(unsigned char in_cluster_count, unsigned short * in_clu
 
 	return 0;
 }
+
+int zcl_register_cluster_closures(){
+	unsigned char in_cluster_count = 0;
+	unsigned short in_cluster[MAX_CLUSTER_COUNT] = {0};
+
+	unsigned char out_cluster_count = 9;
+	unsigned short out_cluster[MAX_CLUSTER_COUNT];
+	memset(out_cluster, 0, MAX_CLUSTER_COUNT * sizeof(unsigned short));
+	out_cluster[0] = ZCL_CLUSTER_ID_GEN_BASIC;
+	out_cluster[1] = ZCL_CLUSTER_ID_GEN_IDENTIFY;
+	out_cluster[2] = ZCL_CLUSTER_ID_GEN_GROUPS;
+	out_cluster[3] = ZCL_CLUSTER_ID_GEN_SCENES;
+	out_cluster[4] = ZCL_CLUSTER_ID_GEN_ON_OFF;
+	out_cluster[5] = ZCL_CLUSTER_ID_GEN_LEVEL_CONTROL;
+	out_cluster[6] = ZCL_CLUSTER_ID_GEN_COMMISSIONING;
+	out_cluster[7] = ZCL_CLUSTER_ID_CLOSURES_SHADE_CONFIG;
+	out_cluster[8] = ZCL_CLUSTER_ID_HA_DIAGNOSTIC;
+
+	zcl_register_cluster(in_cluster_count, in_cluster, out_cluster_count, out_cluster, APP_DEVICETYPEID_CLOSURES_ENDPOINT, APP_DEVICETYPEID_CLOSURES);
+
+	return APP_DEVICETYPEID_CLOSURES_ENDPOINT;
+}
+
