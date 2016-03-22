@@ -11,4 +11,6 @@ void zcl_down_cmd_warning(unsigned long long ieee, struct protocol_cmdtype_warni
 
 void zcl_down_cmd_onoff(struct protocol_cmdtype_onoff_ieee * onoff);
 
+void zcl_down_cmd_level_ctrl(struct protocol_cmdtype_level_ctrl_ieee * level_ctrl);
+
 #endif

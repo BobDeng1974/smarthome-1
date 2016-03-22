@@ -11,6 +11,7 @@
 #define PROTOCOL_IDENTIFY 1
 #define PROTOCOL_WARNING 2
 #define PROTOCOL_ONOFF 3
+#define PROTOCOL_LEVEL_CTRL 4
 
 struct protocol_cmdtype_arm{
 	unsigned char armmodel;
@@ -58,6 +59,18 @@ struct __attribute__((packed))protocol_cmdtype_onoff_ieee{
 struct __attribute__((packed))protocol_cmdtype_onoff_ieee_cmd{
 	int cmdid; 
 	struct protocol_cmdtype_onoff_ieee onoff_ieee;
+};
+
+struct __attribute__((packed))protocol_cmdtype_level_ctrl_ieee{
+	unsigned long long ieee;
+	unsigned char endpoint;
+	unsigned char level;
+	unsigned short trans_time;
+};
+
+struct __attribute__((packed))protocol_cmdtype_level_ctrl_ieee_cmd{
+	int cmdid;
+	struct protocol_cmdtype_onoff_ieee level_ctrl_ieee;
 };
 
 #endif

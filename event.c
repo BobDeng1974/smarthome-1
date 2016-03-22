@@ -198,7 +198,14 @@ void event_recvmsg(struct eventhub * hub, int fd, unsigned char * buf, int bufle
 							     sendnonblocking(g_main_to_znp_write_fd, &onoff, sizeof(struct protocol_cmdtype_onoff_ieee_cmd));
 						     }
 						     break;
-
+				case DEVICE_LEVEL_CTRL:
+						     {
+							     struct protocol_cmdtype_level_ctrl_ieee_cmd level_ctrl_ieee_cmd;
+							     level_ctrl_ieee_cmd.cmdid = PROTOCOL_LEVEL_CTRL;
+							     protocol_parse_level_ctrl(buffer, messagelen, &level_ctrl_ieee_cmd.level_ctrl_ieee);
+							     sendnonblocking(g_main_to_znp_write_fd, &level_ctrl_ieee_cmd, sizeof(struct protocol_cmdtype_level_ctrl_ieee_cmd));
+						     }
+						     break;
 				case ILLEGAL:
 						     break;
 			}

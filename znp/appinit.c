@@ -1745,6 +1745,13 @@ void appProcess(void * args)
 
 				}
 				break;
+			case PROTOCOL_LEVEL_CTRL:
+				{
+					struct protocol_cmdtype_level_ctrl_ieee level_ctrl_ieee;
+					read(znprfd, &level_ctrl_ieee, sizeof(struct protocol_cmdtype_level_ctrl_ieee));
+					zcl_down_cmd_level_ctrl(&level_ctrl_ieee);
+				}
+				break;
 		}
 
 	}

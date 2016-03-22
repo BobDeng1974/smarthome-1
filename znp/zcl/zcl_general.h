@@ -1416,12 +1416,12 @@ typedef struct
   zclGCB_OnOff_OffWithEffect_t      pfnOnOff_OffWithEffect;       // On/Off cluster enhanced command Off with Effect
   zclGCB_OnOff_OnWithRecallGlobalScene_t  pfnOnOff_OnWithRecallGlobalScene;  // On/Off cluster enhanced command On with Recall Global Scene
   zclGCB_OnOff_OnWithTimedOff_t     pfnOnOff_OnWithTimedOff;      // On/Off cluster enhanced command On with Timed Off
-#ifdef ZCL_LEVEL_CTRL
+//#ifdef ZCL_LEVEL_CTRL
   zclGCB_LevelControlMoveToLevel_t  pfnLevelControlMoveToLevel;   // Level Control Move to Level command
   zclGCB_LevelControlMove_t         pfnLevelControlMove;          // Level Control Move command
   zclGCB_LevelControlStep_t         pfnLevelControlStep;          // Level Control Step command
   zclGCB_LevelControlStop_t         pfnLevelControlStop;          // Level Control Stop command
-#endif
+//#endif
 #ifdef ZCL_GROUPS
   zclGCB_GroupRsp_t                 pfnGroupRsp;                  // Group Response commands
 #endif
@@ -1683,7 +1683,7 @@ typedef struct
 #endif // ZCL_LIGHT_LINK_ENHANCE
 //#endif // ZCL_ON_OFF
 
-#ifdef ZCL_LEVEL_CTRL
+//#ifdef ZCL_LEVEL_CTRL
 /*
  *  Send a Level Control Move to Level Command - COMMAND_LEVEL_MOVE_TO_LEVEL
  *  Use like:
@@ -1741,7 +1741,7 @@ typedef struct
  *      ZStatus_t zclGeneral_SendLevelControlStopWithOnOff( uint8 srcEP, afAddrType_t *dstAddr, uint8 disableDefaultRsp, uint8 seqNum );
  */
 #define zclGeneral_SendLevelControlStopWithOnOff(a,b,c,d) zcl_SendCommand( (a), (b), ZCL_CLUSTER_ID_GEN_LEVEL_CONTROL, COMMAND_LEVEL_STOP_WITH_ON_OFF, TRUE, ZCL_FRAME_CLIENT_SERVER_DIR, (c), 0, (d), 0, NULL )
-#endif // ZCL_LEVEL_CTRL
+//#endif // ZCL_LEVEL_CTRL
 
 #ifdef ZCL_ALARMS
 /*
@@ -1827,7 +1827,7 @@ extern ZStatus_t zclGeneral_SendOnOff_CmdOnWithTimedOff ( uint8 srcEP, afAddrTyp
                                                           uint8 disableDefaultRsp, uint8 seqNum );
 #endif // ZCL_ON_OFF
 
-#ifdef ZCL_LEVEL_CTRL
+//#ifdef ZCL_LEVEL_CTRL
 /*
  * Call to send out a Level Control Move to Level Request
  *      cmd - Move or Move with On/Off
@@ -1869,7 +1869,7 @@ extern ZStatus_t zclGeneral_SendLevelControlStepRequest( uint8 srcEP, afAddrType
 extern ZStatus_t zclGeneral_SendLevelControlStopRequest( uint8 srcEP, afAddrType_t *dstAddr,
                                                          uint8 cmd,
                                                          uint8 disableDefaultRsp, uint8 seqNum );
-#endif // ZCL_LEVEL_CTRL
+//#endif // ZCL_LEVEL_CTRL
 
 #ifdef ZCL_GROUPS
 /*

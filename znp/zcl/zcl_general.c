@@ -1006,7 +1006,7 @@ ZStatus_t zclGeneral_SendOnOff_CmdOnWithTimedOff ( uint8 srcEP, afAddrType_t *ds
 #endif // ZCL_LIGHT_LINK_ENHANCE
 #endif // ZCL_ON_OFF
 
-#ifdef ZCL_LEVEL_CTRL
+//#ifdef ZCL_LEVEL_CTRL
 /*********************************************************************
  * @fn      zclGeneral_SendLevelControlMoveToLevelRequest
  *
@@ -1124,7 +1124,7 @@ ZStatus_t zclGeneral_SendLevelControlStopRequest( uint8 srcEP, afAddrType_t *dst
                           cmd, TRUE, ZCL_FRAME_CLIENT_SERVER_DIR,
                           disableDefaultRsp, 0, seqNum, 0, NULL );
 }
-#endif // ZCL_LEVEL_CTRL
+//#endif // ZCL_LEVEL_CTRL
 
 #ifdef ZCL_ALARMS
 /*********************************************************************

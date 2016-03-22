@@ -57,3 +57,16 @@ void zcl_down_cmd_onoff(struct protocol_cmdtype_onoff_ieee * onoff){
 	}
 
 }
+
+void zcl_down_cmd_level_ctrl(struct protocol_cmdtype_level_ctrl_ieee * level_ctrl){
+
+	struct device * d = gateway_getdevice(getgateway(), level_ctrl->ieee);
+
+	if(d){
+		fprintf(stdout, "send level ctrl cmd\n");
+		afAddrType_t addrtype;
+		addrtype.addr.shortAddr = d->shortaddr;
+		addrtype.endPoint = level_ctrl->endpoint;
+		zclGeneral_SendLevelControlMoveToLevel(APP_DEVICETYPEID_CLOSURES_ENDPOINT, &addrtype, level_ctrl->level, level_ctrl->trans_time,0,0);
+	}
+}
