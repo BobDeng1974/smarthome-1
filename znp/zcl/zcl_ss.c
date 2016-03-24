@@ -7,8 +7,6 @@
 #include "zcl_general.h" #include "zcl.h"
 #include "mtParser.h"
 #include "zcl_datatype.h"
-#include "znp_device.h"
-#include "znp_map.h"
 #include "socket.h"
 #include "gateway.h" 
 

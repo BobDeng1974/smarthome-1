@@ -56,9 +56,6 @@
 #include "sqlitedb.h"
 
 #include "zcl.h"
-
-#include "znp_device.h"
-#include "znp_map.h"
 #include "gateway.h"
 #include "zcl_down_cmd.h"
 #include "zcl_register_cluster.h"
@@ -70,15 +67,6 @@
 #define consoleFlush(); fflush(stdout);
 
 extern int g_znpwfd;
-
-static struct device * _get_device(unsigned short shortaddr){
-	struct znp_map * map = znp_map_get_ieee(shortaddr);
-	if(map){ 
-		return gateway_getdevice(getgateway(), map->ieee);
-	}
-
-	return NULL;
-}
 
 /*********************************************************************
  * MACROS
@@ -594,7 +582,6 @@ static uint8_t mtZdoSimpleDescRspCb(SimpleDescRspFormat_t *msg)
 					msg->OutClusterList[i]);
 		}
 
-		//	struct device * d = _get_device(msg->SrcAddr);
 		struct device * d = gateway_getdevice_shortaddr(msg->SrcAddr);
 		if(d && !device_has_enpoint(d, msg->Endpoint)){ 
 			device_increase(d);
@@ -651,7 +638,7 @@ static uint8_t mtZdoActiveEpRspCb(ActiveEpRspFormat_t *msg)
 			consolePrint("ActiveEPList[%d]: 0x%02X\n", i, msg->ActiveEPList[i]); 
 		}
 
-		struct device * d = gateway_getdevice_shortaddr(msg->SrcAddr);//_get_device(msg->SrcAddr);
+		struct device * d = gateway_getdevice_shortaddr(msg->SrcAddr);
 
 		if(d && !device_check_status(d, DEVICE_SEND_SIMPLEDESC)){
 

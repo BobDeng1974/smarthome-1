@@ -2,7 +2,6 @@
 #define __CE_GATEWAY_H_H
 
 #include "list.h"
-#include "cluster.h"
 #include "mtZdo.h"
 #include "protocol_cmdtype.h"
 

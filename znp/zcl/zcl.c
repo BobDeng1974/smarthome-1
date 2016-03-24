@@ -6,7 +6,6 @@
 #include "mtAf.h"
 #include "mtParser.h"
 #include "zcl_ss.h"
-#include "znp_map.h"
 #include "zcl_general.h"
 #include "gateway.h"
 #include "bytebuffer.h"
