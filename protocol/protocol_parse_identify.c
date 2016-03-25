@@ -13,7 +13,7 @@
 //	校验码 (从开头到校验位前一位的^)
 //	标识位 1 byte
 unsigned long long protocol_parse_identify(unsigned char * buf, unsigned short len, struct protocol_cmdtype_identify * identify){ 
-	unsigned char * p = buf;
+	const unsigned char * p = buf;
 	bytebuffer_skipbytes(&p, 9);
 	unsigned long long ieee;
 	bytebuffer_readquadword(&p, &ieee);

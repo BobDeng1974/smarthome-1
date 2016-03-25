@@ -7,7 +7,6 @@
 #include "gateway.h"
 #include "mtZdo.h"
 #include "protocol_cmdtype.h"
-//static int sn = 0;
 #define GATEWAYTABLENAME "gateway"
 #define DEVICETABLENAME "device"
 
@@ -38,126 +37,13 @@ void sqlitedb_destroy(struct sqlitedb * db){
 	free(db);
 }
 
-void sqlitedb_exec(struct sqlitedb * sdb, char *sql){
-	char * zErrMsg;
-	sqlite3_exec(sdb->db,sql,0,0,&zErrMsg);
-}
-
-
-void sqlitedb_close_table(struct sqlitedb * sdb)
-{
-	sqlite3_close(sdb->db);
-}
-
-
-void sqlitedb_insert_record(struct sqlitedb *sdb,char * table,int DID,int CID,char * name,char *end)
-{
-	char * sql;
-	char * zErrMsg = NULL;
-
-	sql = sqlite3_mprintf("insert into %s values(%d,'%d','%s','%s')",table,DID,CID,name,end);
-	sqlite3_exec(sdb->db,sql,0,0,&zErrMsg);
-	sqlite3_free(sql);
-}
-
-
-char **sqlitedb_search_all(struct sqlitedb *sdb,char * table)
-{
-	char * sql;
-	char * zErrMsg = 0;
-	int i,offset = 0;
-	char * buf,* tmp;
-	char zSql[256];
-	char **datatable; /* the result table*/
-	int nRow; /* the number of rows in the result */
-	int nColumn; /* the number of columns of result */
-	int rc;
-	datatable = (char**)malloc(100*sizeof(char*));
-
-	sqlite3_snprintf(sizeof(zSql), zSql,
-			"select * from %s", table);
-
-	rc=sqlite3_get_table(sdb->db, zSql,
-
-			&datatable, &nRow, &nColumn, &zErrMsg);
-
-	if( rc!=SQLITE_OK )
-	{
-		fprintf(stderr, "SQL error: %s\n", zErrMsg);
-		exit(1);
-	} 
-
-
-	return datatable;
-
-}    
-
-char **sqlitedb_search_id(struct sqlitedb *sdb, char * table,int id)
-{
-	char zSql[256];
-	char *szError = NULL,**dbResult;
-	int row,col;
-	dbResult = (char**)malloc(100*sizeof(char*));
-	sqlite3_snprintf(sizeof(zSql), zSql,
-			"select * from %s where DeviceID=%d",table,id);
-
-
-	int result = sqlite3_get_table( sdb->db,zSql,&dbResult,&row,&col,&szError );
-	if( result!=SQLITE_OK )
-	{
-		fprintf(stderr, "SQL error: %s\n", szError);
-		exit(1);
-	}
-	return dbResult;
-
-
-
-}
-
-void sqlitedb_delete_id(struct sqlitedb *sdb,char * table,int id)
-{
-	int rc ;
-	char * sql;
-	char * zErrMsg = 0;
-	sql = sqlite3_mprintf("delete from %s where DeviceID=%d",table,id);
-	rc = sqlite3_exec(sdb->db,sql,0,0,&zErrMsg);
-	sqlite3_free(sql);
-}
-
-void sqlitedb_delete_all(struct sqlitedb *sdb,char * table)
-{
-	char * sql;
-	char * zErrMsg = 0;
-
-	sql = sqlite3_mprintf("delete from %s",table);
-	sqlite3_exec(sdb->db,sql,0,0,&zErrMsg);
-	sqlite3_free(sql);
-}
-
-void sqlitedb_updata_data(struct sqlitedb *sdb,int terminalID,char *terminalname)
-{
-	char *errmsg = NULL;
-
-	char *sql=sqlite3_mprintf("update student set Name='%s' where DeviceID='%d'",terminalname,terminalID);
-
-	if(sqlite3_exec(sdb->db,sql,NULL,NULL,&errmsg) != SQLITE_OK)
-	{
-		perror("sqlite3_exec_update");
-		exit(-1);
-	}
-	else
-		printf("update success!!\n");
-
-}
-
 static const char table_exist[] = "SELECT name FROM sqlite_master WHERE type='table' AND name='%s';";
 
 int _sqlitedb_table_exist(struct sqlitedb * db, char * tablename){ 
 	struct sqlite3_stmt * stmt;
-	const char pztile[256];
 	char _table_exist[128]={0};
 	sprintf(_table_exist, table_exist, tablename);
-	int ret = sqlite3_prepare_v2(db->db, _table_exist, 128, &stmt, &pztile);
+	int ret = sqlite3_prepare_v2(db->db, _table_exist, 128, &stmt, NULL);
 
 	int result = 0;
 	if (ret==SQLITE_OK){
@@ -203,8 +89,7 @@ int sqlitedb_load_gateway_name(char * filepath, unsigned long long mac){
 
 	char select_gateway_name[64] = {0};
 	sprintf(select_gateway_name, sql_select_gateway, mac);
-	const char pztile[256];
-	int ret = sqlite3_prepare_v2(db->db, select_gateway_name, sizeof(select_gateway_name), &stmt, &pztile);
+	int ret = sqlite3_prepare_v2(db->db, select_gateway_name, sizeof(select_gateway_name), &stmt, NULL);
 
 	int result = 1;
 	if (ret==SQLITE_OK){
@@ -242,8 +127,7 @@ int sqlitedb_add_gateway(unsigned long long ieee, char * name){
 
 	char insert_table_gateway[512] = {0};
 	sprintf(insert_table_gateway, sql_insert_gateway, ieee, name);
-	char errmsg[128] = {0};
-	int ret = sqlite3_exec(db->db,insert_table_gateway,NULL,NULL,&errmsg);
+	sqlite3_exec(db->db,insert_table_gateway,NULL,NULL,NULL);
 
 	sqlitedb_destroy(db);
 
@@ -318,8 +202,7 @@ void sqlitedb_load_device(){
 	struct sqlitedb * db = sqlitedb_create(DBPATH);
 
 	struct sqlite3_stmt * stmt;
-	const char pztile[256];
-	int ret = sqlite3_prepare_v2(db->db, sql_select_device, sizeof(sql_select_device), &stmt, &pztile);
+	int ret = sqlite3_prepare_v2(db->db, sql_select_device, sizeof(sql_select_device), &stmt, NULL);
 
 	unsigned long long ieee;
 	unsigned short shortaddr;
@@ -367,11 +250,8 @@ static const char sql_insert_device_ieee[] = "insert into device(ieee,shortaddr,
 int sqlitedb_insert_device_ieee(unsigned long long ieee, unsigned short shortaddr){
 	struct sqlitedb * db = sqlitedb_create(DBPATH);
 
-	char insert_device[128] = {0};
-	sprintf(insert_device, sql_insert_device_ieee, ieee, shortaddr);
-
 	sqlite3_stmt * stmt;
-	int ret = sqlite3_prepare_v2(db->db, sql_insert_device_ieee, -1, &stmt, 0);
+	sqlite3_prepare_v2(db->db, sql_insert_device_ieee, -1, &stmt, 0);
 
 	sqlite3_bind_int64(stmt,1, ieee);
 	sqlite3_bind_int(stmt,2,shortaddr);
@@ -379,7 +259,7 @@ int sqlitedb_insert_device_ieee(unsigned long long ieee, unsigned short shortadd
 	unsigned int blob_size = sizeof(ActiveEpRspFormat_t) + 77*sizeof(struct simpledesc); // 77 magic number is from the ActiveEpRspFormt_t
 	unsigned char blob[sizeof(ActiveEpRspFormat_t) + 77 * sizeof(struct simpledesc)] = {0};
 	sqlite3_bind_blob(stmt, 3, blob, blob_size, SQLITE_STATIC);
-	ret = sqlite3_step(stmt);
+	sqlite3_step(stmt);
 	sqlite3_finalize(stmt);
 
 	sqlitedb_destroy(db);
@@ -420,6 +300,8 @@ int sqlitedb_update_device_endpoint(struct device * d){
 
 	}
 	sqlitedb_destroy(db);
+
+	return 0;
 }
 
 int sqlitedb_update_device_endpoint_zonetype(struct device * d, unsigned char endpoint, unsigned short zonetype){ 
@@ -452,6 +334,8 @@ int sqlitedb_update_device_endpoint_zonetype(struct device * d, unsigned char en
 
 	}
 	sqlitedb_destroy(db);
+
+	return 0;
 }
 
 int sqlitedb_update_device_arm(unsigned long long ieee, unsigned char endpoint, struct protocol_cmdtype_arm * arm){
@@ -505,6 +389,8 @@ int sqlitedb_update_device_attr(struct device * d){
 		sqlite3_exec(db->db, update_device_attr, NULL, NULL, NULL);
 	}
 	sqlitedb_destroy(db);
+
+	return 0;
 }
 
 static const char sql_update_device_status[] = "update device set status = %d where ieee = %lld";

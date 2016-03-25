@@ -264,6 +264,8 @@ int gateway_update_device_networkaddr(unsigned long long ieee, unsigned short sh
 	if(d){
 		device_set_short_addr( d, shortaddr);
 	}
+
+	return 0;
 }
 
 struct endpoint * gateway_get_endpoint_incluster(unsigned long long ieee, unsigned short clusterid){

@@ -17,7 +17,7 @@
 //
 //
 void protocol_parse_level_ctrl(unsigned char * buf, unsigned short len, struct protocol_cmdtype_level_ctrl_ieee * level_ctrl_ieee){ 
-	unsigned char * p = buf;
+	const unsigned char * p = buf;
 	bytebuffer_skipbytes(&p, 9);
 	bytebuffer_readquadword(&p, &level_ctrl_ieee->ieee);
 	bytebuffer_readbyte(&p, &level_ctrl_ieee->endpoint);

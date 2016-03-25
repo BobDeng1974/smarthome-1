@@ -47,7 +47,7 @@
 //-------
 
 unsigned long long protocol_parse_warning(unsigned char * buf, unsigned short len, struct protocol_cmdtype_warning * warning){ 
-	unsigned char * p = buf;
+	const unsigned char * p = buf;
 	bytebuffer_skipbytes(&p, 9);
 	unsigned long long ieee;
 	bytebuffer_readquadword(&p, &ieee);

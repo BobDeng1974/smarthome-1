@@ -29,7 +29,7 @@ void zcl_mem_free(void *ptr){
 };
 
 uint8* zcl_buffer_uint32( uint8 *buf, uint32 val ){ 
-	memcpy(buf, ((uint8 *)(&val)), 4);
+	return memcpy(buf, ((uint8 *)(&val)), 4);
 };
 int zcl_handle_basic(unsigned char * buf, unsigned short buflen, struct device * d); 
 
@@ -1001,7 +1001,7 @@ struct zcl_basic_attr{
 
 int zcl_handle_basic(unsigned char * buf, unsigned short buflen, struct device * d){ 
 	struct zcl_basic_attr attr; 
-	unsigned char * cursor = buf;
+	const unsigned char * cursor = buf;
 
 	unsigned char datalen;
 	
@@ -1046,6 +1046,8 @@ int zcl_handle_basic(unsigned char * buf, unsigned short buflen, struct device *
 		}
 	}
 
+
+	return 0;
 }
 // ------------------------------ZCL_REPORT---------------------------
 

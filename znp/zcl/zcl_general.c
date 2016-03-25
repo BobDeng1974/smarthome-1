@@ -116,8 +116,8 @@ typedef struct zclGenSceneNVItem
 /*********************************************************************
  * LOCAL VARIABLES
  */
-static zclGenCBRec_t *zclGenCBs = (zclGenCBRec_t *)NULL;
-static uint8 zclGenPluginRegisted = FALSE;
+//static zclGenCBRec_t *zclGenCBs = (zclGenCBRec_t *)NULL;
+//static uint8 zclGenPluginRegisted = FALSE;
 
 #if defined( ZCL_SCENES )
   #if !defined ( ZCL_STANDALONE )
@@ -134,7 +134,7 @@ static zclGenAlarmItem_t *zclGenAlarmTable = (zclGenAlarmItem_t *)NULL;
  */
 //static ZStatus_t zclGeneral_HdlIncoming( zclincomingmsg *pInMsg );
 //static ZStatus_t zclGeneral_HdlInSpecificCommands( zclincomingmsg *pInMsg );
-static zclGeneral_AppCallbacks_t *zclGeneral_FindCallbacks( uint8 endpoint );
+//static zclGeneral_AppCallbacks_t *zclGeneral_FindCallbacks( uint8 endpoint );
 
 // Device Configuration and Installation clusters
 #ifdef ZCL_BASIC
@@ -1551,19 +1551,19 @@ ZStatus_t zclGeneral_SendLocationData( uint8 srcEP, afAddrType_t *dstAddr, uint8
  *
  * @return  pointer to the callbacks
  */
-static zclGeneral_AppCallbacks_t *zclGeneral_FindCallbacks( uint8 endpoint )
-{
-  zclGenCBRec_t *pCBs;
-
-  pCBs = zclGenCBs;
-  while ( pCBs )
-  {
-    if ( pCBs->endpoint == endpoint )
-      return ( pCBs->CBs );
-    pCBs = pCBs->next;
-  }
-  return ( (zclGeneral_AppCallbacks_t *)NULL );
-}
+//static zclGeneral_AppCallbacks_t *zclGeneral_FindCallbacks( uint8 endpoint )
+//{
+//  zclGenCBRec_t *pCBs;
+//
+//  pCBs = zclGenCBs;
+//  while ( pCBs )
+//  {
+//    if ( pCBs->endpoint == endpoint )
+//      return ( pCBs->CBs );
+//    pCBs = pCBs->next;
+//  }
+//  return ( (zclGeneral_AppCallbacks_t *)NULL );
+//}
 
 /*********************************************************************
  * @fn      zclGeneral_HdlIncoming

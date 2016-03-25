@@ -1,3 +1,5 @@
+#include <stdlib.h>
+#include <string.h>
 #include "mtAf.h"
 #include "commands.h"
 #include "zcl.h"

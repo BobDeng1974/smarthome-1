@@ -79,13 +79,13 @@ void device_addendpoint(struct device * d, struct endpoint * ep);
 unsigned char device_getepcount(struct device * d);
 void device_destroy(struct device * d);
 void device_setep(struct device * d, ActiveEpRspFormat_t * activeep);
-static void device_increase(struct device * d){
+static inline void device_increase(struct device * d){
 	d->epcursor++;
 }
 
 void device_set_status(struct device * d, unsigned int status);
 
-static int device_check_status(struct device * d, unsigned int status){
+static inline int device_check_status(struct device * d, unsigned int status){
 	return d->status & status;
 }
 

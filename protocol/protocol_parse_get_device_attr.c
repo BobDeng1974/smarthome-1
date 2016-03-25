@@ -14,7 +14,7 @@
 //-------
 //
 void protocol_parse_get_device_attr(unsigned char * buf, unsigned short len, struct protocol_datatype_get_device_attr * get_attr){
-	unsigned char * p = buf;
+	const unsigned char * p = buf;
 	bytebuffer_skipbytes(&p, 5);
 	bytebuffer_readdword(&p, &get_attr->serialnum);
 	bytebuffer_readquadword(&p, &get_attr->ieee);

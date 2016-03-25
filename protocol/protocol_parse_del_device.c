@@ -14,7 +14,7 @@
 //-------
 //
 void protocol_parse_del_device( unsigned char * buf, unsigned short len, struct protocol_datatype_del_device * del){
-	unsigned char * p = buf;
+	const unsigned char * p = buf;
 	bytebuffer_skipbytes(&p, 5);
 	bytebuffer_readdword(&p, &del->serialnum);
 	bytebuffer_readquadword(&p, &del->ieee);

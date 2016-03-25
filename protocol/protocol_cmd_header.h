@@ -12,6 +12,7 @@ void protocol_parse_get_device_attr(unsigned char * buf, unsigned short len, str
 struct protocol_datatype_set_device_name;
 void protocol_parse_set_device_name( unsigned char * buf, unsigned short len, struct protocol_datatype_set_device_name * name);
 void protocol_parse_onoff(unsigned char * buf, unsigned short len, struct protocol_cmdtype_onoff_ieee * onoff);
+void protocol_parse_level_ctrl(unsigned char * buf, unsigned short len, struct protocol_cmdtype_level_ctrl_ieee * level_ctrl_ieee);
 
 unsigned int protocol_encode_add_del_device(unsigned char * buf, unsigned long long ieeeaddr, unsigned char add);
 struct zclzonechangenotification;
@@ -22,4 +23,5 @@ unsigned int protocol_encode_arm_feedback(unsigned char * buf, unsigned long lon
 unsigned int protocol_encode_add_del_device(unsigned char * buf, unsigned long long ieeeaddr, unsigned char add);
 unsigned int protocol_encode_del_device_feedback(unsigned char * buf, struct protocol_datatype_del_device * del_device,unsigned char  result);
 unsigned int protocol_encode_deviceattr(unsigned char * buf, struct protocol_datatype_get_device_attr * get_attr);
+unsigned int protocol_encode_set_name_feedback(unsigned char * buf, struct protocol_datatype_set_device_name * device_name ,unsigned char result);
 #endif

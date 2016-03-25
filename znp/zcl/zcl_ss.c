@@ -2,9 +2,11 @@
 #include <stdio.h>
 #include <string.h>
 #include <assert.h>
+#include <unistd.h>
 
 #include "zcl_ss.h" 
-#include "zcl_general.h" #include "zcl.h"
+#include "zcl_general.h" 
+#include "zcl.h"
 #include "mtParser.h"
 #include "zcl_datatype.h"
 #include "socket.h"

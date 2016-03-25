@@ -88,7 +88,6 @@ unsigned char toolkit_in_period(unsigned char starthour, unsigned char startminu
 	short end_minutes = endhour * 60 + endminute;
 	short target_minutes = targethour * 60 + targetminute; 
 
-	short start_minutes_ = 0;
 	short end_minutes_ = end_minutes - start_minutes;
 	if(end_minutes_ < 0){
 		end_minutes_ += 24 * 60;

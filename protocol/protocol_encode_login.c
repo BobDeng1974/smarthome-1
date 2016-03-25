@@ -36,7 +36,7 @@ unsigned int protocol_encode_login(unsigned char *buf) {
 	bytebuffer_writemac(&p, gw->gatewayid); 
 	unsigned char gateway_name_len = strlen(gw->gatewayname);
 	bytebuffer_writebyte(&p, gateway_name_len);
-	bytebuffer_writebytes(&p, gw->gatewayname, gateway_name_len);
+	bytebuffer_writebytes(&p, (unsigned char *)gw->gatewayname, gateway_name_len);
 	bytebuffer_writebyte(&p, gw->boxversion);
 	bytebuffer_writebyte(&p, gw->protocolversion);
 	unsigned short active_device_count = gateway_get_active_device_count();
@@ -44,7 +44,6 @@ unsigned int protocol_encode_login(unsigned char *buf) {
 
 	struct list_head *pos, *n;
 	struct device *d;
-	int i;
 	list_for_each_safe(pos, n,&gw->head)
 	{
 		d=list_entry(pos, struct device, list);

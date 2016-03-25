@@ -17,7 +17,7 @@
 //-------
 //
 void protocol_parse_set_device_name( unsigned char * buf, unsigned short len, struct protocol_datatype_set_device_name * name){
-	unsigned char * p = buf;
+	const unsigned char * p = buf;
 	bytebuffer_skipbytes(&p, 5);
 	bytebuffer_readdword(&p, &name->serialnum);
 	bytebuffer_readquadword(&p, &name->ieee);

@@ -1,5 +1,6 @@
 #include <stdlib.h>
 #include <assert.h>
+#include <time.h>
 #include "protocol.h"
 #include "zcl_datatype.h"
 #include "gateway.h"

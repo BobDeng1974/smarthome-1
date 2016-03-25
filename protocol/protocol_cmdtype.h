@@ -70,7 +70,7 @@ struct __attribute__((packed))protocol_cmdtype_level_ctrl_ieee{
 
 struct __attribute__((packed))protocol_cmdtype_level_ctrl_ieee_cmd{
 	int cmdid;
-	struct protocol_cmdtype_onoff_ieee level_ctrl_ieee;
+	struct protocol_cmdtype_level_ctrl_ieee level_ctrl_ieee;
 };
 
 #endif

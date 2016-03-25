@@ -17,7 +17,7 @@
 //
 
 void protocol_parse_onoff(unsigned char * buf, unsigned short len, struct protocol_cmdtype_onoff_ieee * onoff){
-	unsigned char * p = buf; 
+	const unsigned char * p = buf; 
 	bytebuffer_skipbytes(&p, 9);
 	bytebuffer_readquadword(&p, &onoff->ieee); 
 	bytebuffer_readbyte(&p, &onoff->endpoint);

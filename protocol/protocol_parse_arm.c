@@ -17,7 +17,7 @@
 //标识位 1 byte
 //-------
 unsigned long long protocol_parse_arm(unsigned char * buf, unsigned short len, struct protocol_cmdtype_arm * arm, unsigned int * serialnum, unsigned char * endpoint ){
-	unsigned char * p = buf;
+	const unsigned char * p = buf;
 	bytebuffer_skipbytes(&p, 5);
 	unsigned long long ieee;
 	bytebuffer_readquadword(&p, &ieee);

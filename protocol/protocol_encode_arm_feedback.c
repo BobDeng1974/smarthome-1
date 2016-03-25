@@ -13,7 +13,6 @@
 //
 unsigned int protocol_encode_arm_feedback(unsigned char * buf, unsigned long long ieee, unsigned char result){
 	unsigned char *p = buf;
-	unsigned long long ctime;
 	bytebuffer_writebyte(&p,PROTOCOL_START_FLAG);
 	bytebuffer_writeword(&p,16);
 	bytebuffer_writeword(&p,DEVICE_ARM_FEEDBACK);

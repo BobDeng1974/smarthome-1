@@ -568,7 +568,6 @@ static uint8_t mtZdoSimpleDescRspCb(SimpleDescRspFormat_t *msg)
 		consolePrint("DeviceID: 0x%04X\n", msg->DeviceID);
 		consolePrint("DeviceVersion: 0x%02X\n", msg->DeviceVersion);
 		consolePrint("NumInClusters: 0x%02X\n", msg->NumInClusters);
-		fprintf(stdout, "simple ****** %lld\n", pthread_self());
 		uint32_t i;
 		for (i = 0; i < msg->NumInClusters; i++)
 		{
@@ -630,7 +629,6 @@ static uint8_t mtZdoActiveEpRspCb(ActiveEpRspFormat_t *msg)
 		consolePrint("Status: 0x%02X\n", msg->Status);
 		consolePrint("NwkAddr: 0x%04X\n", msg->NwkAddr);
 		consolePrint("ActiveEPCount: 0x%02X\n", msg->ActiveEPCount);
-		fprintf(stdout, "active ****** %lld\n", pthread_self());
 
 		uint32_t i;
 		for (i = 0; i < msg->ActiveEPCount; i++)
