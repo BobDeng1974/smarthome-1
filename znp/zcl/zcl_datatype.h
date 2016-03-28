@@ -4,7 +4,7 @@
 #define ZCLZONEENROLLREQ    0x00000001
 #define ZCLZONECHANGENOTIFICATION 0x00000002
 
-struct zclzoneenrollreq{
+struct __attribute__((packed))zclzoneenrollreq{
 	unsigned long long ieeeaddr;
 	unsigned short groupid;
 	unsigned short clusterid;
@@ -13,7 +13,7 @@ struct zclzoneenrollreq{
 	unsigned char zoneid;
 };
 
-struct zcl_zone_enroll_req_cmd{
+struct __attribute__((packed))zcl_zone_enroll_req_cmd{
 	unsigned int cmdid;
 	struct zclzoneenrollreq req;
 };
@@ -53,7 +53,7 @@ struct zcl_zone_enroll_req_cmd{
  * only can tell that an alarm has occurred.These Zones must set the “Restore” bit to
  * zero, indicating to the CIE not to look for alarm-restore notifications.
  */
-struct zclzonechangenotification{
+struct __attribute__((packed))zclzonechangenotification{
 	unsigned long long ieeeaddr;
 	unsigned short clusterid;
 	unsigned short zonetype;
@@ -74,7 +74,7 @@ struct zclzonechangenotification{
 	}zonechangenotification;
 };
 
-struct zcl_zone_change_notification_cmd{
+struct __attribute__((packed))zcl_zone_change_notification_cmd{
 	unsigned int cmdid;
 	struct zclzonechangenotification req;
 };
